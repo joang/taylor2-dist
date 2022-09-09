@@ -1,0 +1,107 @@
+
+        Taylor Translator (taylor)
+        ==========================
+
+What it does?
+============
+    Given a system of ODEs, generate a C-procedure which
+    computes the coefficients of the taylor polynomial at a given point. 
+    The output procedure is of the following type
+
+      MY_FLOAT **derivatives( MY_FLOAT t, MY_FLOAT *x0, int order)
+
+    This functions returns a static array of MY_FLOAT *, the size
+    of the return value is guaranteed to be bigger than the dimension
+    of the system of ODEs. Each entry points to an array of MY_FLOAT
+    of size order+1.
+
+    You need to define a few macros in "taylor.h" in order to compile
+    the output code. Run 'taylor' with the -header option to generate a
+    sample header file.
+
+Compiling
+=========   
+      run make to compile "taylor";
+
+      "taylor" is the translator. It read from stdin and writes to
+       stdout.  It takes the following command line options
+           -o output_file     (specify output filename, like a.c)
+           -n name            (output procedure name, default is 'derivatives')
+           -h                 (print a short help msg)	
+           -header            (generate a sample header file)
+           -debug -v          (generate verbose output to stderr) 
+           -v                 (same as -debug)
+           -expandsum int     (specifies the threshold for sums being expanded)
+           -expandpower int   (specifies the threshold for rewriting powers as products)
+           -main              (generate the main function for testing)
+           file               (treated as input)
+
+        Example:
+
+                taylor pendulum -o pendulum.c;
+
+
+Input Syntax:
+=============
+    Taylor is expression based, with a branching expression extension
+         if(condition) { expr } else {expr};
+    and a non-nested summation
+         sum(expr, id=int,int);
+    Expressions defined by the following gramma (see parse.y for details).
+
+    booleanExpr:
+		       expr EQ  expr
+		     | expr NEQ expr
+		     | expr GE  expr
+		     | expr GT  expr
+		     | expr LE  expr
+		     | expr LT  expr
+		     | bexpr AND  bexpr
+		     | bexpr OR   bexpr
+                     | '(' booleanExpr ')'
+    expr:
+                      term
+		    | expr '^' expr
+		    | expr '*' expr
+		    | expr '/' expr
+		    | expr '+' expr
+		    | expr '-' expr
+                    | '-' expr   %prec UNARY
+                    | '+' expr   %prec UNARY
+                    | IF '(' bexpr ')' '{' expr '}' ELSE '{' expr '}'
+                    ;
+
+    term:
+		      id
+                    | idexpr arrayref
+	            | INTEGER_CONSTANT
+	            | FLOAT_CONSTANT
+	            | mathFunction '(' expr ')'
+                    | SUM '(' expr ','  idexpr  '=' expr ',' expr ')'
+                      ;
+
+    arrayref:        one_idx
+                   | arrayref one_idx
+                    ;
+    one_idx: 
+                   '[' expr ']'
+                    ;
+    mathFunction:
+                    sin | cos | exp | log | tan | atan | sinh | cosh | tanh | sqrt
+                    ;                
+
+=========================================================================================
+
+
+        
+
+
+  
+    
+    
+
+         
+
+
+	
+

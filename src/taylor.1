@@ -1,0 +1,295 @@
+.TH Taylor 1 "10 September 2022" " " " "
+.SH NAME
+taylor \(em
+generating C-code to solve a system of ODEs using the taylor
+method, optionally integrate a set of variational equations
+simutaneously via the Jet Transport mechanism.
+.SH SYNOPSIS
+.B taylor
+.RI [ options ] " input_file"
+
+.SH DESCRIPTION
+.PP
+.B taylor
+\(em version
+.B "2.0.0"
+\(em is a translator that generates C-procedure that computes the
+coefficients of the taylor series of the dependent variables
+with respect to time. It can also generate complete C-code
+that solves a system of ODEs. 
+.PP
+.B taylor 
+reads from a file or stdin and writes to stdout or a file. The
+input is a system of ODEs specified in the format: 
+.PP
+.in 20
+diff(var, t) = expr;
+.PP
+.in 8
+where expr is an expression composed from +, -, *, /, ^ and mathematical
+functions sqrt, sin, cos, tan, exp, log, sinh, cosh and atan. For example, the
+following specifies the famous lorenz equation
+.br
+.PP
+.in 20
+RR = 28.0;
+.br
+diff(x,t) = 10.0* (y - x);
+.br
+diff(y,t) = RR* x - x*z - y;
+.br
+diff(z,t) = x* y - 8.0* z /3.0;
+.br
+.in 8
+.PP
+Jet transport is defined by a statement like
+.PP
+.in 20
+jet x,y,z  symbols 3 degree 1;
+.br
+.in 8
+.PP
+This statement tells taylor to generate code to integrate
+the first order variational equations for the Lorenz system.
+.PP
+The output routines are of the following prototype
+.PP
+int taylor_step__ODE_NAME__(MY_FLOAT *time,
+                 MY_FLOAT *xvars,
+                 int      direction,
+                 int      step_ctrl_method,
+                 double   log10abserr,
+                 double   log10relerr,
+                 MY_FLOAT *endtime,
+                 MY_FLOAT *stepused,
+                 int      *order,
+                 MY_JET   *jetInOut)
+.PP
+MY_FLOAT **taylor_coefficient__ODE_NAME___A(MY_FLOAT t, 
+                                            MY_FLOAT *x, 
+                                            int order,
+                                            MY_JET *jetIn,
+                                            MY_JET ***jetOut
+                                           )
+.PP
+where MY_FLOAT is a custom floating point data type. It may
+be float, double or other floating point data types
+like long double or complex. For the later cases, the user
+must redefine a few macros that handle arithmetic operations.
+MY_JET is a custom data structure that is used to integrate
+the variational equations (Jet Transport). A macro
+MY_JET_DATA(jet,idx) is provided for accessing individual
+monomial coefficients in MY_JET arranged in 'graded lexicographical' order. 
+
+.PP
+The function 
+.B taylor_step__ODE_NAME__
+integrates the given system of ODEs one step forward, using
+the supplied step-size, error_tolerance and some other control parameters.
+If jetInOut is not NULL, it will compute the corresponding
+jet (monomial coefficients).
+.PP
+The function
+.B taylor_coefficient__ODE_NAME___A
+returns a static two dimensional array whose rows are
+the taylor coefficients of the state variables. If jetIn is
+not NULL, it returns the corresponding array of jet coefficients in jetOut. 
+.PP
+Normally, the user writes a main procedure that
+does the control. The following is a simple example.
+.PP
+.nf
+
+#include <stdio.h>
+#include <math.h>
+#include "taylor.h"
+int main(int argc, char **argv)
+{
+   MY_FLOAT  xx[3], t;
+   double    abs_err, rel_err, h_return;
+   double    log10_abs_err, log10_rel_err, endtime;
+   int       nsteps = 100;
+
+   /* set initiaial conditions */
+   xx[0] = 0.1;
+   xx[1] = 0.2;
+   xx[2] = 0.3;
+   t     = 0.0;
+   /* control parameters       */
+   abs_err = 1.0e-16;
+   rel_err = 1.0e-16;
+   log10_abs_err = log10(abs_err);
+   log10_rel_err = log10(rel_err);
+   endtime = 123.0;
+
+   /* integrate 100 steps */
+   while( -- nsteps > 0) {
+      /* do something with xx and t. We just print it */
+      printf("%f %f %f %f\n", xx[0],xx[1],xx[2],t);
+      taylor_step_lorenz(&t, &xx[0], 1, 1, log10_abs_err,
+                          log10_rel_err, &endtime, &h_return, 16, NULL);
+   }       
+}
+.fi
+.PP
+.B Taylor
+can also generate the main driving function. The user may supply some
+control information in the ODE specification. 
+Supported control information is listed below.
+.PP
+.nf
+initial_values = 2.0, 3.0, -0.7;     /* initial values */
+absolute_error_tolerance = 1.0E-16;  /* error tolerance */
+relative_error_tolerance = 1.0E-16;  /* error tolerance */
+stop_time = 100.0;                   /* stop condition */
+.fi
+.PP
+Initial value for jet coefficients can also be provided, like
+.PP
+.nf
+jetInitialValues x ="(0.03   1 0 0 )";
+jetInitialValues y ="(-0.02  0 1 0 )";
+jetInitialValues z ="(0.15   0 0 1 )";
+.PP
+
+
+
+.SH OPTIONS
+.LP
+.TP
+.BI \-o " file" 
+Specify the output file name. The default is stdout.
+.TP
+.BI \-name " name" 
+Specify a name for your system of ODEs. The name
+will be appended to the output procedures.
+.TP
+.BR \-main 
+.br
+Generate code that includes the main function. The code
+can then be compiled directly into executable.
+.TP
+.BR \-main_only
+.br
+Generate only the main driving function.
+.TP
+.BR \-gmp_precision " PRECISION_IN_BITS"
+.TP
+.BR \-gmp 
+.BR
+
+Generate code to use the Gnu Multiple Precision library.
+See "http://www.swox.com/gmp/" for more info about this
+library.
+.TP
+.TP
+.BR \-header
+.br
+Generate the header file using the input.
+.TP
+.BR \-help
+.br
+Print a sample help message.
+.TP
+
+.BR \-step " STEP_SIZE_CONTROL_METHOD"
+.br
+Generate only the code for the step size control using the
+specified method. Possible value for
+STEP_SIZE_CONTROL_METHOD are : 0, 1, 2 and -1. You
+have to generate the code that computes the jet derivatives
+separately.
+.TP
+.BR \-jet
+.br
+Generate code that computes the jet derivitaves. 
+You'll have to write or generate the step size
+control function, the main function seperately in
+order to compile and run the generated code.
+.TP
+
+.BR \-jet_helper
+.br
+Generate the IO helpers functions for jet transport.
+.TP
+
+.BR \-jet_library " LIBRARY"
+.br
+Select the jet transport library. Available
+values are:
+.br
+jet_1:  1 symbol, degree 1.  
+.br
+jet1:  1 symbol, arbitary degree.
+.br
+jet_1: degree 1, arbitary number of symbols.
+.br
+jet2: two symbols, arbitary degree.
+.br
+jet_2: degree 2, arbitary number of symbols.
+.br
+jet_m: general case, only works when jet size is below 1000 terms.
+.br
+jet_tree: general case, this is the default,
+.br
+
+
+.TP
+.BR \-headername \  NAME
+.br
+Specify the name of the header file. This option
+is meant to be used with  '-jet' or '-step' or '-main_only'
+when the header file is generated separately.
+
+.TP
+.BR \-v
+.br
+Print parser info to stderr.
+.TP
+.BI \-expandsum "  number"
+.br
+Specify the threshold for expanding SUM expressions. Default value is 10.
+.TP
+.BI \-expandpower "  number"
+.br
+Specify the threshold for rewriting powers as product. Default value is 0.
+
+.TP
+.BI \-sqrt 
+.br
+Compute exponentials like x^(-3/2)  using the sqrt function
+instead of the pow function.
+
+
+.SH SYNTAX
+Besides the simple expresion described above,
+.B taylor
+also understands the following two expressions.
+.PP
+.in 14
+ if(boolean_expr) { expr } else { expr };
+.PP
+.in 14
+ sum(expr, index= INT, INT);
+.PP
+.in 8
+with one restriction: sum may not be nested. For example,
+the following is a valid ODE description.
+.PP
+.nf
+     diff(x,t) = if(t < 2) { x^2 } else { x+2};
+     diff(y,t) = sum( 0.1*sin(i*x), i= 1, 10 );
+.fi
+
+.SH AUTHORS
+ Joan Gimeno <joan@maia.ub.es>
+ Angel Jorba <angel@maia.ub.es>
+ Maorong Zou <mzou@math.utexas.edu>
+
+.SH URL(s)
+ <http://www.math.utexas.edu/~mzou/taylor/>
+ <http://www.maia.ub.es/~angel/taylor/>
+.br
+
+
+

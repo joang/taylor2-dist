@@ -1,0 +1,38 @@
+To test taylor,
+
+   run  taylor <input > output.c
+
+   it outputs a compilable program (which including a sample
+   series library code). There are a few tests in the tests subdir.
+
+
+
+To test series libraries
+
+  1) See SampleHeader_JET.h, make the whole header a string in
+       static char *sample_header_JET=" jet_header ";
+     There is a sample (unused) sample_header_JETx there for 
+     your reference (to see what need to be defined). Pay
+     attention to the line continuations (no space after \n\).
+
+
+  2) run 
+      make clean; make
+     to recompile taylor before using it.
+
+  3) For other arithmetics, the relevent header files are: 
+
+        gmpHeader_JET.h    // for gmp 
+        mpfrheader_JET.h   // for mpfr
+        qdheader_JET.h     // for qd and dd
+
+       
+
+Please log any issues you find in ISSUES.
+
+
+
+
+
+
+ 
