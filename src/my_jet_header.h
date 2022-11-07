@@ -128,7 +128,7 @@ typedef enum { \
 /* Macros used in the integration */\n\
 typedef " MY_JET_FIXES(t) " MY_JET;\n\
 #define InitUpJet2(nsymbs,deg)     " MY_JET_FIXES(initup) "(nsymbs,deg)\n\
-#define InitUpJet()                InitUpJet2(_NUMBER_OF_SYMBOLS_,_DEGREE_OF_JET_VARS_)\n\
+#define InitUpJet()                InitUpJet2(_NUMBER_OF_MAX_SYMBOLS_,_MAX_DEGREE_OF_JET_VARS_)\n\
 #define InitJet(a)                 " MY_JET_FIXES(init) "(" InitCleanFlag "(a))\n\
 #define ClearJet(a)                " MY_JET_FIXES(clean) "(" InitCleanFlag "(a))\n\
 #define ClearUpJet()               " MY_JET_FIXES(cleanup) "()\n\
@@ -215,6 +215,9 @@ typedef " PREFIX_JET(t) "* " PREFIX_JET(ptr) ";\n" \
 #define MY_JET_APIS(PREFIX_JET,MY_JET_TYPE,PREFIX_SCAL,SCAL,I) "\
 #include <stdio.h>\n\
 " MY_JET_TYPE(PREFIX_JET,SCAL,I) "\
+\n\
+int * " PREFIX_JET(monomial_counts) "(void);\n\
+int * " PREFIX_JET(monomial_offsets) "(void);\n\
 \n\
 size_t " PREFIX_JET(init) "(" PREFIX_JET(ptr) ");\n\
 void " PREFIX_JET(initup) "(" I ", " I ");\n\

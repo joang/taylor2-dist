@@ -14,6 +14,9 @@
 \usepackage{fancyvrb}
 \DefineVerbatimEnvironment{command}{Verbatim}{commandchars=\\\{\}}
 
+\usepackage[hidelinks=true]{hyperref}
+
+
 \usepackage{amsthm}
 \theoremstyle{remark}
 \newtheorem{warning}{Warning}
@@ -23,7 +26,8 @@
 
 
 \newcommand{\taylorname}{{\bf taylor}}
-\newcommand{\version}{2.0.0}
+\newcommand{\version}{2.0.1}
+% \newcommand{\version}{2.0.0}
 
 \newcommand{\myfloat}{{\tt MY\symbol{95}FLOAT}}
 \newcommand{\myjet}{{\tt MY\symbol{95}JET}}
@@ -92,7 +96,8 @@ ERROR!!!!!}}}}}}}}}%
 
 \author{Joan Gimeno {\tt <joan@maia.ub.es>} \and \`Angel Jorba {\tt
     <angel@maia.ub.es>} \and Maorong Zou {\tt <mzou@math.utexas.edu>}}
-\date{September 9, 2022}
+\date{November 7, 2022}
+% \date{September 9, 2022}
 
 \voffset=-20mm       % vertical displacement
 \oddsidemargin=3mm   % horizontal displacement (odd pages)
@@ -177,12 +182,12 @@ caveats:
 \taylorname{} is released under the GNU Public License (GPL).  It is
 available on Github
 \begin{tabbing}
-    {\tt https://github.com/joang/taylor2-dist}
+    \url{https://github.com/joang/taylor2-dist}
 \end{tabbing}
 \taylorname{} is also available on the web using the URLs
 \begin{tabbing}
-    {\tt http://www.math.utexas.edu/users/mzou/taylor/}\hspace*{5mm} \= (US)\\
-    {\verb-http://www.maia.ub.es/~angel/taylor/-} \> (Europe)
+    \url{http://www.math.utexas.edu/users/mzou/taylor/}\hspace*{5mm} \= (US)\\
+    \url{http://www.maia.ub.es/~angel/taylor/} \> (Europe)
 \end{tabbing}
 
 
@@ -294,8 +299,7 @@ transparent unless you want to modify them. Here is the list.
       arbitrary number of symbols, and arbitrary degree. It works well
       when the jet size is below 1000 terms, i.e., whenever ${{d+m}
         \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on {\tt
-      http://www.maia.ub.es/dsg/param/chapter2.html}}.
+    \item \verb+jet_tree+ a general library\footnote{based on \url{   http://www.maia.ub.es/dsg/param/chapter2.html}}.
 \end{itemize}
 
 
@@ -890,7 +894,7 @@ by \taylorname{} with or without the {\tt -mpfr} flag.
     
     int main(void)
     {
-      int i, order, direction=+1, step_cntrl=2;
+      int i, direction=+1, step_cntrl=2;
       double log10abs=-DIGITS_PRECISION, log10rel=-DIGITS_PRECISION;
       MY_FLOAT startT, nextT, stopT, x[NS];
       MY_JET xjet[NJ];
@@ -916,7 +920,7 @@ by \taylorname{} with or without the {\tt -mpfr} flag.
       MakeMyFloatC(stopT,"1",1);
       while (taylor_step_lorenz3_eq(&startT, x, direction, 
                                     step_cntrl, log10abs, log10rel, 
-                                    &stopT, &nextT, &order, xjet) != 1) {}
+                                    &stopT, &nextT, NULL, xjet) != 1) {}
       
       for (i = 0; i < NJ; i++) {
         printf("x%d=\n",i);
@@ -1295,8 +1299,7 @@ a special purpose library. Possible value for \verb+JETLIBRARY+ are:
       arbitrary number of symbols, arbitrary degree. This
       implementation works well when the jet size is below 1000 terms,
       i.e., when ${{d+m} \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on {\tt
-      http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the
+    \item \verb+jet_tree+ a general library\footnote{based on \url{     http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the
       default.
 \end{itemize}
 }
@@ -1464,29 +1467,36 @@ passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
   decimal log of the absolute accuracy required.
 \item {\tt log10relerr}\newline
   decimal log of the relative accuracy required.
-\item {\tt endtime}\newline
-  if {\tt NULL}, it is ignored. \\if {\tt step\symbol{95}ctrl\symbol{95}method} is set to
-  0, it is also ignored. \\otherwise, if next step is going to be
+\item {\tt endtime}
+ \begin{description}
+  \item if \verb+NULL+, it is ignored. \item if {\tt step\symbol{95}ctrl\symbol{95}method} is set to
+  0, it is also ignored. \item otherwise, if next step is going to be
   outside {\tt endtime}, reduce the step size so that the new time
   {\tt time} is exactly {\tt endtime} (in that case, the function
   returns 1).
-\item {\tt ht}\newline
-  on input: ignored/used as a time step (see parameter {\tt
-  step\symbol{95}ctl\symbol{95}method})\newline
-  on output: time step used
+  \end{description}
+\item {\tt ht}
+ \begin{description}
+  \item if \verb+NULL+, it is ignored. 
+  \item on input: ignored/used as a time step (see parameter {\tt
+  step\symbol{95}ctl\symbol{95}method})
+  \item on output: time step used if the pointer is not \verb+NULL+.
+  \end{description}
 \item {\tt order}
  \begin{description}
-  \item input: this parameter is only used if {\tt
+  \item if \verb+NULL+, it is ignored. 
+  \item on input: this parameter is only used if {\tt
     step\symbol{95}ctrl\symbol{95}method} is 0, or if you add the
     proper code for the case {\tt
       step\symbol{95}ctrl\symbol{95}method}=3.\newline If {\tt
       step\symbol{95}ctrl\symbol{95}method} is 0, its possible values
     are:\newline $<2$: the program will select degree 2,\newline $\ge
     2$: the program will use this degree.
-  \item output: degree used.
+  \item on output: degree used if the pointer is not \verb+NULL+.
   \end{description}
 \item {\tt jetInOut}
 \begin{description}
+\item if \verb+NULL+, it is ignored. 
 \item on input: the value of jet variables
 \item on output: the new value of jet variable at the output time {\tt ti}.
 \end{description}
@@ -1554,13 +1564,13 @@ currently supports the following floating point data types.
     % \item \verb+double complex+. A complex double precision arithmetic based on the C standard \verb+complex.h+. 
     \item \verb+long double+. The C \verb+long double+ type.
     \item \verb+__float128+. The GNU C 128 bit floating point
-      type\footnote{\texttt{https://gcc.gnu.org/onlinedocs/libquadmath/index.html}}.
+      type\footnote{\url{https://gcc.gnu.org/onlinedocs/libquadmath/index.html}}.
     \item \verb+mpfr_t+. An arbitary precision floating-point data
       type from {\tt mpfr}
-      library\footnote{\texttt{https://www.mpfr.org}}.
+      library\footnote{\url{https://www.mpfr.org}}.
     \item \verb+gmp_t+. An arbitrary precision floating point data
       type from {\tt gmp}
-      library\footnote{\texttt{https://gmplib.org}}.
+      library\footnote{\url{https://gmplib.org}}.
 \end{itemize}
 These data types can be selected using \taylorname{} command line
 flags, that is, \verb+-long_double+, \verb+-float128+, \verb+-gmp+ or
@@ -1618,11 +1628,11 @@ as the conversion of double to \verb+MY_FLOAT+ is not precise.
     This function fills the array \verb+inOut+ with an identity
     matrix. If either \verb+myfloats+ or \verb+values+ is not NULL, it
     fills the constant terms in \verb+inOut+ with elements in
-    \verb+myfloats+ or \verb+values+.  This function uses the global
-    variable \verb+_number_of_jet_vars_+, \verb+_number_of_symbols_+
-    and \verb+_size_of_jet_variable_+.  Please note, this function
-    only fills the first \verb+_number_of_symbols_+ or
-    \verb+_number_of_jet_vars+ rows of \verb+inOut+, whichever is
+    \verb+myfloats+ or \verb+values+.  This function uses the symbolic
+    constants \verb+_NUMBER_OF_JET_VARS_+, \verb+_NUMBER_OF_MAX_SYMBOLS_+
+    and \verb+_NUMBER_OF_JET_VARS_+.  Please note, this function
+    only fills the first \verb+_NUMBER_OF_MAX_SYMBOLS_+ or
+    \verb+_NUMBER_OF_JET_VARS_+ rows of \verb+inOut+, whichever is
     smaller. The constant terms are filled in full, if provided.}
     
 \item{\verb+int taylor_make_unit_jet(MY_JET a, int idx, MY_FLOAT *myfloat, double *value)+\\
@@ -1793,7 +1803,7 @@ and save the following code to \mainfile{}.
     	     char **var_names = taylor_get_variable_names();
     	     // here we print all monomial coefficients	   	     
     	     fprintf(stdout, "%s: ", var_names[i]);
-    	     for(j = 0; j < _SIZE_OF_JET_VAR_; j++) {
+    	     for(j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {
     #ifdef _USE_MPFR_	 	       
     	       fprintf(stdout, "%12.8f ", mpfr_get_d(MY_JET_DATA(jetIn[i],j),GMP_RNDN));
     #else
@@ -2126,8 +2136,7 @@ i}\right)(\sin p)_{i-1-r} (p)_{r+1}\cr
   methods. {\it Exp. Math.}, 14(1):99–117, 2005.
 \bibitem{GJJMZ} J. Gimeno, \`A. Jorba, M. Jorba-Cusc\'o, N. Miguel,
   and M. Zou. Numerical integration of high-order variational
-  equations of odes. Revisions requested, 2022.
+  equations of odes. Revisions submitted, 2022.
 % \bibitem{GJZ} J. Gimeno, \`A. Jorba, and M. Zou. A software package for the numerical integration of ODE by means of high-order Taylor methods using jet transport. Work in progress, 2022.
 \end{thebibliography}
-
 \end{document}

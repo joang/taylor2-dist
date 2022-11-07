@@ -263,7 +263,8 @@ void genMyJetHeader(void) {
   } else {
     fprintf(outfile, "#define MY_JET_DATA(x,i) ((x)[i])\n");        
   }
-
+  //
+  
   print_and_subs(words, my_jet_preheaders[index_my_jet_header]);
 
   print_and_subs(words, my_jet_headers[index_my_jet_header]);
@@ -276,8 +277,27 @@ void genMyJetCode(void) {
   if (outfile == NULL) return;
 
 //  print_and_subs(words, my_float_api_macros);
+  
+  // 221104
+  extern int num_monomials(int, int);
+  int i, k; 
+  fprintf(outfile,"static int _monomial_counts_[]  =      {1");
+  for(i=1; i<= deg_jet_vars; i++) {
+    k=num_monomials(num_symbols, i);
+    fprintf(outfile, ",%d", k);
+  }
+  fprintf(outfile, "};\n");
+  fprintf(outfile,"static int _monomial_offsets_[] =      {0");
+  k=0;
+  for(i=0;i<= deg_jet_vars; i++) {
+    k+= num_monomials(num_symbols, i);    
+    fprintf(outfile, ",%d", k);
+  }  
+  fprintf(outfile, "};\n");
+  // 221104
+  
   print_and_subs(words, my_jet_precodes[index_my_jet_code]);
-
+  
   if (index_my_jet_code == CODE_JET_TREE)
     {
       print_jet_tree_num_coef_homog_table(num_symbols, deg_jet_vars);

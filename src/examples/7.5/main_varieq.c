@@ -16,7 +16,7 @@
 
 int main(void)
 {
-  int i, order, direction=+1, step_cntrl=2;
+  int i, direction=+1, step_cntrl=2;
   double log10abs=-DIGITS_PRECISION, log10rel=-DIGITS_PRECISION;
   MY_FLOAT startT, nextT, stopT, x[N];
   MY_JET xjet[NJ];
@@ -42,7 +42,7 @@ int main(void)
   MakeMyFloatC(stopT,"1",1);
   while (taylor_step_lorenz3_eq(&startT, x, direction,
 				step_cntrl, log10abs, log10rel,
-				&stopT, &nextT, &order, xjet) != 1) {}
+				&stopT, &nextT, NULL, xjet) != 1) {}
 
   for (i = 0; i < NJ; i++) {
     printf("x%d=\n",i);

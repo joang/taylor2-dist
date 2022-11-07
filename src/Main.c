@@ -505,7 +505,7 @@ void genSampleHeader(void)
   int njets =num_jet_vars;
   int djets =deg_jet_vars;
   
-  int i,n,jsize=1;
+  int i,jsize=1;
 
   fprintf(outfile, "#ifdef __cplusplus\nextern \"C\"\n{\n#endif\n");
   
@@ -518,20 +518,20 @@ void genSampleHeader(void)
   fprintf(outfile,"#define _NUMBER_OF_STATE_VARS_         %d\n", neqns - nonautonomous);  
   fprintf(outfile,"#define _NUMBER_OF_JET_VARS_           %d\n", njets);
   // 20220608+
-  fprintf(outfile,"#define _NUMBER_OF_SYMBOLS_            %d\n", num_symbols);
+  fprintf(outfile,"#define _NUMBER_OF_MAX_SYMBOLS_        %d\n", num_symbols);
   
-  fprintf(outfile,"#define _DEGREE_OF_JET_VARS_           %d\n", djets);
+  fprintf(outfile,"#define _MAX_DEGREE_OF_JET_VARS_       %d\n", djets);
   
   // 20220608r
   //fprintf(outfile,"#define _JET_COEFFICIENTS_COUNT_TOTAL_ %d\n",coefficients_count(njets,djets));
   fprintf(outfile,"#define _JET_COEFFICIENTS_COUNT_TOTAL_ %d\n",coefficients_count(num_symbols,djets));
   
-  fprintf(outfile,"static int _number_of_jet_vars_ =      %d;\n", njets);
+//   fprintf(outfile,"static int _number_of_jet_vars_ =      %d;\n", njets);
   // 20220608+
-  fprintf(outfile,"static int _number_of_symbols_  =      %d;\n", num_symbols);
+//   fprintf(outfile,"static int _number_of_symbols_  =      %d;\n", num_symbols);
   
-  fprintf(outfile,"static int _degree_of_jet_vars_ =      %d;\n", djets);
-  fprintf(outfile,"static int _monomial_counts_[]  =      {1");
+//   fprintf(outfile,"static int _degree_of_jet_vars_ =      %d;\n", djets);
+/*  fprintf(outfile,"static int _monomial_counts_[]  =      {1");
   for(i=1; i<= djets; i++) {
     int k=num_monomials(num_symbols, i);
     jsize +=k;
@@ -546,10 +546,11 @@ void genSampleHeader(void)
     n += num_monomials(num_symbols, i);    
     fprintf(outfile, ",%d", n);
   }
-  fprintf(outfile, "};\n");
-  fprintf(outfile, "static int _size_of_jet_variable_ =    %d;\n", jsize);
+  fprintf(outfile, "};\n");*/
+//   fprintf(outfile, "static int _size_of_jet_variable_ =    %d;\n", jsize);
 
-  fprintf(outfile,"#define _SIZE_OF_JET_VAR_              %d\n", jsize);    
+  for(i=1; i<= djets; i++) jsize+=num_monomials(num_symbols, i);
+  fprintf(outfile,"#define _MAX_SIZE_OF_JET_VAR_          %d\n", jsize);    
   fprintf(outfile,"#endif\n\n");
 
 
@@ -565,34 +566,34 @@ void genSampleHeader(void)
     } else if (qd2) { /* use double double */
       fprintf(outfile,"typedef dd_real MY_FLOAT;\n");      
     }
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");          
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");          
     fprintf(outfile, "%s\n",qd_header);
 
     fprintf(outfile, "#endif\n");    
 //    fprintf(outfile, "%s\n",qd_header_JET);
 //    jetHeader = strlen(qd_header_JET);
   } else if (mpfr) {
-    fprintf(outfile,"#include<math.h>\n");      
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");              
-    fprintf(outfile,"#include<mpfr.h>\n");      
+    fprintf(outfile,"#include <math.h>\n");      
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
+    fprintf(outfile,"#include <mpfr.h>\n");      
     fprintf(outfile, "%s\n", mpfr_header);
 
     fprintf(outfile, "#endif\n");        
 //    fprintf(outfile, "%s\n", mpfr_header_JET);
 //    jetHeader = strlen(mpfr_header_JET);
   } else if (gmp) {
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");              
-    fprintf(outfile,"#include<gmp.h>\n");      
-    fprintf(outfile,"#include<math.h>\n");      
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
+    fprintf(outfile,"#include <gmp.h>\n");      
+    fprintf(outfile,"#include <math.h>\n");      
     fprintf(outfile, "%s\n",gmp_header);
 
     fprintf(outfile, "#endif\n");    
@@ -600,31 +601,31 @@ void genSampleHeader(void)
 //    jetHeader = strlen(gmp_header_JET);
   } else if (ldouble) {
     fprintf(outfile,"typedef long double MY_FLOAT;\n\n");
-    fprintf(outfile,"#include<math.h>\n");      
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");              
+    fprintf(outfile,"#include <math.h>\n");      
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile, "%s\n",longdouble_header);
     fprintf(outfile, "#endif\n");    
   } else if (float128) {
-    fprintf(outfile,"#include<math.h>\n");      
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");
-    fprintf(outfile,"#include<quadmath.h>\n");
+    fprintf(outfile,"#include <math.h>\n");      
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");
+    fprintf(outfile,"#include <quadmath.h>\n");
     fprintf(outfile,"typedef __float128 MY_FLOAT;\n\n");        
     fprintf(outfile, "%s\n",_float128_header);
     fprintf(outfile, "#endif\n");    
   } else if (complexx) {
-    fprintf(outfile,"#include<complex.h>\n");      
+    fprintf(outfile,"#include <complex.h>\n");      
     fprintf(outfile,"typedef double complex MY_FLOAT;\n\n");
-    fprintf(outfile,"#include<math.h>\n");      
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");              
+    fprintf(outfile,"#include <math.h>\n");      
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile, "%s\n",complex_header);
 
     fprintf(outfile, "#endif\n");    
@@ -632,11 +633,11 @@ void genSampleHeader(void)
 //    jetHeader = strlen(sample_header_JET_long_double);
   } else {
     fprintf(outfile,"typedef double MY_FLOAT;\n\n");
-    fprintf(outfile,"#include<math.h>\n");      
-    fprintf(outfile,"#include<stdio.h>\n");  
-    fprintf(outfile,"#include<stdlib.h>\n");  
-    fprintf(outfile,"#include<string.h>\n");
-    fprintf(outfile,"#include<ctype.h>\n");              
+    fprintf(outfile,"#include <math.h>\n");      
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile, "%s\n",sample_header);
     fprintf(outfile, "#endif\n");
     
@@ -741,7 +742,7 @@ void genJetHelpers(int add_header_h) {
 
 int num_monomials(int nvars0, int deg0) {
   long int nvars, deg;
-  nvars = (long int)nvars0;
+  nvars = (long int) nvars0;
   deg = (long int) deg0;
   long int t=nvars+deg-1, d=0, n=1,  k = nvars - 1, c;
   c = (deg > k)? k : deg;

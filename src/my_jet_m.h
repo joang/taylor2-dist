@@ -49,7 +49,10 @@
 /* *******  *************  ******* */
 #define MY_JET_m_PRECODE(PREFIX_JET_m,PREFIX_SCAL,I) "\
 " MY_SCAL_MACROS(PREFIX_SCAL) "\n\
-/* CODE FOR " PREFIX_JET_m(t) " */\n"\
+/* CODE FOR " PREFIX_JET_m(t) " */\n\
+int * " PREFIX_JET_m(monomial_counts) "(void) {return _monomial_counts_;}\n\
+int * " PREFIX_JET_m(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+\n"\
 
 #define MY_JET_m_CODE(PREFIX_JET_m,PREFIX_SCAL,I) "\
 #include <stdlib.h>\n\
@@ -60,18 +63,18 @@
 #define _NUMBER_OF_JET_VARS_ 0\n\
 #endif\n\
 #define my_scal_tmp " PREFIX_JET_m(tmp) "\n\
+static int flag_init_jet_library=0;\n\
 static " I " num_symbs=_NUMBER_OF_JET_VARS_;\n\
-static " I " nm_working_degree=_DEGREE_OF_JET_VARS_;\n\
-static " I " nm_working_jetvar_size=_SIZE_OF_JET_VAR_;\n\
+static " I " nm_working_degree=_MAX_DEGREE_OF_JET_VARS_;\n\
+static " I " nm_working_jetvar_size=_MAX_SIZE_OF_JET_VAR_;\n\
 static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 #pragma omp threadprivate(my_scal_tmp)\n\
 \n \
   void " PREFIX_JET_m(initup) "(" I " nsymbs, " I " deg)\n\
 {\n\
-static int inited=0;\n\
-if(inited) return;\n\
+\tif (flag_init_jet_library==1) return;\n\
 \t" PREFIX_SCAL(init) "(my_scal_tmp);\n\
-inited=1;\n\
+\tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
   I " " PREFIX_JET_m(set_num_symbs) "(" I " nsymbs)\n\
@@ -83,23 +86,24 @@ inited=1;\n\
   I " " PREFIX_JET_m(set_deg) "(" I " deg)\n\
 {\n\
 \t" I " tdg;\n\
-\tif(deg > _DEGREE_OF_JET_VARS_ || deg <= 0) {\n\
-\t\tfprintf(stderr, \"%d: Invalid degree %d. Must be between 1 and %d.\\n\",__LINE__,deg, _DEGREE_OF_JET_VARS_);\n\
+\tif(deg > _MAX_DEGREE_OF_JET_VARS_ || deg <= 0) {\n\
+\t\tfprintf(stderr, \"%d: Invalid degree %d. Must be between 1 and %d.\\n\",__LINE__,deg, _MAX_DEGREE_OF_JET_VARS_);\n\
 \t\texit(1);\n\
 \t}\n\
 \ttdg=nm_working_degree;\n\
 \tnm_working_degree=deg;\n\
 \tnm_working_jetvar_size= _monomial_offsets_[deg+1];\n\
-\t_size_of_jet_variable_=nm_working_jetvar_size;\n\
+\t//_size_of_jet_variable_=nm_working_jetvar_size;\n\
 \treturn tdg;\n\
 }\n" \
   "\n" \
   "\n" \
   "void " PREFIX_JET_m(cleanup) "(void)\n\
 {\n\
-\tif ( num_symbs == 0) return;\n\
+\tif (flag_init_jet_library==0) return;\n\
 \t" PREFIX_SCAL(clean) "(my_scal_tmp);\n\
 \tnum_symbs = 0;\n\
+\tflag_init_jet_library=0;\n\
 }\n" \
   "\n" \
   "\n" \
@@ -135,10 +139,10 @@ void " PREFIX_JET_m(nm_jet_polynomial_eval) "(" PREFIX_JET_m(t) " t, " PREFIX_SC
 \n\
 size_t " PREFIX_JET_m(init) "(" PREFIX_JET_m(ptr) " t) {\n\
   int i;\n\
-  " PREFIX_JET_m(t) " a=(" PREFIX_JET_m(t) ")malloc( _SIZE_OF_JET_VAR_ * sizeof(" PREFIX_SCAL(t) ") );\n\
-  memset( (char *)a,0, _SIZE_OF_JET_VAR_ * sizeof(" PREFIX_SCAL(t) "));\n\
+  " PREFIX_JET_m(t) " a=(" PREFIX_JET_m(t) ")malloc( _MAX_SIZE_OF_JET_VAR_ * sizeof(" PREFIX_SCAL(t) ") );\n\
+  memset( (char *)a,0, _MAX_SIZE_OF_JET_VAR_ * sizeof(" PREFIX_SCAL(t) "));\n\
   *t = a;\n\
-  for(i=0;i<_SIZE_OF_JET_VAR_;i++){  \n\
+  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){  \n\
     " PREFIX_SCAL(init) "(a[i]);\n\
     " PREFIX_SCAL(set_d) "(a[i],0.0);\n\
   }\n\
@@ -346,7 +350,7 @@ void " PREFIX_JET_m(nm_jet_polynomial_eval) "(" PREFIX_JET_m(t) " jet_out, " PRE
     initialized=1;\n\
   }\n\
   \n\
-  d = _DEGREE_OF_JET_VARS_;\n\
+  d = _MAX_DEGREE_OF_JET_VARS_;\n\
   \n\
   " PREFIX_JET_m(scal_mul2) "(tmp1, coefs[d],jet);\n\
   n = d-1;\n\
@@ -367,7 +371,7 @@ void " PREFIX_JET_m(nm_jet_polynomial_eval) "(" PREFIX_JET_m(t) " jet_out, " PRE
 //\n\
 void " PREFIX_JET_m(scal_div2)  "(" PREFIX_JET_m(t) " t, " PREFIX_SCAL(t) " a, " PREFIX_JET_m(t) " b) {\n\
   static " PREFIX_JET_m(t) " tmp1, tmp2;\n\
-  static " PREFIX_SCAL(t) " coefs[_DEGREE_OF_JET_VARS_+1];  \n\
+  static " PREFIX_SCAL(t) " coefs[_MAX_DEGREE_OF_JET_VARS_+1];  \n\
   static int initialized = 0;\n\
   static " PREFIX_SCAL(t) " b0, temp;\n\
   int i;\n\
@@ -377,7 +381,7 @@ void " PREFIX_JET_m(scal_div2)  "(" PREFIX_JET_m(t) " t, " PREFIX_SCAL(t) " a, "
     " PREFIX_SCAL(init) "(temp);\n\
     " PREFIX_JET_m(init) "(&tmp1);\n\
     " PREFIX_JET_m(init) "(&tmp2);\n\
-    for(i = 0; i < _DEGREE_OF_JET_VARS_+1; i++) {\n\
+    for(i = 0; i < _MAX_DEGREE_OF_JET_VARS_+1; i++) {\n\
       " PREFIX_SCAL(init) "(coefs[i]);      \n\
       " PREFIX_SCAL(set_d) "(coefs[i], 1.0);\n\
     }\n\
@@ -400,7 +404,7 @@ void " PREFIX_JET_m(scal_div2)  "(" PREFIX_JET_m(t) " t, " PREFIX_SCAL(t) " a, "
 // just a copy of the above\n\
 void " PREFIX_JET_m(d_div2)  "(" PREFIX_JET_m(t) " t, double a, " PREFIX_JET_m(t) " b) {\n\
   static " PREFIX_JET_m(t) " tmp1, tmp2;\n\
-  static " PREFIX_SCAL(t) " coefs[_DEGREE_OF_JET_VARS_+1];  \n\
+  static " PREFIX_SCAL(t) " coefs[_MAX_DEGREE_OF_JET_VARS_+1];  \n\
   static int initialized = 0;\n\
   static " PREFIX_SCAL(t) " b0, temp, fa;\n\
   int i;\n\
@@ -411,7 +415,7 @@ void " PREFIX_JET_m(d_div2)  "(" PREFIX_JET_m(t) " t, double a, " PREFIX_JET_m(t
     " PREFIX_SCAL(init) "(fa);        \n\
     " PREFIX_JET_m(init) "(&tmp1);\n\
     " PREFIX_JET_m(init) "(&tmp2);\n\
-    for(i = 0; i < _DEGREE_OF_JET_VARS_+1; i++) {\n\
+    for(i = 0; i < _MAX_DEGREE_OF_JET_VARS_+1; i++) {\n\
       " PREFIX_SCAL(init) "(coefs[i]);            \n\
       " PREFIX_SCAL(set_d) "(coefs[i], 1.0);\n\
     }\n\
@@ -460,7 +464,7 @@ void " PREFIX_JET_m(div2) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " a," PREFIX
 void " PREFIX_JET_m(set_exp) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n\
   static " PREFIX_JET_m(t) " t0, t1;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " tmp, b0, _c, zero, one, coefs[_DEGREE_OF_JET_VARS_+1];\n\
+  static " PREFIX_SCAL(t) " tmp, b0, _c, zero, one, coefs[_MAX_DEGREE_OF_JET_VARS_+1];\n\
 #pragma omp threadprivate(t0, t1, b0, tmp, _c, zero, one, initialized, coefs)\n\
   int i;  \n\
   if(!initialized) {\n\
@@ -473,7 +477,7 @@ void " PREFIX_JET_m(set_exp) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n\
     " PREFIX_JET_m(init) "(&t1);\n\
     " PREFIX_SCAL(set_d) "(zero, 0.0);\n\
     " PREFIX_SCAL(set_d) "(one, 1.0);            \n\
-    for(i=0; i<=_DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i=0; i<=_MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(coefs[i]);\n\
       if(i == 0 || i == 1) {\n\
 	" PREFIX_SCAL(set_d) "(coefs[i], 1.0);    \n\
@@ -505,8 +509,8 @@ void " PREFIX_JET_m(set_sin) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
   static " PREFIX_JET_m(t) " tmp1, tmp2, tmp3;\n\
   static int initialized = 0;\n\
   static " PREFIX_SCAL(t) " b0, _c, _s, smp, smp1, one, zero ;\n\
-  static " PREFIX_SCAL(t) " odds[_DEGREE_OF_JET_VARS_+1], evens[_DEGREE_OF_JET_VARS_+1];  \n\
-#pragma omp threadprivate(tmp1, tmp2, tmp3, one, zero,b0, _c, _s,smp, smp1,initialized,odds[_DEGREE_OF_JET_VARS_+1], evens[_DEGREE_OF_JET_VARS_+1])\n\
+  static " PREFIX_SCAL(t) " odds[_MAX_DEGREE_OF_JET_VARS_+1], evens[_MAX_DEGREE_OF_JET_VARS_+1];  \n\
+#pragma omp threadprivate(tmp1, tmp2, tmp3, one, zero,b0, _c, _s,smp, smp1,initialized,odds[_MAX_DEGREE_OF_JET_VARS_+1], evens[_MAX_DEGREE_OF_JET_VARS_+1])\n\
   int i, esign, osign;\n\
   if(!initialized) {\n\
     esign = -1; osign= 1;    \n\
@@ -520,7 +524,7 @@ void " PREFIX_JET_m(set_sin) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
     " PREFIX_JET_m(init) "(&tmp1);\n\
     " PREFIX_JET_m(init) "(&tmp2);\n\
     " PREFIX_JET_m(init) "(&tmp3);\n\
-    for(i =0; i<= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i =0; i<= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(odds[i]);\n\
       " PREFIX_SCAL(init) "(evens[i]);\n\
     }\n\
@@ -529,7 +533,7 @@ void " PREFIX_JET_m(set_sin) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
     " PREFIX_SCAL(set) "(odds[0], zero);\n\
     " PREFIX_SCAL(set) "(evens[0], one);    \n\
     " PREFIX_SCAL(set) "(smp, one);\n\
-    for(i = 1; i <= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i = 1; i <= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(set_d) "(smp1, i);\n\
       " PREFIX_SCAL(div2) "(smp, smp, smp1) ;\n\
       if( i & 1) {\n\
@@ -579,8 +583,8 @@ void " PREFIX_JET_m(set_cos) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
   static " PREFIX_JET_m(t) " tmp1, tmp2, tmp3;\n\
   static int initialized = 0;\n\
   static " PREFIX_SCAL(t) " b0, _c, _s, smp, smp1, one, zero ;\n\
-  static " PREFIX_SCAL(t) " odds[_DEGREE_OF_JET_VARS_+1], evens[_DEGREE_OF_JET_VARS_+1];  \n\
-#pragma omp threadprivate(tmp1, tmp2, tmp3, one, zero,b0, _c, _s, smp, smp1,initialized,odds[_DEGREE_OF_JET_VARS_+1], evens[_DEGREE_OF_JET_VARS_+1])\n\
+  static " PREFIX_SCAL(t) " odds[_MAX_DEGREE_OF_JET_VARS_+1], evens[_MAX_DEGREE_OF_JET_VARS_+1];  \n\
+#pragma omp threadprivate(tmp1, tmp2, tmp3, one, zero,b0, _c, _s, smp, smp1,initialized,odds[_MAX_DEGREE_OF_JET_VARS_+1], evens[_MAX_DEGREE_OF_JET_VARS_+1])\n\
   int i, esign,osign;\n\
   if(!initialized) {\n\
     esign=-1; osign = 1;\n\
@@ -594,7 +598,7 @@ void " PREFIX_JET_m(set_cos) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
     " PREFIX_JET_m(init) "(&tmp1);\n\
     " PREFIX_JET_m(init) "(&tmp2);\n\
     " PREFIX_JET_m(init) "(&tmp3);\n\
-    for(i =0; i<= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i =0; i<= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(odds[i]); " PREFIX_SCAL(init) "(evens[i]);\n\
     }\n\
     " PREFIX_SCAL(set_d) "(zero, 0.0);    \n\
@@ -602,7 +606,7 @@ void " PREFIX_JET_m(set_cos) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
     " PREFIX_SCAL(set) "(odds[0], zero);\n\
     " PREFIX_SCAL(set) "(evens[0], one);    \n\
     " PREFIX_SCAL(set) "(smp, one);\n\
-    for(i = 1; i <= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i = 1; i <= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(set_d) "(smp1, i);\n\
       " PREFIX_SCAL(div2) "(smp, smp, smp1) ;\n\
 \n\
@@ -651,8 +655,8 @@ void " PREFIX_JET_m(set_tan) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
   static " PREFIX_JET_m(t) " tmp1, tmp2, tmp3, tmp4, tmp5, tmp6;\n\
   static int initialized = 0;\n\
   static " PREFIX_SCAL(t) " b0, _c, _s, smp, smp1, one, zero ;\n\
-  static " PREFIX_SCAL(t) " odds[_DEGREE_OF_JET_VARS_+1], evens[_DEGREE_OF_JET_VARS_+1];  \n\
-#pragma omp threadprivate(tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, one, zero,b0, _c, _s,smp, smp1,initialized,odds[_DEGREE_OF_JET_VARS_+1], evens[_DEGREE_OF_JET_VARS_+1])\n\
+  static " PREFIX_SCAL(t) " odds[_MAX_DEGREE_OF_JET_VARS_+1], evens[_MAX_DEGREE_OF_JET_VARS_+1];  \n\
+#pragma omp threadprivate(tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, one, zero,b0, _c, _s,smp, smp1,initialized,odds[_MAX_DEGREE_OF_JET_VARS_+1], evens[_MAX_DEGREE_OF_JET_VARS_+1])\n\
   int i, osign, esign;\n\
   if(!initialized) {\n\
     esign=-1; osign = 1;          \n\
@@ -669,7 +673,7 @@ void " PREFIX_JET_m(set_tan) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
     " PREFIX_JET_m(init) "(&tmp4);\n\
     " PREFIX_JET_m(init) "(&tmp5);\n\
     " PREFIX_JET_m(init) "(&tmp6);\n\
-    for(i =0; i<= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i =0; i<= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(odds[i]);\n\
       " PREFIX_SCAL(init) "(evens[i]);\n\
     }\n\
@@ -678,7 +682,7 @@ void " PREFIX_JET_m(set_tan) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
     " PREFIX_SCAL(set) "(odds[0], zero);\n\
     " PREFIX_SCAL(set) "(evens[0], one);    \n\
     " PREFIX_SCAL(set) "(smp, one);\n\
-    for(i = 1; i <= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i = 1; i <= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(set_d) "(smp1, i);\n\
       " PREFIX_SCAL(div2) "(smp, smp, smp1) ;\n\
       if( i & 1) {\n\
@@ -734,7 +738,7 @@ void " PREFIX_JET_m(set_tan) "(" PREFIX_JET_m(t) " out," PREFIX_JET_m(t) " b) {\
 void " PREFIX_JET_m(set_log) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n\
   static " PREFIX_JET_m(t) " t0;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " tmp, one, b0, lna,  coefs[_DEGREE_OF_JET_VARS_+1];\n\
+  static " PREFIX_SCAL(t) " tmp, one, b0, lna,  coefs[_MAX_DEGREE_OF_JET_VARS_+1];\n\
 #pragma omp threadprivate(t0, tmp,b0, lna, coefs, initialized)\n\
   int i,sign=1;  \n\
   if(!initialized) {\n\
@@ -746,7 +750,7 @@ void " PREFIX_JET_m(set_log) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n\
     " PREFIX_JET_m(init) "(&t0);\n\
     " PREFIX_SCAL(set_d) "(one,1.0);\n\
     \n\
-    for(i =0; i <= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i =0; i <= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(coefs[i]);\n\
       if(i==0) {\n\
 	" PREFIX_SCAL(set_d) "(coefs[i], 0);	\n\
@@ -782,7 +786,7 @@ void " PREFIX_JET_m(set_log) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n\
 void " PREFIX_JET_m(set_pow_scal) "(" PREFIX_JET_m(t) " t, " PREFIX_JET_m(t) " b, " PREFIX_SCAL(t) " e) {\n\
   static " PREFIX_JET_m(t) " tmp1, tmp2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, s1, smp1,smp2,one,zero, coefs[_DEGREE_OF_JET_VARS_+1];\n\
+  static " PREFIX_SCAL(t) " b0, s1, smp1,smp2,one,zero, coefs[_MAX_DEGREE_OF_JET_VARS_+1];\n\
 #pragma omp threadprivate(tmp1, tmp2, b0, s1, smp1,smp2,one,zero, initialized)\n\
   if(!initialized) {\n\
     int i;\n\
@@ -798,7 +802,7 @@ void " PREFIX_JET_m(set_pow_scal) "(" PREFIX_JET_m(t) " t, " PREFIX_JET_m(t) " b
     " PREFIX_JET_m(init) "(&tmp2);\n\
     " PREFIX_SCAL(init) "(coefs[0]);    \n\
     " PREFIX_SCAL(set_d) "(coefs[0], 1.0);\n\
-    for(i =1; i <= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i =1; i <= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(coefs[i]);          \n\
       " PREFIX_SCAL(set_d) "(smp1, i);\n\
       " PREFIX_SCAL(div2) "(coefs[i], coefs[i-1], smp1);\n\
@@ -852,7 +856,7 @@ void " PREFIX_JET_m(set_sqrt) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " a) {\n
 void "  PREFIX_JET_m(set_atan) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n\
   static " PREFIX_JET_m(t) " t0, t1, t2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " tmp, b0, b02, b02p1, one, zero ,coefs[_DEGREE_OF_JET_VARS_+1];;\n\
+  static " PREFIX_SCAL(t) " tmp, b0, b02, b02p1, one, zero ,coefs[_MAX_DEGREE_OF_JET_VARS_+1];;\n\
 #pragma omp threadprivate(t0, t1, t2, tmp, b0, b02, b02p1, one, zero, coefs,initialized)\n\
   int i;\n\
   if(!initialized) {\n\
@@ -867,7 +871,7 @@ void "  PREFIX_JET_m(set_atan) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\
     " PREFIX_JET_m(init) "(&t2);\n\
     " PREFIX_SCAL(set_d) "(one, 1.0);\n\
     " PREFIX_SCAL(set_d) "(zero, 0);    \n\
-    for(i =0; i <= _DEGREE_OF_JET_VARS_; i++) {\n\
+    for(i =0; i <= _MAX_DEGREE_OF_JET_VARS_; i++) {\n\
       " PREFIX_SCAL(init) "(coefs[i]);\n\
       if(i&1) {\n\
 	if((i+1)%4 == 0) {\n\

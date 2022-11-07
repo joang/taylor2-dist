@@ -1,5 +1,5 @@
 static char *JetVarIOHelpers =
-"#if _SIZE_OF_JET_VAR_ > 1\n\
+"#if _MAX_SIZE_OF_JET_VAR_ > 1\n\
 \n\
 #include <stdio.h>\n\
 #include <ctype.h>\n\
@@ -58,12 +58,12 @@ static int taylor_gen_jetvar_prompt(int i, char *buf) {\n\
 \n\
 int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values) {\n\
   int i;\n\
-  MY_FLOAT *dtmp = (MY_FLOAT *)malloc((_size_of_jet_variable_) * sizeof(MY_FLOAT));\n\
+  MY_FLOAT *dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
   if(dtmp == NULL) {\n\
-    fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_size_of_jet_variable_) * sizeof(MY_FLOAT)));\n\
+    fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
     exit(9);\n\
   }  \n\
-  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     InitMyFloat(dtmp[i]);\n\
     if(myfloats != NULL) {\n\
       AssignMyFloat( dtmp[i],myfloats[i]);\n\
@@ -75,7 +75,7 @@ int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values) {\n\
   // make sure our assigment macro/function are using the matching\n\
   // order\n\
   AssignFloatArrayToJet(a,dtmp);\n\
-  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     ClearMyFloat(dtmp[i]);\n\
   }\n\
   (void)free(dtmp);\n\
@@ -90,10 +90,10 @@ int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values) {\n\
 int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values) {\n\
   int i,j, k;\n\
 \n\
-  k = _number_of_jet_vars_ > _number_of_symbols_ ? _number_of_symbols_  : _number_of_jet_vars_;\n\
+  k = _NUMBER_OF_JET_VARS_ > _NUMBER_OF_MAX_SYMBOLS_ ? _NUMBER_OF_MAX_SYMBOLS_  : _NUMBER_OF_JET_VARS_;\n\
   \n\
   for(i = 0; i < k ; i++) {\n\
-    for(j = 0; j < _size_of_jet_variable_; j++) {\n\
+    for(j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
       if(j == 0 ) {\n\
 	if(myfloats != NULL) {\n\
 	  AssignMyFloat( MY_JET_DATA((inOut[i]),0),myfloats[i]);    	\n\
@@ -110,7 +110,7 @@ int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values)
     }\n\
   }\n\
   for(i = k; i < _NUMBER_OF_STATE_VARS_; i++) {\n\
-    for(j = 0; j < _size_of_jet_variable_; j++) {\n\
+    for(j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
       if(j == 0 ) {\n\
 	if(myfloats != NULL) {\n\
 	  AssignMyFloat( MY_JET_DATA((inOut[i]),0),myfloats[i]);    	\n\
@@ -131,7 +131,7 @@ int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values)
  *   idx is 0 based, s0, s1, s2 etc. \n\
  */\n\
 int taylor_make_unit_jet(MY_JET a, int idx, MY_FLOAT *myfloat, double *value) {\n\
-  for(int j = 0; j < _size_of_jet_variable_; j++) {\n\
+  for(int j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
     if(j == 0) {\n\
       if(myfloat != NULL) {\n\
 	AssignMyFloat( MY_JET_DATA((a),0),*myfloat);    		\n\
@@ -159,7 +159,7 @@ int taylor_set_jet(MY_JET a, MY_FLOAT *myfloats, double *values, int include_sta
   if(include_state) offset = 0;\n\
   else {MakeMyFloatA( MY_JET_DATA((a),0),0.0);}\n\
   \n\
-  for(j = offset; j < _size_of_jet_variable_; j++) {\n\
+  for(j = offset; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
     if(myfloats != NULL) {\n\
       AssignMyFloat( MY_JET_DATA((a),j),myfloats[j-offset]);\n\
     } else if(values != NULL) {\n\
@@ -181,17 +181,17 @@ MY_FLOAT *taylor_convert_jet_to_array(MY_JET a, int include_state) {\n\
 #pragma omp threadprivate(dtmp)\n\
 \n\
   if(dtmp == NULL) {\n\
-    dtmp = (MY_FLOAT *)malloc((_size_of_jet_variable_) * sizeof(MY_FLOAT));\n\
+    dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
     if(dtmp == NULL) {\n\
-      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_size_of_jet_variable_) * sizeof(MY_FLOAT)));\n\
+      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
       exit(9);\n\
     }  \n\
-    for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+    for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
       InitMyFloat(dtmp[i]);\n\
       MakeMyFloatA(dtmp[i], 0.0);\n\
     }\n\
   }\n\
-  for(i = offset; i < _size_of_jet_variable_; i++) {\n\
+  for(i = offset; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     AssignMyFloat(dtmp[i-offset],  MY_JET_DATA((a),i));    \n\
   }\n\
   return dtmp;\n\
@@ -215,12 +215,12 @@ int taylor_input_jet_from_stdin(MY_JET a, int idx) {\n\
   char buf[2048];\n\
   int i, count, nbytes;\n\
 \n\
-  MY_FLOAT *dtmp = (MY_FLOAT *)malloc((_size_of_jet_variable_) * sizeof(MY_FLOAT));\n\
+  MY_FLOAT *dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
   if(dtmp == NULL) {\n\
-    fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_size_of_jet_variable_) * sizeof(MY_FLOAT)));\n\
+    fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
     exit(9);\n\
   }  \n\
-  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     InitMyFloat(dtmp[i]);\n\
   }\n\
   \n\
@@ -229,7 +229,7 @@ int taylor_input_jet_from_stdin(MY_JET a, int idx) {\n\
 \n\
   fprintf(stderr, \"Enter values for JET Var %s: %s \\n\", ode_variable_names[idx], buf);\n\
   buf[0] =0;\n\
-  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     char *q = get_next_number_stdin(buf);\n\
     double f = atof(q);\n\
     MakeMyFloatC(dtmp[i], buf, f);    \n\
@@ -237,7 +237,7 @@ int taylor_input_jet_from_stdin(MY_JET a, int idx) {\n\
   \n\
   taylor_make_jet(a,dtmp, NULL);\n\
   \n\
-  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     ClearMyFloat(dtmp[i]);\n\
   }  \n\
   (void) free(dtmp);\n\
@@ -251,17 +251,17 @@ int taylor_input_jet_from_string(MY_JET a, const char *str) {\n\
 #pragma omp threadprivate(buf,dtmp)\n\
   int i, j=0;\n\
   if(dtmp == NULL) {\n\
-    dtmp = (MY_FLOAT *)malloc((_size_of_jet_variable_) * sizeof(MY_FLOAT));\n\
+    dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
     if(dtmp == NULL) {\n\
-      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_size_of_jet_variable_) * sizeof(MY_FLOAT)));\n\
+      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
       exit(9);\n\
     }  \n\
-    for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+    for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
       InitMyFloat(dtmp[i]);\n\
       MakeMyFloatA(dtmp[i], 0.0);\n\
     }\n\
   }\n\
-  for(i=0; i< _size_of_jet_variable_; i++) {\n\
+  for(i=0; i< _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     get_next_number(str, &j, buf);\n\
     double f=atof(buf);\n\
     MakeMyFloatC(dtmp[i], buf, f);\n\
@@ -277,23 +277,23 @@ int taylor_output_jet(FILE *file, char *fmt, MY_JET a) {\n\
 #pragma omp threadprivate(dtmp)\n\
 \n\
   if(dtmp == NULL) {\n\
-    dtmp = (MY_FLOAT *)malloc((_size_of_jet_variable_) * sizeof(MY_FLOAT));\n\
+    dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
     if(dtmp == NULL) {\n\
-      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_size_of_jet_variable_) * sizeof(MY_FLOAT)));\n\
+      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
       exit(9);\n\
     }  \n\
-    for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+    for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
       InitMyFloat(dtmp[i]);\n\
       MakeMyFloatA(dtmp[i], 0.0);\n\
     }\n\
   }\n\
-  //  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  //  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
   //    MakeMyFloatA(dtmp[i], 0.0);    \n\
   //  }\n\
 \n\
   AssignJetToFloatArray(dtmp,a);  \n\
   \n\
-  for(i = 0; i < _size_of_jet_variable_; i++) {\n\
+  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
     OutputMyFloat3(file, fmt, dtmp[i]);\n\
     //#if defined _USE_MPFR_ || defined  _USE_GMP_\n\
     //    fprintf(file, \" \");\n\

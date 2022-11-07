@@ -51,7 +51,10 @@
 /* *******  *************  ******* */
 #define MY_JET_1_PRECODE(PREFIX_JET_1,PREFIX_SCAL,I) "\
 " MY_SCAL_MACROS(PREFIX_SCAL) "\n\
-/* CODE FOR " PREFIX_JET_1(t) " */\n "\
+/* CODE FOR " PREFIX_JET_1(t) " */\n\
+int * " PREFIX_JET_1(monomial_counts) "(void) {return _monomial_counts_;}\n\
+int * " PREFIX_JET_1(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+\n"\
 
 #define MY_JET_1_CODE(PREFIX_JET_1,PREFIX_SCAL,I) "\
 #include <stdlib.h>\n\
@@ -62,7 +65,8 @@
 #define _NUMBER_OF_JET_symbs_ 0\n\
 #endif\n\
 #define my_scal_tmp " PREFIX_JET_1(tmp) "\n\
-static " I " num_symbs=_SIZE_OF_JET_VAR_;\n\
+static int flag_init_jet_library=0;\n\
+static " I " num_symbs=_MAX_SIZE_OF_JET_VAR_;\n\
 static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 #pragma omp threadprivate(my_scal_tmp)\n\
 \n" \
@@ -83,6 +87,7 @@ static " PREFIX_SCAL(t) " my_scal_tmp;\n\
   "\n" \
   "void " PREFIX_JET_1(initup) "(" I " nsymbs, " I " deg)\n\
 {\n\
+\tif (flag_init_jet_library==1) return;\n\
 \tif (deg != 1) {\n\
 \t\tfprintf(stderr, \"%d: Not allowed deg value: \%d!=1\\n\",__LINE__,deg);\n\
 \t\texit(1);\n\
@@ -93,6 +98,7 @@ static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 \t}\n\
 \tnum_symbs = nsymbs+1;\n\
 \t" PREFIX_SCAL(init) "(my_scal_tmp);\n\
+\tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
   I " " PREFIX_JET_1(set_num_symbs) "(" I " nsymbs)\n\
@@ -124,9 +130,10 @@ static " PREFIX_SCAL(t) " my_scal_tmp;\n\
   "\n" \
   "void " PREFIX_JET_1(cleanup) "(void)\n\
 {\n\
-\tif (num_symbs == 0) return;\n\
+\tif (flag_init_jet_library==0) return;\n\
 \t" PREFIX_SCAL(clean) "(my_scal_tmp);\n\
 \tnum_symbs = 0;\n\
+\tflag_init_jet_library=0;\n\
 }\n" \
   "\n" \
   "void " PREFIX_JET_1(set) "(" PREFIX_JET_1(t) " b, " PREFIX_JET_1(t) " a)\n\

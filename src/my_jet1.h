@@ -50,7 +50,10 @@
 /* *******  ************  ******* */
 #define MY_JET1_PRECODE(PREFIX_JET1,PREFIX_SCAL,I) "\
 " MY_SCAL_MACROS(PREFIX_SCAL) "\n\
-/* CODE FOR " PREFIX_JET1(t) " */\n"\
+/* CODE FOR " PREFIX_JET1(t) " */\n\
+int * " PREFIX_JET1(monomial_counts) "(void) {return _monomial_counts_;}\n\
+int * " PREFIX_JET1(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+\n"\
 
 #define MY_JET1_CODE(PREFIX_JET1,PREFIX_SCAL,I) "\
 #include <stdlib.h>\n\
@@ -59,10 +62,11 @@
 \n\
 #define my_scal_tmp " PREFIX_SCAL(tmp) "\n\
 #define my_jet_tmp " PREFIX_JET1(tmp) "\n\
-#ifndef _DEGREE_OF_JET_VARS_\n\
-#define _DEGREE_OF_JET_VARS_ 0\n\
+#ifndef _MAX_DEGREE_OF_JET_VARS_\n\
+#define _MAX_DEGREE_OF_JET_VARS_ 0\n\
 #endif\n\
-static " I " max_deg=_DEGREE_OF_JET_VARS_+1, cur_deg=_DEGREE_OF_JET_VARS_+1;\n\
+static int flag_init_jet_library=0;\n\
+static " I " max_deg=_MAX_DEGREE_OF_JET_VARS_+1, cur_deg=_MAX_DEGREE_OF_JET_VARS_+1;\n\
 static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 static " PREFIX_JET1(t) " my_jet_tmp;\n\
 #pragma omp threadprivate(cur_deg,my_scal_tmp,my_jet_tmp)\n\
@@ -84,6 +88,7 @@ static " PREFIX_JET1(t) " my_jet_tmp;\n\
 }\n" \
   "void " PREFIX_JET1(initup) "(" I " nsymbs, " I " deg)\n\
 {\n\
+\tif (flag_init_jet_library==1) return;\n\
 \tif (nsymbs != 1) {\n\
 \t\tfprintf(stderr, \"%d: Not allowed nsymbs value: \%d!=1\\n\",__LINE__,nsymbs);\n\
 \t\texit(1);\n\
@@ -96,6 +101,7 @@ static " PREFIX_JET1(t) " my_jet_tmp;\n\
 \tcur_deg = max_deg;\n\
 \t" PREFIX_SCAL(init) "(my_scal_tmp);\n\
 \t" PREFIX_JET1(init) "(&my_jet_tmp);\n\
+\tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
   I " " PREFIX_JET1(set_num_symbs) "(" I " nsymbs)\n\
@@ -128,11 +134,13 @@ static " PREFIX_JET1(t) " my_jet_tmp;\n\
   "\n" \
   "void " PREFIX_JET1(cleanup) "(void)\n\
 {\n\
+\tif (flag_init_jet_library==0) return;\n\
 \tif (max_deg == 0) return;\n\
 \t\tcur_deg = 0;\n\
 \t\t" PREFIX_JET1(clean) "(&my_jet_tmp);\n\
 \t\t" PREFIX_SCAL(clean) "(my_scal_tmp);\n\
 \tmax_deg = 0;\n\
+\tflag_init_jet_library=0;\n\
 }\n" \
   "\n" \
   "void " PREFIX_JET1(set) "(" PREFIX_JET1(t) " b, " PREFIX_JET1(t) " a)\n\

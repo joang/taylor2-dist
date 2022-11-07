@@ -62,6 +62,9 @@ typedef " PREFIX_JET_TREE(t) "* " PREFIX_JET_TREE(ptr) ";\n\
 #define MY_JET_TREE_PRECODE(PREFIX_JET_TREE,PREFIX_TREE,PREFIX_SCAL,I) "\
 " MY_SCAL_MACROS(PREFIX_SCAL) "\n\
 /* CODE " PREFIX_JET_TREE(t) " */\n\
+int * " PREFIX_JET_TREE(monomial_counts) "(void) {return _monomial_counts_;}\n\
+int * " PREFIX_JET_TREE(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+\n\
 #include <stdlib.h>\n\
 #include <stdio.h>\n\
 #include <math.h>\n\
@@ -75,15 +78,15 @@ static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 static " PREFIX_JET_TREE(t) " my_jet_tmp=NULL;\n\
 #pragma omp threadprivate(my_scal_tmp,my_jet_tmp)\n\
 \n\
-#ifndef _NUMBER_OF_SYMBOLS_\n\
-#define _NUMBER_OF_SYMBOLS_ 1\n\
+#ifndef _NUMBER_OF_MAX_SYMBOLS_\n\
+#define _NUMBER_OF_MAX_SYMBOLS_ 1\n\
 #endif\n\
-#ifndef _DEGREE_OF_JET_VARS_\n\
-#define _DEGREE_OF_JET_VARS_ 0\n\
+#ifndef _MAX_DEGREE_OF_JET_VARS_\n\
+#define _MAX_DEGREE_OF_JET_VARS_ 0\n\
 #endif\n\
-#define max_nsymb _NUMBER_OF_SYMBOLS_ \n\
-#define max_deg _DEGREE_OF_JET_VARS_ \n\
-/*static " I " max_nsymb=_NUMBER_OF_SYMBOLS_,max_deg=_DEGREE_OF_JET_VARS_;*/\n\
+#define max_nsymb _NUMBER_OF_MAX_SYMBOLS_ \n\
+#define max_deg _MAX_DEGREE_OF_JET_VARS_ \n\
+static int flag_init_jet_library=0;\n\
 static " I " nsymb=0,deg=0;\n\
 #pragma omp threadprivate(nsymb,deg)\n\
 \n\
@@ -162,6 +165,7 @@ size_t " PREFIX_JET_TREE(init) "(" PREFIX_JET_TREE(ptr) " s)\n\
 \n\
 void " PREFIX_JET_TREE(initup) "(" I " ns, " I " dg)\n\
 {\n\
+  if (flag_init_jet_library==1) return;\n\
 #pragma omp single\n\
 {\n\
   if (ns > max_nsymb) {\n\
@@ -179,6 +183,7 @@ void " PREFIX_JET_TREE(initup) "(" I " ns, " I " dg)\n\
   deg = dg;\n\
   " PREFIX_JET_TREE(init) "(&my_jet_tmp);\n\
   " PREFIX_SCAL(init) "(my_scal_tmp);\n\
+  flag_init_jet_library=1;\n\
 }\n\
 \n\
 void " PREFIX_JET_TREE(clean) "(" PREFIX_JET_TREE(ptr) " s)\n\
@@ -203,6 +208,7 @@ void " PREFIX_JET_TREE(clean) "(" PREFIX_JET_TREE(ptr) " s)\n\
 \n\
 void " PREFIX_JET_TREE(cleanup) "(void)\n\
 {\n\
+  if (flag_init_jet_library==0) return;\n\
   " PREFIX_SCAL(clean) "(my_scal_tmp);\n\
   " PREFIX_JET_TREE(clean) "(&my_jet_tmp);\n\
   nsymb = 0;\n\
@@ -212,6 +218,7 @@ void " PREFIX_JET_TREE(cleanup) "(void)\n\
   max_nsymb = 0;\n\
   max_deg = 0;\n\
 }*/\n\
+  flag_init_jet_library=0;\n\
 }\n\
 \n\
 " I " " PREFIX_JET_TREE(set_num_symbs) "(" I " nsymbs)\n\

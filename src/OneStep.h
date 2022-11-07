@@ -92,7 +92,7 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
  *     (in that case, the function returns 1).\n\
  *\n\
  * ht: on input:  ignored/used as a time step (see parameter step_ctl)\n\
- *     on output: time step used\n\
+ *     on output: time step used if the pointer is not NULL\n\
  *\n\
  * order: degree of the taylor expansion.\n\
  *        input: this parameter is only used if step_ctl is 0,\n\
@@ -100,7 +100,7 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
  *               its possible values are:\n\
  *               < 2: the program will select degree 2 (if step_ctl is 0).\n\
  *               >=2: the program will use this degree (if step_ctl is 0).\n\
- *        ouput: degree used.\n\
+ *        ouput: degree used if the pointer is not NULL\n\
  *\n\
  * jetInOut: on input: the value of all declared jet variables\n\
  *           on output: new value of the jet variable, corresponding to the new time\n\
@@ -130,9 +130,9 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
       init=1;\n\
       InitMyFloat(h);\n\
       InitMyFloat(mtmp);\n\
+      xInitUpJet();\n\
       xInitJet(jtmp);\n\
       xInitJet(jtmp1);\n\
-      xInitUpJet();\n\
     }\n\
 /*\n\
   sup norm of the initial condition (jet included)\n\
@@ -165,6 +165,11 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
   switch(step_ctl)\n\
     {\n\
     case 0: /* no step size control, fixed degree; both given by the user */\n\
+      if (order==NULL)\n\
+      {\n\
+        fprintf(stderr,\"step_ctl=%d needs an input order\\n\",step_ctl);\n\
+        exit(0);\n\
+      }\n\
       nt=(*order<2)? 2: *order; /* 2 is the minimum order allowed */\n\
       break;\n\
     case 1:\n\
@@ -182,7 +187,7 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
       fprintf(stderr, \"method or supply a step size control procedure.\\n\");\n\
       exit(0);\n\
     }\n\
-  *order=nt;\n\
+  if (order!=NULL) *order=nt;\n\
 /*\n\
   computation of the jet of derivatives up to order nt\n\
 */\n\
@@ -200,6 +205,11 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
   switch(step_ctl)\n\
     {\n\
     case 0: /* no step size control (fixed step size, given by the user) */\n\
+      if (ht==NULL)\n\
+      {\n\
+        fprintf(stderr,\"step_ctl=%d needs an input stepsize\\n\",step_ctl);\n\
+        exit(0);\n\
+      }\n\
       AssignMyFloat(h,*ht);\n\
       break;\n\
     case 1:\n\
@@ -279,7 +289,7 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
 /*\n\
   finally, we set the values of the parameters *ht and *ti.\n\
 */\n\
-  AssignMyFloat(*ht,h);\n\
+  if (ht!=NULL) AssignMyFloat(*ht,h);\n\
   if (flag_endtime == 0)\n\
     {\n\
       AssignMyFloat(mtmp, *ti);\n\

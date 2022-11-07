@@ -264,7 +264,10 @@ p3,g3,p1,g1,p2,g2,i,j) {\\\n\
 /* *******  ************  ******* */
 #define MY_JET2_PRECODE(PREFIX_JET2,PREFIX_MP2,PREFIX_SCAL,I) "\
 " MY_SCAL_MACROS(PREFIX_SCAL) "\n\
-/* CODE FOR " PREFIX_JET2(t) " */\n"\
+/* CODE FOR " PREFIX_JET2(t) " */\n\
+int * " PREFIX_JET2(monomial_counts) "(void) {return _monomial_counts_;}\n\
+int * " PREFIX_JET2(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+\n"\
 
 #define MY_JET2_CODE(PREFIX_JET2,PREFIX_MP2,PREFIX_SCAL,I) "\
 " MY_MP2_MACRO_CODE(PREFIX_MP2,PREFIX_SCAL,I,I) "\n\
@@ -282,10 +285,11 @@ static " I " *nc=_monomial_counts_,nct=_JET_COEFFICIENTS_COUNT_TOTAL_;\n\
 static " I " *nc=NULL,nct=0;\n\
 #endif\n\
 #define nct " PREFIX_JET2(nct) "\n\
-#ifndef _DEGREE_OF_JET_VARS_\n\
-#define _DEGREE_OF_JET_VARS_ 0\n\
+#ifndef _MAX_DEGREE_OF_JET_VARS_\n\
+#define _MAX_DEGREE_OF_JET_VARS_ 0\n\
 #endif\n\
-static " I " max_deg=_DEGREE_OF_JET_VARS_+1, cur_deg=_DEGREE_OF_JET_VARS_+1;\n\
+static int flag_init_jet_library=0;\n\
+static " I " max_deg=_MAX_DEGREE_OF_JET_VARS_+1, cur_deg=_MAX_DEGREE_OF_JET_VARS_+1;\n\
 static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 static " PREFIX_JET2(t) " my_jet_tmp=NULL;\n\
 #pragma omp threadprivate(cur_deg,my_scal_tmp,my_jet_tmp)\n\
@@ -314,7 +318,7 @@ static " PREFIX_JET2(t) " my_jet_tmp=NULL;\n\
 }\n" \
   "void " PREFIX_JET2(initup) "(" I " nsymb, " I " deg)\n\
 {\n\
-\tif (my_jet_tmp) return;\n\
+\tif (flag_init_jet_library==1) return;\n\
 #pragma omp single\n\
 {\n\
 \t" I " k;\n\
@@ -348,6 +352,7 @@ __FILE__,__LINE__,deg,max_deg);\n\
 \tcur_deg = max_deg;\n\
 \t" PREFIX_JET2(init) "(&my_jet_tmp);\n\
 \t" PREFIX_SCAL(init) "(my_scal_tmp);\n\
+\tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
   I " " PREFIX_JET2(set_num_symbs) "(" I " nsymbs)\n\
@@ -381,6 +386,7 @@ __FILE__,__LINE__,deg,max_deg);\n\
   "\n" \
   "void " PREFIX_JET2(cleanup) "(void)\n\
 {\n\
+\tif (flag_init_jet_library==0) return;\n\
 \tif (max_deg == 0) return;\n\
 \t" PREFIX_SCAL(clean) "(my_scal_tmp);\n\
 \t" PREFIX_JET2(clean) "(&my_jet_tmp);\n\
@@ -390,6 +396,7 @@ __FILE__,__LINE__,deg,max_deg);\n\
 \t" PREFIX_MP2(cleanup) "();\n\
 \tmax_deg = 0;\n\
 }\n\
+\tflag_init_jet_library=0;\n\
 }\n" \
   "\n" \
   "void " PREFIX_JET2(set) "(" PREFIX_JET2(t) " b, " PREFIX_JET2(t) " a)\n\

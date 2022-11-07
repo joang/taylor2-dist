@@ -348,7 +348,10 @@ typedef " PREFIX_JET1_1(t) "* " PREFIX_JET1_1(ptr) ";\n" \
 /* *******  MY_JET1_1_CODE  ******* */
 /* *******  **************  ******* */
 #define MY_JET1_1_PRECODE(PREFIX_JET1_1,PREFIX_SCAL,I) "\
-/* CODE FOR " PREFIX_JET1_1(t) " */\n"\
+/* CODE FOR " PREFIX_JET1_1(t) " */\n\
+int * " PREFIX_JET1_1(monomial_counts) "(void) {return _monomial_counts_;}\n\
+int * " PREFIX_JET1_1(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+\n"\
 
 #define MY_JET1_1_CODE(PREFIX_JET1_1,PREFIX_SCAL,I) "\
 /* none */\n" \
