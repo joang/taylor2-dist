@@ -110,7 +110,7 @@ char *my_float_api_macros = \
 #define InitCleanFlag "&"
 #define InitCleanFlagStruct ""
 char *my_jet_preheaders[]= { \
-  MY_JET_NONE_HEADER(NONE), \
+  MY_JET_NONE_PREHEADER(NONE), \
   \
   MY_JET1_1_PREHEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
                       MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
@@ -173,18 +173,25 @@ char *my_jet_headers[]= { \
 };
 char *my_jet_postheaders[]= { \
   MY_JET_NONE_POSTHEADER(NONE), \
+  \
   MY_JET1_1_POSTHEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
                        MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+  \
   MY_JET_1_POSTHEADER(MY_JET_1_FIXES, MY_JET_1_TYPE, \
                       MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+  \
   MY_JET1_POSTHEADER(MY_JET1_FIXES, MY_JET1_TYPE, \
                      MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+  \
   MY_JET2_POSTHEADER(MY_JET2_FIXES, MY_JET2_TYPE, \
                      MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+  \
   MY_JET_2_POSTHEADER(MY_JET_2_FIXES, MY_JET_2_TYPE, \
                       MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+  \
   MY_JET_m_POSTHEADER(MY_JET_m_FIXES, MY_JET_m_TYPE, \
                       MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+  \
   MY_JET_TREE_POSTHEADER(MY_JET_TREE_FIXES, MY_JET_TREE_TYPE, \
                          MY_FLOAT_FIXES, "MY_FLOAT", "int") \
 };
@@ -254,12 +261,12 @@ void genMyJetHeader(void) {
 
   //20200615
   if(jetStorageType==0) {
-    fprintf(outfile, "#define MY_JET_DATA(x,i) (x[i])\n");        
+    fprintf(outfile, "#define MY_JET_DATA(x,i) ((x)[i])\n");        
   } else if(jetStorageType==1) {
-      fprintf(outfile, "#define MY_JET_DATA(x,i) ((*x)[i])\n");            
+      fprintf(outfile, "#define MY_JET_DATA(x,i) ((*(x))[i])\n");            
   } else if(jetStorageType==2) {
     print_jet_tree_monomial_index_mapper();      
-    fprintf(outfile, "#define MY_JET_DATA(x,i) ((x->coef)[_tr_idx_map_[i]])\n");        
+    fprintf(outfile, "#define MY_JET_DATA(x,i) (((x)->coef)[_tr_idx_map_[i]])\n");        
   } else {
     fprintf(outfile, "#define MY_JET_DATA(x,i) ((x)[i])\n");        
   }

@@ -439,7 +439,7 @@ extern int   jetStorageType;
 extern int   genSeries;
 extern int   genSeries;
 extern int   use_rational_exponent;
-extern int   gmp, gmp_precision,mpfr,mpfr_precision;
+extern int   gmp, gmp_precision,mpfr,mpfr_precision,mpc,mpc_precision[2];
 extern int   ldouble, qd2, qd4, float128;
 extern char  *outNames[10];
 extern char  *suffixes[10];

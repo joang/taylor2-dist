@@ -272,9 +272,9 @@ int taylor_input_jet_from_string(MY_JET a, const char *str) {\n\
 }\n\
 \n\
 int taylor_output_jet(FILE *file, char *fmt, MY_JET a) {\n\
-  int i;\n\
   static MY_FLOAT *dtmp = NULL;\n\
 #pragma omp threadprivate(dtmp)\n\
+  int i;\n\
 \n\
   if(dtmp == NULL) {\n\
     dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\

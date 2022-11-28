@@ -31,8 +31,11 @@
 #include "qdheader.h"
 #include "mpfrheader.h"
 #include "longdoubleheader.h"
-#include "_float128Header.h"
+#include "float128Header.h"
 #include "complexheader.h"
+#include "longcomplexheader.h"
+#include "complex128header.h"
+#include "mpcheader.h"
 #include "jetIOHelper.h"
 #include "VERSION"
 int    debug = 0;
@@ -51,9 +54,15 @@ int    genJetHelper = 0;
 int    jetStorageType = 0;
 int    cdouble = 0;
 int    complexx = 0;
+int    lcomplex = 0;
+int    complexx128 = 0;
+int    mpc = 0;
+int    mpc_rounding = 0;
+int    mpc_precision[2]={0,0};
 int    gmp = 0;
-int    mpfr = 0;
 int    gmp_precision=0;
+int    mpfr = 0;
+int    mfr_rounding = 0;
 int    mpfr_precision=0;
 int    ldouble=0;
 int    float128=0;
@@ -140,7 +149,7 @@ int main(int ac, char **av)
 	    case 'f':
               if (!strcmp(arg,"-f77")) { f77hook=1;}
               if (!strcmp(arg,"-float128") || !strcmp(arg,"-f128")) {
-		qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=0; float128=1; nariths++; arith="_float128";
+		qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=0; float128=1;mpfr=0; complexx=0; lcomplex=0; complexx128=0; mpc=0; nariths++; arith="_float128";
 	      }
 	      break;	      	      
 	      break;
@@ -148,20 +157,41 @@ int main(int ac, char **av)
               if (!strcmp(arg,"-main_only") || !strcmp(arg,"-mainonly")) { genMain = 1; }
               else if (!strcmp(arg,"-main")) { genMain = 2; }
               else if (!strcmp(arg,"-mpfr"))
-              { ddouble = 0; gmp=0; ldouble=0; mpfr=1; nariths++; arith="mpfr";}
+              { ddouble = 0; gmp=0; ldouble=0; mpfr=1; complexx=0; lcomplex=0;  complexx128=0; mpc=0; nariths++; arith="mpfr";}
               else if (!strcmp(arg,"-mpfr_precision")) {
                 if ( ac > i+1 && atoi(av[i+1]) > 0)
                   {
                     ddouble=0; ldouble=0; float128=0;
-                    gmp =0; qd4 = qd2 = 0; mpfr=1;
+                    gmp =0; qd4 = qd2 = 0; mpfr=1; complexx=0; lcomplex=0; complexx128=0; mpc=0;
                     mpfr_precision = atoi(av[i+1]);
                     i++;
                     nariths++; arith="mpfr";
                   } else {
                     fprintf(stderr,"\t The -mpfr_precision flag must be followed by PRECISION in number of bits\n");
                     exit(1);
-                  }	
-	      }
+                  }                
+              }
+              else if (!strcmp(arg,"-mpc"))
+              { ddouble = 0; gmp=0; ldouble=0; mpfr=0; complexx=0; lcomplex=0;  complexx128=0; mpc=1; nariths++; arith="mpc";}
+              else if (!strcmp(arg,"-mpc_precision")) {
+                if ( ac > i+1 && atoi(av[i+1]) > 0)
+                  {
+                    ddouble=0; ldouble=0; float128=0;
+                    gmp =0; qd4 = qd2 = 0; mpfr=0;  complexx=0; lcomplex=0; complexx128=0; mpc=1;
+                    mpc_precision[0] = atoi(av[i+1]);
+                    i++;
+                    if ( ac > i+1 && atoi(av[i+1]) > 0) {
+                      mpc_precision[1] = atoi(av[i+1]);
+                      i++;
+                    } else {
+                      mpc_precision[1] = mpc_precision[0];
+                    }
+                    nariths++; arith="mpc";
+                  } else {
+                    fprintf(stderr,"\t The -mpc_precision flag must be followed by [PRECISION_REAL | PRECISION_IMAG] in number of bits\n");
+                    exit(1);
+                  }                
+              }
               break;
             case 's':
               if (!strcmp(arg,"-step")) {
@@ -204,15 +234,18 @@ int main(int ac, char **av)
               break;
 	    case 'l':
               if (!strcmp(arg,"-long_double") || !strcmp(arg,"-longdouble")) {
-		 float128=0; qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=1; nariths++; arith="longdouble";
-	      }
+                qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=1; float128=0; mpfr=0; complexx=0;  lcomplex=0; complexx128=0; mpc=0; nariths++; arith="longdouble";                
+              }
+              if (!strcmp(arg,"-long_complex") || !strcmp(arg,"-longcomplex")) {
+                float128=0; qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=0; mpfr=0; complexx=0; lcomplex=1; complexx128=0; mpc=0; nariths++; arith="longcomplex";                
+              }
 	      break;
             case 'g':
               if (!strcmp(arg,"-gmp_precision")) {
                 if ( ac > i+1 && atoi(av[i+1]) > 0)
                   {
                     ddouble=0; ldouble=0; float128=0;
-                    gmp =1; qd4 = qd2 = 0;
+                    gmp =1; qd4 = qd2 = 0; mpfr=0; complexx=0; lcomplex=0; complexx128=0; mpc=0;
                     gmp_precision = atoi(av[i+1]);
                     i++;
                     nariths++; arith="gmp";
@@ -222,7 +255,7 @@ int main(int ac, char **av)
                   }
               } else if (!strcmp(arg,"-gmp")) {
                 ddouble=0; ldouble=0; float128=0;
-                gmp =1; qd4 = qd2 = 0;
+                gmp =1; qd4 = qd2 = 0; mpfr=0; complexx=0; lcomplex=0; complexx128=0; mpc=0; 
                 nariths++; arith="gmp";
               }
               break;
@@ -230,7 +263,9 @@ int main(int ac, char **av)
               if (!strcmp(arg,"-constantsafe") || !strcmp(arg,"-const"))
                 { cdouble = 1;}
               else if (!strcmp(arg,"-complex") || !strcmp(arg,"-cmplx")) 
-              {ddouble = 0; gmp=0; ldouble=0; mpfr=0;complexx=1; arith="cmplx";}
+              {ddouble = 0; gmp=0; ldouble=0; float128=0;mpfr=0;complexx=1;lcomplex=0;complexx128=0; mpc=0; nariths++; arith="cmplx";}
+              else if (!strcmp(arg,"-complex128") || !strcmp(arg,"-cmplx128")) 
+              {ddouble = 0; gmp=0; ldouble=0; float128=0; mpfr=0;complexx=0;lcomplex=0;complexx128=1; mpc=0; nariths++; arith="cmplx128";}
 	      break; 
 	    case 'e':
               if (!strncmp(arg,"-expandsum",8))
@@ -484,17 +519,20 @@ void help(char *name)
 {
   fprintf(stderr, "Taylor %s\n\n", versionString);
   fprintf(stderr, "Usage: %s \n", name);
-  fprintf(stderr, "  [-name ODE_NAME]\n");
-  fprintf(stderr, "  [-o outfile] \n");
-  fprintf(stderr, "  [-qd_real | -dd_real | -gmp | -gmp_precision PRECISION ] \n");
-  fprintf(stderr, "  [-mpfr | -mpfr_precision PRECISION ] \n");
-  fprintf(stderr, "  [-complex ] \n");
-  fprintf(stderr, "  [-main | -header | -jet | -jet_helper | -main_only] \n");
+  fprintf(stderr, "  [-name ODE_NAME ]\n");
+  fprintf(stderr, "  [-o outfile ]\n");
+  fprintf(stderr, "  [-long_double | -float128 |\n");
+  fprintf(stderr, "   -mpfr | -mpfr_precision PRECISION |\n");
+  fprintf(stderr, "   -gmp | -gmp_precision PRECISION |\n");
+  fprintf(stderr, "   -complex |\n");
+  fprintf(stderr, "   -long_complex | -complex128 |\n");
+  fprintf(stderr, "   -mpc | -mpc_precision [PRECISION_REAL | PRECISION_IMAG] ]\n");
+  fprintf(stderr, "  [-main | -header | -jet | -jet_helper | -main_only ]\n");
   fprintf(stderr, "  [-step STEP_CONTROL_METHOD ]\n");
-  fprintf(stderr, "  [-u | -userdefined ] STEP_SIZE_FUNCTION_NAME ORDER_FUNCTION_NAME \n");
+  fprintf(stderr, "  [-u | -userdefined STEP_SIZE_FUNCTION_NAME ORDER_FUNCTION_NAME ]\n");
   fprintf(stderr, "  [-f77 ]\n");
   fprintf(stderr, "  [-sqrt ]\n");
-  fprintf(stderr, "  [-headername HEADER_FILE_NAME]\n");
+  fprintf(stderr, "  [-headername HEADER_FILE_NAME ]\n");
   fprintf(stderr, "  [-debug] [-help] [-v]  file\n");
   exit(0);
 }
@@ -573,20 +611,16 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",qd_header);
 
     fprintf(outfile, "#endif\n");    
-//    fprintf(outfile, "%s\n",qd_header_JET);
-//    jetHeader = strlen(qd_header_JET);
-  } else if (mpfr) {
-    fprintf(outfile,"#include <math.h>\n");      
+  } else if (mpfr) {     
     fprintf(outfile,"#include <stdio.h>\n");  
-    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");
+    fprintf(outfile,"#include <math.h>\n");   
     fprintf(outfile,"#include <string.h>\n");
     fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile,"#include <mpfr.h>\n");      
     fprintf(outfile, "%s\n", mpfr_header);
-
+    
     fprintf(outfile, "#endif\n");        
-//    fprintf(outfile, "%s\n", mpfr_header_JET);
-//    jetHeader = strlen(mpfr_header_JET);
   } else if (gmp) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");  
@@ -597,48 +631,92 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",gmp_header);
 
     fprintf(outfile, "#endif\n");    
-//    fprintf(outfile, "%s\n",gmp_header_JET);
-//    jetHeader = strlen(gmp_header_JET);
-  } else if (ldouble) {
-    fprintf(outfile,"typedef long double MY_FLOAT;\n\n");
-    fprintf(outfile,"#include <math.h>\n");      
+  } else if (ldouble) {    
     fprintf(outfile,"#include <stdio.h>\n");  
-    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n"); 
+    fprintf(outfile,"typedef long double MY_FLOAT;\n\n");
+    fprintf(outfile,"#include <math.h>\n");   
     fprintf(outfile,"#include <string.h>\n");
     fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile, "%s\n",longdouble_header);
+    
     fprintf(outfile, "#endif\n");    
-  } else if (float128) {
-    fprintf(outfile,"#include <math.h>\n");      
+  } else if (float128) {    
     fprintf(outfile,"#include <stdio.h>\n");  
-    fprintf(outfile,"#include <stdlib.h>\n");  
-    fprintf(outfile,"#include <string.h>\n");
-    fprintf(outfile,"#include <ctype.h>\n");
+    fprintf(outfile,"#include <stdlib.h>\n"); 
     fprintf(outfile,"#include <quadmath.h>\n");
-    fprintf(outfile,"typedef __float128 MY_FLOAT;\n\n");        
+    fprintf(outfile,"typedef __float128 MY_FLOAT;\n\n");
+    fprintf(outfile,"#include <math.h>\n");   
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");        
     fprintf(outfile, "%s\n",_float128_header);
+    
     fprintf(outfile, "#endif\n");    
-  } else if (complexx) {
+  } else if (complexx) {     
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n"); 
     fprintf(outfile,"#include <complex.h>\n");      
     fprintf(outfile,"typedef double complex MY_FLOAT;\n\n");
-    fprintf(outfile,"#include <math.h>\n");      
-    fprintf(outfile,"#include <stdio.h>\n");  
-    fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <math.h>\n");  
     fprintf(outfile,"#include <string.h>\n");
     fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile, "%s\n",complex_header);
-
+    
+    fprintf(outfile, "#endif\n");
+  } else if (lcomplex) {    
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");
+    fprintf(outfile,"#include <complex.h>\n");      
+    fprintf(outfile,"typedef long double complex MY_FLOAT;\n\n");
+    fprintf(outfile,"#include <math.h>\n");    
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
+    fprintf(outfile, "%s\n",longcomplex_header);
+    
+    fprintf(outfile, "#endif\n");
+  } else if (complexx128) {     
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");
+    fprintf(outfile,"#include <complex.h>\n"); 
+    fprintf(outfile,"#include <quadmath.h>\n");      
+    fprintf(outfile,"typedef __complex128 MY_FLOAT;\n\n");
+    fprintf(outfile,"#include <math.h>\n"); ;  
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");              
+    fprintf(outfile, "%s\n",complex128_header);
+    
+    fprintf(outfile, "#endif\n");
+  } else if (mpc) {         
+    fprintf(outfile,"#include <stdio.h>\n");  
+    fprintf(outfile,"#include <stdlib.h>\n");
+    fprintf(outfile,"#include <complex.h>\n");
+    fprintf(outfile,"#include <mpc.h>\n");
+    fprintf(outfile,"#include <math.h>\n");   
+    fprintf(outfile,"#include <string.h>\n");
+    fprintf(outfile,"#include <ctype.h>\n");  
+    
+    if (mpc_precision[0] != 0)           
+      fprintf(outfile,"#define MY_FLOAT_REAL_PREC %d\n", mpc_precision[0]);
+    else 
+      fprintf(outfile,"#define MY_FLOAT_REAL_PREC mpfr_get_default_prec()\n");
+    
+    if (mpc_precision[1] != 0)           
+      fprintf(outfile,"#define MY_FLOAT_IMAG_PREC %d\n", mpc_precision[1]);
+    else 
+      fprintf(outfile,"#define MY_FLOAT_IMAG_PREC mpfr_get_default_prec()\n");
+    
+    fprintf(outfile, "%s\n", mpc_header);
+    
     fprintf(outfile, "#endif\n");    
-//    fprintf(outfile, "%s\n",sample_header_JET_long_double);
-//    jetHeader = strlen(sample_header_JET_long_double);
   } else {
-    fprintf(outfile,"typedef double MY_FLOAT;\n\n");
-    fprintf(outfile,"#include <math.h>\n");      
+    fprintf(outfile,"typedef double MY_FLOAT;\n\n"); 
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");  
+    fprintf(outfile,"#include <math.h>\n");     
     fprintf(outfile,"#include <string.h>\n");
     fprintf(outfile,"#include <ctype.h>\n");              
     fprintf(outfile, "%s\n",sample_header);
+    
     fprintf(outfile, "#endif\n");
     
 //    fprintf(outfile, "%s\n",sample_header_JET);
@@ -1264,12 +1342,12 @@ int output_taylor_jet_reducer(FILE *outfile) {
   indicies = mn_rearrange_indicies(m, n);
 
   fprintf(outfile, "static MY_FLOAT *taylor_jet_monomial_values(double *params) {\n");
-  fprintf(outfile, "\tMY_FLOAT *monomial_values = (MY_FLOAT *)malloc( (%d) * sizeof(MY_FLOAT));\n", order);
   fprintf(outfile, "\tMY_FLOAT ftmp, ptmp, qtmp, one;\n");    
-  fprintf(outfile, "\tint i;\n\n");
+  fprintf(outfile, "\tint i;\n");
+  fprintf(outfile, "\tMY_FLOAT *monomial_values = (MY_FLOAT *)malloc( (%d) * sizeof(MY_FLOAT));\n\n", order);
 
 
-  fprintf(outfile, "\tfor(i=0;i<%d;i++) {;\n",order);
+  fprintf(outfile, "\tfor(i=0;i<%d;i++) {\n",order);
   fprintf(outfile, "\t\tInitMyFloat(monomial_values[i]);\n");
   fprintf(outfile, "\t}\n");
   fprintf(outfile, "\tInitMyFloat(ftmp);\n");
@@ -1324,19 +1402,19 @@ int output_taylor_jet_reducer(FILE *outfile) {
 
 
     fprintf(outfile, "void taylor_jet_reduce(MY_JET a, double *params) {\n");
-    fprintf(outfile, "\tMY_FLOAT *monomials = taylor_jet_monomial_values(params);\n");
     fprintf(outfile, "\tstatic int inited=0;\n");
     fprintf(outfile, "\tstatic MY_FLOAT ftmp;\n");
     fprintf(outfile, "#pragma omp threadprivate(inited,ftmp)\n");
-    fprintf(outfile, "\tint i;\n\n");
+    fprintf(outfile, "\tint i;\n");
+    fprintf(outfile, "\tMY_FLOAT *monomials = taylor_jet_monomial_values(params);\n\n");
     fprintf(outfile, "\tif(inited==0){ inited=1;InitMyFloat(ftmp); }\n");    
 
     //fprintf(outfile, "\tfor(i=1; i< %d; i++) {\n", order-1); fprintf(outfile, "fprintf(stderr, \"%%f \",MY_JET_DATA((a),i);}\nfprintf(stderr,\"\\n\");\n"); 
     
     fprintf(outfile, "\tfor(i=1; i< %d; i++) {\n", order-1);
     fprintf(outfile, "\t\tMultiplyMyFloatA(ftmp, MY_JET_DATA((a),i),monomials[i]);\n");
-    fprintf(outfile, "\t\tAddMyFloatA(MY_JET_DATA((a),0), MY_JET_DATA((a),0), ftmp);\n");
-    fprintf(outfile, "\t};\n");
+    fprintf(outfile, "\t\tAddMyFloatA(MY_JET_DATA(a,0), MY_JET_DATA(a,0), ftmp);\n");
+    fprintf(outfile, "\t}\n");
     fprintf(outfile, "\tfor(i=0; i< %d; i++) {ClearMyFloat(monomials[i]);}\n", order);    
     fprintf(outfile, "\tfree(monomials);\n");
     fprintf(outfile, "}\n");

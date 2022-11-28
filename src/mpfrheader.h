@@ -30,8 +30,6 @@ static char *mpfr_header="\
  *  It may be 'float', 'double' or user defined private data types\n\
  *  like 'long double', 'complex' etc. \n\
  */\n\
-#ifndef _TAYLOR_\n\
-#define _TAYLOR_\n\
 \n\
 #define _USE_MPFR_\n\
 #define MY_FLOAT  mpfr_t\n\
@@ -46,7 +44,7 @@ static char *mpfr_header="\
 #define   MakeMyFloatA(r,a)         mpfr_set_d(r,(double)(a),GMP_RNDN)\n\
 \n\
 /* create a MY_FLOAT from a, assign to r and return r */\n\
-#define   MakeMyFloatB(r,a)         (mpfr_set_d(r,(double)(a),GMP_RNDN),r)\n\
+#define   MakeMyFloatB(r,a)         (MakeMyFloatA(r,a),r)\n\
 \n\
 /* create a MY_FLOAT from a, a is an integer or a float, s is its string representation */\n\
 #define   MakeMyFloatC(r,s,a)       (mpfr_set_str(r,s,10,GMP_RNDN))\n\
@@ -137,6 +135,5 @@ static char *mpfr_header="\
 #define   OutputMyFloat3(file,fmt,a)        mpfr_fprintf(file,fmt,a)\n\
 \n\
 /************************************************************************/\n\
-#endif\n\
 ";
 

@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 	   for(i = 0; i < JJ; i++) {
 	     const char **var_names = taylor_get_variable_names();
 	     fprintf(stdout, "%s: ", var_names[i]);
-	     for(j = 0; j < _SIZE_OF_JET_VAR_; j++) {
+	     for(j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {
 #ifdef _USE_MPFR_	 	       
 	       fprintf(stdout, "%12.8f ", mpfr_get_d( MY_JET_DATA(jetIn[i],j),GMP_RNDN));
 #else

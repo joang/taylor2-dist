@@ -79,6 +79,16 @@ static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 \tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
+  I " " PREFIX_JET_2(get_num_symbs) "(void)\
+{\
+return num_symbs;\
+}\n" \
+  "\n" \
+  I " " PREFIX_JET_2(get_deg) "(void)\
+{\
+return 2;\
+}\n" \
+  "\n" \
   I " " PREFIX_JET_2(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
 \t" I " k;\n\

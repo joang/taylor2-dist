@@ -48,8 +48,10 @@ typedef " PREFIX_JET1_1(t) "* " PREFIX_JET1_1(ptr) ";\n" \
 \t" PREFIX_SCAL(clean) "((*x)[0]);\
 }\n\
 #define " PREFIX_JET1_1(cleanup) "(x) {}\n\
-#define " PREFIX_JET1_1(set_deg) "(x) (1)\n\
+#define " PREFIX_JET1_1(get_num_symbs) "(x) (1)\n\
+#define " PREFIX_JET1_1(get_deg) "(x) (1)\n\
 #define " PREFIX_JET1_1(set_num_symbs) "(x) (1)\n\
+#define " PREFIX_JET1_1(set_deg) "(x) (1)\n\
 \n\
 /* y' = x' */\n\
 #define " PREFIX_JET1_1(set) "(y,x) {\\\n\

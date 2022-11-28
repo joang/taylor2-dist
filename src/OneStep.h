@@ -2,7 +2,7 @@
  *
  *       Taylor  
  *
- *    Copyright (C) 1999  Maorong Zou, Angel Jorba
+ *    Copyright (C) 1999 Maorong Zou, Angel Jorba
  *    Copyright (C) 2022 Joan Gimeno, Angel Jorba, Maorong Zou
  *
  *
@@ -151,9 +151,9 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
 #endif\n\
       for (i=_J_DIM_; i<_N_DIM_; i++)\n\
       {\n\
-	MyFloatToDouble(xi,x[i]);\n\
-	xi=fabs(xi);\n\
-	if (xi > xnorm) xnorm=xi;\n\
+        MyFloatToDouble(xi,x[i]);\n\
+        xi=fabs(xi);\n\
+        if (xi > xnorm) xnorm=xi;\n\
       }\n\
     }\n\
 /*\n\

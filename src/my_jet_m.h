@@ -77,6 +77,16 @@ static " PREFIX_SCAL(t) " my_scal_tmp;\n\
 \tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
+  I " " PREFIX_JET_m(get_num_symbs) "(void)\
+{\
+return num_symbs;\
+}\n" \
+  "\n" \
+  I " " PREFIX_JET_m(get_deg) "(void)\
+{\
+return nm_working_degree;\
+}\n" \
+  "\n" \
   I " " PREFIX_JET_m(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
 \t\tfprintf(stderr, \"%d: Change number of symbols is Not allowed.\\n\",__LINE__);\n\

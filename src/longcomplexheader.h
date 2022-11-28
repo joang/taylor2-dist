@@ -23,13 +23,13 @@
  *
  *************************************************************************/
 
-static char *longdouble_header="\
+static char *longcomplex_header="\
 /*\n\
  *  MY_FLOAT is the data type to be used in computing derivatives. \n\
  *  It may be 'float', 'double' or user defined private data types\n\
- *  like 'long double', 'complex' etc. \n\
+ *  like 'long double', 'complex', 'long complex', 'complex128', etc. \n\
  */\n\
-#define _USE_LONG_DOUBLE_\n\
+#define _USE_LONG_COMPLEX_\n\
 \n\
 /* for double or long double, don't need to initialize */\n\
 #define   InitMyFloat(r)            \n\
@@ -39,13 +39,13 @@ static char *longdouble_header="\
 #define   AssignMyFloat(a, b)       {(a)=(b);}\n\
 \n\
 /* create a MY_FLOAT from a, assigne to r. a is an integer or a float */\n\
-#define   MakeMyFloatA(r,a)         (r=(long double)(a))\n\
+#define   MakeMyFloatA(r,a)         (r=(long double complex)(a))\n\
 \n\
 /* create a MY_FLOAT from a, assign to r and return r */\n\
-#define   MakeMyFloatB(r,a)         (MakeMyFloatA(r,a),r)\n\
+#define   MakeMyFloatB(r,a)         (r=(double)(a),r)\n\
 \n\
 /* create a MY_FLOAT from string, a is an integer or a float, s is its string representation */\n\
-#define   MakeMyFloatC(r,s,a)       (r=(long double)(a))\n\
+#define   MakeMyFloatC(r,s,a)       (r=(double)(a))\n\
 \n\
 /* addition r=a+b   */\n\
 #define   AddMyFloatA(r,a,b)        (r=(a)+(b))\n\
@@ -74,35 +74,35 @@ static char *longdouble_header="\
 #define   NegateMyFloatA(r,a)          (r= -(a))\n\
 \n\
 /* square root r=sqrtl(a) */\n\
-#define   sqrtMyFloatA(r,a)            (r=sqrtl(a))\n\
+#define   sqrtMyFloatA(r,a)            (r=csqrtl(a))\n\
 /* exponentiation r=a^b */\n\
-#define   ExponentiateMyFloatA(r,a,b)  (r=powl((a),(b)))\n\
+#define   ExponentiateMyFloatA(r,a,b)  (r=cpowl((a),(b)))\n\
 /* exponentiation r=a^b, b is an integer */\n\
-#define   ExponentiateMyFloatIA(r,a,b) (r=powl((a),(long double)(b)))\n\
+#define   ExponentiateMyFloatIA(r,a,b) (r=cpowl((a),(long double)(b)))\n\
 /* sin(a)  r=sin(a) */\n\
-#define   sinMyFloatA(r,a)             (r=sinl((a)))\n\
+#define   sinMyFloatA(r,a)             (r=csinl((a)))\n\
 /* cos(a)  r=cos(a) */\n\
-#define   cosMyFloatA(r,a)             (r=cosl((a)))\n\
+#define   cosMyFloatA(r,a)             (r=ccosl((a)))\n\
 /* tan(a)  r=tan(a) */\n\
-#define   tanMyFloatA(r,a)             (r=tanl((a)))\n\
+#define   tanMyFloatA(r,a)             (r=ctanl((a)))\n\
 /* atan(a) r=atan(a) */\n\
-#define   atanMyFloatA(r,a)            (r=atanl((a)))\n\
+#define   atanMyFloatA(r,a)            (r=catanl((a)))\n\
 /* exp(a)  r=exp(a) */\n\
-#define   expMyFloatA(r,a)             (r=expl((a)))\n\
+#define   expMyFloatA(r,a)             (r=cexpl((a)))\n\
 /* log(a)  r=log(a) */\n\
-#define   logMyFloatA(r,a)             (r=logl((a)))\n\
+#define   logMyFloatA(r,a)             (r=clogl((a)))\n\
 /* sinh(a) r=sinh(a) */\n\
-#define   sinhMyFloatA(r,a)            (r=sinhl(a))\n\
+#define   sinhMyFloatA(r,a)            (r=csinhl(a))\n\
 /* cosh(a) r=cosh(a) */\n\
-#define   coshMyFloatA(r,a)            (r=coshl(a))\n\
+#define   coshMyFloatA(r,a)            (r=ccoshl(a))\n\
 /* tanh(a) r=tanh(a) */\n\
-#define   tanhMyFloatA(r,a)            (r=tanhl(a))\n\
+#define   tanhMyFloatA(r,a)            (r=ctanhl(a))\n\
 \n\
 \n\
 /* log10(a)  r=log10(a) */\n\
-#define   log10MyFloatA(r,a)           (r=log10l((a)))\n\
+#define   log10MyFloatA(r,a)           (r=clog10l((a)))\n\
 /* fabs(a) r=fabs(a) */\n\
-#define   fabsMyFloatA(r,a)            (r=fabsl(a))\n\
+#define   fabsMyFloatA(r,a)            (r=cabsl(a))\n\
 \n\
 /* convert to int */\n\
 #define   MyFloatToInt(ir,fa)          (ir=(int)(fa))\n\
@@ -111,16 +111,16 @@ static char *longdouble_header="\
 \n\
 \n\
 /* boolean operation  */\n\
-#define   MyFloatA_GE_B(a,b)        ((a)>=(b))\n\
-#define   MyFloatA_GT_B(a,b)        ((a)> (b))\n\
-#define   MyFloatA_LE_B(a,b)        ((a)<=(b))\n\
-#define   MyFloatA_LT_B(a,b)        ((a)< (b))\n\
-#define   MyFloatA_EQ_B(a,b)        ((a)==(b))\n\
-#define   MyFloatA_NEQ_B(a,b)       ((a)!=(b))\n\
+#define   MyFloatA_GE_B(a,b)        (creall(a)>=creall(b))\n\
+#define   MyFloatA_GT_B(a,b)        (creall(a)> creall(b))\n\
+#define   MyFloatA_LE_B(a,b)        (creall(a)<=creall(b))\n\
+#define   MyFloatA_LT_B(a,b)        (creall(a)< creall(b))\n\
+#define   MyFloatA_EQ_B(a,b)        (creall(a)==creall(b))\n\
+#define   MyFloatA_NEQ_B(a,b)       (creall(a)!=creall(b))\n\
 \n\
 \n\
-#define   OutputMyFloat(a)          fprintf(stdout,\"%.20Lg \",a)\n\
-#define   OutputMyFloat3(file,format,a)     fprintf(file,format,a)\n\
+#define   OutputMyFloat(a)          fprintf(stdout,\"%Lg %Lg \",(long double) creall(a), (long double) cimagl(a))\n\
+#define   OutputMyFloat3(file,format,a)     fprintf(file,format,(long double) creall(a), (long double) cimagl(a))\n\
 \n\
 /************************************************************************/\n\
 ";

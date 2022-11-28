@@ -355,6 +355,16 @@ __FILE__,__LINE__,deg,max_deg);\n\
 \tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
+  I " " PREFIX_JET2(get_num_symbs) "(void)\n\
+{\
+return 2;\
+}\n" \
+  "\n" \
+  I " " PREFIX_JET2(get_deg) "(void)\n\
+{\
+return cur_deg;\
+}\n" \
+  "\n" \
   I " " PREFIX_JET2(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
 \tfprintf(stderr, \"%s:%d Action not allowed\\n\",__FILE__,__LINE__);\n\

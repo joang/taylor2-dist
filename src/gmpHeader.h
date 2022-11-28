@@ -30,8 +30,6 @@ static char *gmp_header="\
  *  It may be 'float', 'double' or user defined private data types\n\
  *  like 'long double', 'complex' etc. \n\
  */\n\
-#ifndef _TAYLOR_\n\
-#define _TAYLOR_\n\
 \n\
 #define _USE_GMP_\n\
 #define MY_FLOAT  mpf_t\n\
@@ -131,6 +129,5 @@ static  int gmp_j_aux_init=0;\n\
 #define   OutputMyFloat3(file,fmt,a)          gmp_fprintf(file,fmt,a)\n\
 \n\
 /************************************************************************/\n\
-#endif\n\
 ";
 

@@ -104,6 +104,16 @@ static " PREFIX_JET1(t) " my_jet_tmp;\n\
 \tflag_init_jet_library=1;\n\
 }\n" \
   "\n" \
+  I " " PREFIX_JET1(get_num_symbs) "(void)\
+{\
+return 1;\
+}\n" \
+  "\n" \
+  I " " PREFIX_JET1(get_deg) "(void)\
+{\
+return cur_deg;\
+}\n" \
+  "\n" \
   I " " PREFIX_JET1(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
 \tfprintf(stderr, \"%d: Action not allowed\\n\",__LINE__);\n\
@@ -182,6 +192,28 @@ static " PREFIX_JET1(t) " my_jet_tmp;\n\
 }\n" \
   "void " PREFIX_JET1(to_scal) "(" PREFIX_SCAL(t) " t[1], "PREFIX_JET1(t) " a) \
 {" PREFIX_SCAL(set) "(*t,a[0]);}\n" \
+  "\n" \
+  "void " PREFIX_JET1(eval) "(" PREFIX_SCAL(t) " t[1], " PREFIX_JET1(t) " a, " PREFIX_SCAL(t) " s[]) \n\
+{\n\
+\t" I " k;\n\
+\t" PREFIX_SCAL(set_si) "(*t,0);\n\
+\tfor (k = cur_deg-1; k > 0; k--) {\n\
+\t\t" PREFIX_SCAL(mul2) "(my_scal_tmp,*t,*s);\n\
+\t\t" PREFIX_SCAL(add2) "(*t,my_scal_tmp,a[k]);\n\
+\t}\n\
+\t" PREFIX_SCAL(mul2) "(my_scal_tmp,*t,*s);\n\
+\t" PREFIX_SCAL(add2) "(*t,my_scal_tmp,a[0]);\n\
+}\n" \
+  "\n" \
+  "void " PREFIX_JET1(get_coef) "(" PREFIX_SCAL(t) " t[1], " PREFIX_JET1(t) " a, const " I " idx[]) \
+{\
+" PREFIX_SCAL(set) "(*t,a[*idx]);\
+}\n" \
+  "\n" \
+  "void " PREFIX_JET1(set_coef) "(" PREFIX_JET1(t) " a, const " I " idx[], " PREFIX_SCAL(t) " t) \
+{\
+" PREFIX_SCAL(set) "(a[*idx],t);\
+}\n" \
   "\n" \
   "void " PREFIX_JET1(nrminf) "(" PREFIX_SCAL(t) " nrm[1], " PREFIX_JET1(t) " a)\n\
 {\n\

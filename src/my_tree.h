@@ -56,7 +56,7 @@ typedef " PREFIX_TREE(t) "* " PREFIX_TREE(ptr) ";\n\
 /* CODE " PREFIX_TREE(t) " */\n\
 \n\
 \n\
-#define " PREFIX_TREE(nch) "(n,k) num_coefs_homogeneous[n*(max_deg+1)+k]\n\
+#define " PREFIX_TREE(nch) "(n,k) num_coefs_homogeneous[(n)*(max_deg+1)+(k)]\n\
 \n\
 size_t " PREFIX_TREE(create_tree) "(" PREFIX_TREE(ptr) " h, " PREFIX_SCAL(t) " *coef) {\n\
   static " PREFIX_SCAL(t) " *pcoef=NULL;\n\
@@ -462,7 +462,7 @@ void " PREFIX_TREE(pph_si) "(" PREFIX_TREE(ptr) " h, " I " scal, " PREFIX_TREE(p
        ++hc, ++ac){" PREFIX_SCAL(div2_d) "((*hc),(*ac),s);}\\\n\
 }\n\
 \n\
-#define get_zero_coef(x) x->coef\n\
+#define get_zero_coef(x) (x)->coef\n\
 \n\
 " PREFIX_SCAL(t) "* " PREFIX_TREE(get_coef) "(" PREFIX_TREE(ptr) " h, const " I " idx[])\n\
 {\n\

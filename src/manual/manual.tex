@@ -3,7 +3,7 @@
 \usepackage{soul,ifthen}
 \lstnewenvironment{code}[1][]{%
   \lstset{
-    basicstyle=\ttfamily,
+    basicstyle=\ttfamily\small,
     columns=fullflexible,
     keepspaces=true,
     frame=left,
@@ -19,14 +19,15 @@
 
 \usepackage{amsthm}
 \theoremstyle{remark}
-\newtheorem{warning}{Warning}
+\newtheorem*{warnings}{Warnings}
 
 \usepackage{xcolor} \newcommand{\jg}[1]{\textcolor{violet}{JG: #1}}
 \newcommand{\mz}[1]{\textcolor{red}{MZ: #1}}
 
 
 \newcommand{\taylorname}{{\bf taylor}}
-\newcommand{\version}{2.0.1}
+\newcommand{\version}{2.0.2}
+% \newcommand{\version}{2.0.1}
 % \newcommand{\version}{2.0.0}
 
 \newcommand{\myfloat}{{\tt MY\symbol{95}FLOAT}}
@@ -96,8 +97,10 @@ ERROR!!!!!}}}}}}}}}%
 
 \author{Joan Gimeno {\tt <joan@maia.ub.es>} \and \`Angel Jorba {\tt
     <angel@maia.ub.es>} \and Maorong Zou {\tt <mzou@math.utexas.edu>}}
-\date{November 7, 2022}
-% \date{September 9, 2022}
+\date{November 28, 2022} % version 2.0.2
+% \date{November 7, 2022} % version 2.0.1
+% \date{September 9, 2022} % version 2.0.0
+
 
 \voffset=-20mm       % vertical displacement
 \oddsidemargin=3mm   % horizontal displacement (odd pages)
@@ -121,7 +124,7 @@ minimize the global computational effort.  This routine is meant to be
 called from a user main program to perform the desired numerical
 integration. This version of \taylorname{} (2.*) extends the
 functionalities from \cite{JZ} by adding support of jet transport
-\cite{GJJMZ}. I.e., generating code to integrate the variational
+\cite{GJJMZ}. That is, by generating code to integrate the variational
 equations (of any order).
 
 \smallskip 
@@ -152,13 +155,14 @@ Lyapunov exponents, and high-order derivatives of Poincar\'e maps.
 
 \begin{itemize}
     \item \taylorname{} is a high-order ODE-solver.
-    \item \taylorname{} needs input of ODEs in its natural form.
-    \item \taylorname{} admits user-defined arithmetic via a set of predefined
-      \myfloat{} macros.
+    \item \taylorname{} needs input of an ODE in its natural form.
+    \item \taylorname{} admits user-defined arithmetic via a set of
+      predefined \myfloat{} macros.
     \item \taylorname{} works with multi-precision arithmetic libraries.
     \item \taylorname{} uses an optimized step size control.
     \item \taylorname{} allows user-defined step size control.
-    % \item \taylorname{} supports double complex variables but not complex time integration.
+    \item \taylorname{} supports complex variables with even quadruple
+      or arbitrary precision.
     \item \taylorname{} is OpenMP compatible. Declaration is required
       for thread dependent external parameters.
     \item \taylorname{} works with jet transport via its \myjet{}
@@ -299,7 +303,8 @@ transparent unless you want to modify them. Here is the list.
       arbitrary number of symbols, and arbitrary degree. It works well
       when the jet size is below 1000 terms, i.e., whenever ${{d+m}
         \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on \url{   http://www.maia.ub.es/dsg/param/chapter2.html}}.
+    \item \verb+jet_tree+ a general library\footnote{based on \url{
+ http://www.maia.ub.es/dsg/param/chapter2.html}}.
 \end{itemize}
 
 
@@ -351,7 +356,7 @@ the usual type (although it may be of other type, such as, {\tt
 \subsection*{Jet variables declaration}
 Jet variables are declared using the statement
 \begin{verbatim}
-    jet [var_list|all] symbols [Number_of_symbols] degree [Degree];
+    jet [var_list | all] symbols [Number_of_symbols] degree [Degree];
 \end{verbatim}
 For example,
 \begin{verbatim}
@@ -404,8 +409,8 @@ steps in the construction of the \taylorname{} integrator.
       compute the derivatives of the state variables, and the
       automatic step size (and order) control.
     \item\label{step2} We ask \taylorname{} to produce a header file
-      that contains the definition of the data type, macros for basic arithmetic and forward declarations of
-       API functions.
+      that contains the definition of the data type, macros for basic
+      arithmetic and forward declarations of API functions.
     \item\label{step3} We write a main driver function that repeatedly
       call the taylor integrator.
 \end{enumerate}
@@ -435,7 +440,11 @@ and \ref{step2}.
 
 \section{How to use \taylorname{} by examples}\label{sec:examples}
 
-The source code of examples in this manual is included in the \taylorname{} distribution.  If \taylorname{} is installed from a \verb+deb+ or \verb+rpm+ package, they're in \verb+/usr/share/taylor/+. If \taylorname{} is installed from source, they're in \verb+src/examples+ subdirectory.
+The source code of examples in this manual is included in the
+\taylorname{} distribution.  If \taylorname{} is installed from a
+\verb+deb+ or \verb+rpm+ package, they are in
+\verb+/usr/share/taylor/+. If \taylorname{} is installed from source,
+they're in \verb+src/examples+ subdirectory.
 
 \subsection{A first \taylorname{} contact} \label{sec:ex0}
 \renewcommand{\inputfile}{\inputfiles{sec:ex0}}
@@ -500,10 +509,10 @@ control functions in separate files.
 The first line creates the file \odecfile{} ({\tt -o} flag) with the
 code that computes the time-jet of derivatives ({\tt -jet} flag) and
 the step size control ({\tt -step} flag); the ODE description is read
-from the input file \inputfile{}. The flag {\tt -name}  tells
-\taylorname{} the name we want to use for the stepper function; in this case the name is {\tt
-  taylor\symbol{95}step\symbol{95}lrnz} (the string after the {\tt
-  -name} flag is appended to the string {\tt
+from the input file \inputfile{}. The flag {\tt -name} tells
+\taylorname{} the name we want to use for the stepper function; in
+this case the name is {\tt taylor\symbol{95}step\symbol{95}lrnz} (the
+string after the {\tt -name} flag is appended to the string {\tt
   taylor\symbol{95}step\symbol{95}} to get the name of this
 function). The detailed description of the parameters of this function
 is in Section~\ref{sec:or}.
@@ -575,13 +584,13 @@ when either condition is met.
 
 Please be advised that expressions here are evaluated to double
 precision values, then passed to the header macro
-\verb+MakeMyFloatC(var,string_form,double_value)+.
-When a supported multi-precision is used, this macro
-uses a native conversion procedure to convert the number in string form to
-a native multi-precision object.  \taylorname{} will pass
-numbers in it's original form (i.e, not converted to double) to this macro. 
-Expressions, however, will be evaluated to double first, its string form is then 
-generated use the \verb+printf+ utility.
+\verb+MakeMyFloatC(var,string_form,double_value)+.  When a supported
+multi-precision is used, this macro uses a native conversion procedure
+to convert the number in string form to a native multi-precision
+object.  \taylorname{} will pass numbers in it's original form (i.e,
+not converted to double) to this macro.  Expressions, however, will be
+evaluated to double first, its string form is then generated use the
+\verb+printf+ utility.
 
 \bigskip
 For example, we can add the following lines to 
@@ -643,7 +652,11 @@ with these libraries before using them.
 
 This example demonstrate the use of {\tt extern} variables, i.e.,
 variable defined in somewhere other file that it must be find during
-the linkage process.
+the linkage process. The current version recognizes
+
+\begin{verbatim}
+    extern [MY_FLOAT|double|float|int|short|char] var;
+\end{verbatim}
 
 In some cases, a vector field can depend on one or several parameters
 and the user is interested in changing them at runtime. Moreover, for
@@ -987,7 +1000,7 @@ We then generate the source and header files using \taylorname{},
     taylor -o \odecfile{} -jet -step -headername \odehfile{} \inputfile{} -jethelper
 \end{command}
 We assume parameter \verb+RR+ is thread-dependent, so we need to
-modify \odecfile{}. Append the line
+modify \odecfile{}. Append to the line
 \begin{verbatim}
     extern MY_FLOAT RR;
 \end{verbatim}
@@ -1174,7 +1187,12 @@ routines.
 Usage: ./taylor 
   [-name ODE_NAME]
   [-o outfile] 
-  [-long_double | -float128 | -mpfr | -mpfr_precision PRECISION ]
+  [-long_double | -float128 | 
+   -mpfr | -mpfr_precision PRECISION |
+   -gmp | -gmp_precision PRECISION |
+   -complex | 
+   -long_complex | -complex128 | 
+   -mpc | -mpc_precision [ PRECISION_REAL | PRECISION_IMAG ] ]
   [-main | -header | -jet | -jhelper | -jet_helper | -main_only] 
   [-step STEP_CONTROL_METHOD]
   [-jlib JET_LIBRARY]
@@ -1205,6 +1223,16 @@ writes its output to the standard output.}
 
 \noindent
 
+\item{\verb+-long_double+
+
+This option tells \taylorname{} to use long double
+floating point arithmetic.  }
+
+\item{\verb+-float128+
+
+This option tells \taylorname{} to use the GNU C \verb+__float128+
+floating point arithmetic.  }
+
 \item{\verb+-mpfr+ 
 
 This option tells \taylorname{} to use the the GNU MPFR library.  }
@@ -1218,10 +1246,32 @@ the {\bf mpfr} floating point types. If {\tt -mpfr\symbol{95}precision
   PRECISION} is used, the main program will set the precision to {\tt
   PRECISION} without prompting the user.}
 
-\item{\verb+-float128+
 
-This option tells \taylorname{} to use the GNU C \verb+__float128+
+\item{\verb+-complex+
+
+This option tells \taylorname{} to use the C standard for \verb+double complex+
 floating point arithmetic.  }
+
+\item{\verb+-long_complex+
+
+This option tells \taylorname{} to use the C standard for
+\verb+long double complex+ floating point arithmetic.  }
+
+\item{\verb+-complex128+
+
+This option tells \taylorname{} to use the GNU C \verb+__complex128+
+floating point arithmetic.  }
+
+\item{\verb+-mpc+ 
+
+This option tells \taylorname{} to use the the GNU MPC library.  }
+
+\item{\verb+-mpc_precision [ PRECISION_REAL | PRECISION_IMAG ]+
+
+This flag is almost equivalent to {\tt -mpc}; the only difference is
+that instead of using default precision from the \verb+mpfr+ for the
+real and imaginary parts, it uses the precision (in bits) of the
+mantissa for the real and imaginary floating point types.}
 
 \item{\verb+-main+
 
@@ -1299,8 +1349,8 @@ a special purpose library. Possible value for \verb+JETLIBRARY+ are:
       arbitrary number of symbols, arbitrary degree. This
       implementation works well when the jet size is below 1000 terms,
       i.e., when ${{d+m} \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on \url{     http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the
-      default.
+    \item \verb+jet_tree+ a general library\footnote{based on \url{
+ http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the default.
 \end{itemize}
 }
 \item{\verb+-main_only+
@@ -1436,9 +1486,11 @@ passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
   on input:  initial condition\newline
   on output: new condition, corresponding to the (output) time
 \item {\tt direction}\newline
-  flag to integrate forward or backwards.\newline
-  \hspace*{5mm} \phantom{-}1: forward\newline
-  \hspace*{5mm} -1: backwards\newline
+  flag to integrate forward or backwards.
+  \begin{itemize}
+  \item[\phantom{-}1:] forward
+  \item[-1:] backwards
+  \end{itemize}
   Note: this flag is ignored if {\tt
     step\symbol{95}ctrl\symbol{95}method} is set to 0.
 \item {\tt step\symbol{95}ctrl\symbol{95}method}\newline flag for the
@@ -1469,11 +1521,12 @@ passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
   decimal log of the relative accuracy required.
 \item {\tt endtime}
  \begin{description}
-  \item if \verb+NULL+, it is ignored. \item if {\tt step\symbol{95}ctrl\symbol{95}method} is set to
-  0, it is also ignored. \item otherwise, if next step is going to be
-  outside {\tt endtime}, reduce the step size so that the new time
-  {\tt time} is exactly {\tt endtime} (in that case, the function
-  returns 1).
+  \item if \verb+NULL+, it is ignored. \item if {\tt
+    step\symbol{95}ctrl\symbol{95}method} is set to 0, it is also
+    ignored.
+  \item otherwise, if next step is going to be outside {\tt endtime},
+    reduce the step size so that the new time {\tt time} is exactly
+    {\tt endtime} (in that case, the function returns 1).
   \end{description}
 \item {\tt ht}
  \begin{description}
@@ -1498,7 +1551,8 @@ passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
 \begin{description}
 \item if \verb+NULL+, it is ignored. 
 \item on input: the value of jet variables
-\item on output: the new value of jet variable at the output time {\tt ti}.
+\item on output: the new value of jet variable at the output time {\tt
+  ti}.
 \end{description}
 \end{itemize}
 
@@ -1561,7 +1615,6 @@ currently supports the following floating point data types.
 \begin{itemize}
     \item \verb+double+.  The standard C \verb+double+.  This is the
       default.
-    % \item \verb+double complex+. A complex double precision arithmetic based on the C standard \verb+complex.h+. 
     \item \verb+long double+. The C \verb+long double+ type.
     \item \verb+__float128+. The GNU C 128 bit floating point
       type\footnote{\url{https://gcc.gnu.org/onlinedocs/libquadmath/index.html}}.
@@ -1571,11 +1624,39 @@ currently supports the following floating point data types.
     \item \verb+gmp_t+. An arbitrary precision floating point data
       type from {\tt gmp}
       library\footnote{\url{https://gmplib.org}}.
+    \item \verb+double complex+. A complex double precision arithmetic
+      based on the C standard \verb+complex.h+.
+    \item \verb+long double complex+. The C \verb+long double complex+ type.
+    \item \verb+__complex128+. The GNU C 128 bit floating point for
+      complex
+      type\footnote{\url{https://gcc.gnu.org/onlinedocs/libquadmath/index.html}}.
+    \item \verb+mpc_t+. An arbitary precision floating-point data type
+      from {\tt mpc}
+      library\footnote{\url{https://www.multiprecision.org/mpc}}.
 \end{itemize}
 These data types can be selected using \taylorname{} command line
-flags, that is, \verb+-long_double+, \verb+-float128+, \verb+-gmp+ or
+flags, e.g., \verb+-long_double+, \verb+-float128+, \verb+-gmp+ or
 \verb+-gmp_precision NBITS+ and \verb+-mpfr+ or
 \verb+-mpfr_precision NBITS+, see Section~\ref{sec:clo}.
+
+\medskip 
+
+\begin{warnings}[Complex numbers]
+ \begin{enumerate}
+ \renewcommand{\theenumi}{\arabic{enumi}}
+ \renewcommand{\labelenumi}{\theenumi.)}
+     \item In case of \verb+MY_FLOAT+ complex types, the functions are
+       provided by the C standard data types, the GNU C and \verb+mpc+
+       libraries respectively. Thus, \taylorname{} does not manage
+       complex determination branches.
+     \item The unit imaginary number can be provided as external
+       parameter.
+     \item Boolean comparisons of complex \verb+MY_FLOAT+ are treated
+       as real Boolean comparison of their real parts.
+     \item \taylorname{} does not provide support for complex time
+       integration.
+ \end{enumerate}
+\end{warnings}
 
 \bigskip
 To extend \taylorname{} to support a custom floating point data type,
@@ -2069,7 +2150,7 @@ where $f^{i}(t)$ is the $i$th derivative of $f$ at $t_0$.
 The Taylor expansion of $f(t)$ around $t_0$ can be
 conveniently expressed as
 \begin{eqnarray*}
-f(t_0 +h) = (f)_0 + (f)_1 h + (f)_2 h^2 + \cdots + (f)_n h^n  \cdots
+f(t_0 +h) = (f)_0 + (f)_1 h + (f)_2 h^2 + \cdots + (f)_n h^n + \cdots
 \end{eqnarray*}
 
 Let $(p)_i, (q)_i$ be the $i$th Taylor coefficients of $p, q$ at
@@ -2136,7 +2217,7 @@ i}\right)(\sin p)_{i-1-r} (p)_{r+1}\cr
   methods. {\it Exp. Math.}, 14(1):99–117, 2005.
 \bibitem{GJJMZ} J. Gimeno, \`A. Jorba, M. Jorba-Cusc\'o, N. Miguel,
   and M. Zou. Numerical integration of high-order variational
-  equations of odes. Revisions submitted, 2022.
+  equations of ODEs. Forthcoming to {\it Appl. Math. Comput.}, 2022.
 % \bibitem{GJZ} J. Gimeno, \`A. Jorba, and M. Zou. A software package for the numerical integration of ODE by means of high-order Taylor methods using jet transport. Work in progress, 2022.
 \end{thebibliography}
 \end{document}

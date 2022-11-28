@@ -132,6 +132,8 @@ typedef " MY_JET_FIXES(t) " MY_JET;\n\
 #define InitJet(a)                 " MY_JET_FIXES(init) "(" InitCleanFlag "(a))\n\
 #define ClearJet(a)                " MY_JET_FIXES(clean) "(" InitCleanFlag "(a))\n\
 #define ClearUpJet()               " MY_JET_FIXES(cleanup) "()\n\
+#define GetJetVarDegree()          " MY_JET_FIXES(get_deg) "()\n\
+#define GetNumSymbols()            " MY_JET_FIXES(get_num_symbs) "()\n\
 #define SetJetVarDegree(a)         " MY_JET_FIXES(set_deg) "(a)\n\
 #define SetNumSymbols(a)           " MY_JET_FIXES(set_num_symbs) "(a)\n\
 #define InitJetParameter(a,i)      undefined\n	\
@@ -221,6 +223,8 @@ int * " PREFIX_JET(monomial_offsets) "(void);\n\
 \n\
 size_t " PREFIX_JET(init) "(" PREFIX_JET(ptr) ");\n\
 void " PREFIX_JET(initup) "(" I ", " I ");\n\
+" I " " PREFIX_JET(get_num_symbs) "(void);\n\
+" I " " PREFIX_JET(get_deg) "(void);\n\
 " I " " PREFIX_JET(set_num_symbs) "(" I ");\n\
 " I " " PREFIX_JET(set_deg) "(" I ");\n\
 void " PREFIX_JET(cleanup) "(void);\n\

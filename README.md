@@ -24,7 +24,15 @@ We recommend reviewing the manual for further details.
 
 ## Changelog
 
-### Nov 7, 2022 -- v2.0.1
+### Nov 28, 2022 -- v2.0.2
+
+1. Complex types for double, long double, quadruple, and arbitrary precision.
+2. Option to provide NULL input in order or step size for step controls different than 0.
+3. Macros GetNumSymbols and GetJetVarDegree to know the working degrees and symbols.
+4. Minor bugs/typos corrected and corrected example 9.4.
+5. Manual updated.
+
+### Nov 07, 2022 -- v2.0.1
 
 * Minor updates
     1. Removed static variables number_of_jet_vars, number_of_symbols,

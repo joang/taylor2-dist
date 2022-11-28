@@ -221,6 +221,16 @@ void " PREFIX_JET_TREE(cleanup) "(void)\n\
   flag_init_jet_library=0;\n\
 }\n\
 \n\
+" I " " PREFIX_JET_TREE(get_num_symbs) "(void)\
+{\
+return nsymb;\
+}\n\
+\n\
+" I " " PREFIX_JET_TREE(get_deg) "(void)\
+{\
+return deg;\
+}\n\
+\n\
 " I " " PREFIX_JET_TREE(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
   fprintf(stderr,\"%s:%d Action not allowed\\n\",__FILE__,__LINE__); fflush(stderr); exit(1);\n\
@@ -718,8 +728,8 @@ void " PREFIX_JET_TREE(set_log) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t)
 \\\n\
   for (i = 1; i <= deg; ++i)\\\n\
     {\\\n\
-      " PREFIX_TREE(set_zero) "(s[i], sc,sf);\\\n\
-      " PREFIX_TREE(set_zero) "(c[i], sc,sf);\\\n\
+      " PREFIX_TREE(set_zero) "((s)[i], sc,sf);\\\n\
+      " PREFIX_TREE(set_zero) "((c)[i], sc,sf);\\\n\
 \\\n\
       for (j = 0; j < i; ++j)\\\n\
         {\\\n\
@@ -728,8 +738,8 @@ void " PREFIX_JET_TREE(set_log) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t)
           " PREFIX_SCAL(sub2_si) "(aux2,aux1,1);\\\n\
           " PREFIX_SCAL(si_sub2) "(aux1,1,aux1);\\\n\
 \\\n\
-          " PREFIX_TREE(pph_scal) "(s+i, aux1, a+(i-j), c+j);\\\n\
-          " PREFIX_TREE(pph_scal) "(c+i, aux2, a+(i-j), s+j);\\\n\
+          " PREFIX_TREE(pph_scal) "((s)+i, aux1, (a)+(i-j), (c)+j);\\\n\
+          " PREFIX_TREE(pph_scal) "((c)+i, aux2, (a)+(i-j), (s)+j);\\\n\
         }\\\n\
     }\\\n\
   " PREFIX_SCAL(clean) "(aux2);\\\n\

@@ -2,7 +2,6 @@
  *
  *       Taylor  
  *
- *    Copyright (C) 1999  Maorong Zou, Angel Jorba
  *    Copyright (C) 2022 Joan Gimeno, Angel Jorba, Maorong Zou
  *
  *
@@ -24,92 +23,94 @@
  *
  *************************************************************************/
 
-static char *qd_header="\
+static char *_float128_header="\
 /*\n\
  *  MY_FLOAT is the data type to be used in computing derivatives. \n\
  *  It may be 'float', 'double' or user defined private data types\n\
  *  like 'long double', 'complex' etc. \n\
  */\n\
+#define _USE__FLOAT128_\n\
+static char f128_out_buf[128];\n\
 \n\
-#define _USE_QD_\n\
+//#define MY_FLOAT  __float128\n\
 \n\
 /* for double or long double, don't need to initialize */\n\
 #define   InitMyFloat(r)            \n\
 #define   ClearMyFloat(r)           \n\
  \n\
 /* assign b to a */\n\
-#define   AssignMyFloat(a, b)       {(a)=(b);}\n\
+#define   AssignMyFloat(a, b)       ((a)=(b))\n\
 \n\
 /* create a MY_FLOAT from a, assigne to r. a is an integer or a float */\n\
-#define   MakeMyFloatA(r,a)         (r=(double)(a))\n\
-\n\
-/* create a MY_FLOAT from string, a is an integer or a float, s is its string representation */\n\
-#define   MakeMyFloatC(r,s,a)       (r=s)\n\
+#define   MakeMyFloatA(r,a)         (r=(__float128)(a))\n\
 \n\
 /* create a MY_FLOAT from a, assign to r and return r */\n\
-#define   MakeMyFloatB(r,a)         (r=(double)(a),r)\n\
+#define   MakeMyFloatB(r,a)         (MakeMyFloatA(r,a),r)\n\
+\n\
+/* create a MY_FLOAT from string, a is an integer or a float, s is its string representation */\n\
+#define   MakeMyFloatC(r,s,a)       (r=strtoflt128(s,NULL))\n\
 \n\
 /* addition r=a+b   */\n\
 #define   AddMyFloatA(r,a,b)        (r=(a)+(b))\n\
-#define   AddMyFloatD(r,a,b)        (r=(a)+(double)(b))\n\
-#define   AddMyFloatSI(r,a,b)        (r=(a)+(double)(b))\n\
+#define   AddMyFloatD               AddMyFloatA\n\
+#define   AddMyFloatSI              AddMyFloatA\n\
 \n\
 /* substraction r=a-b */\n\
-#define   SubtractMyFloatA(r,a,b)  (r=(a)-(b))\n\
-#define   SubtractMyFloatD(r,a,b)  (r=(a)-(double)(b))\n\
-#define   SubtractMyFloatSI(r,a,b)  (r=(a)-(double)(b))\n\
+#define   SubtractMyFloatA(r,a,b)   (r=(a)-(b))\n\
+#define   SubtractMyFloatD          SubtractMyFloatA\n\
+#define   SubtractMyFloatSI         SubtractMyFloatA\n\
+#define   SubtractSIMyFloat         SubtractMyFloatA\n\
 \n\
 /* multiplication r=a*b */\n\
 #define   MultiplyMyFloatA(r,a,b)   (r=(a)*(b))\n\
-#define   MultiplyMyFloatD(r,a,b)   (r=(a)*(double)(b))\n\
-#define   MultiplyMyFloatSI(r,a,b)   (r=(a)*(double)(b))\n\
+#define   MultiplyMyFloatD          MultiplyMyFloatA\n\
+#define   MultiplyMyFloatSI         MultiplyMyFloatA\n\
 \n\
 /* division r=a/b */\n\
 #define   DivideMyFloatA(r,a,b)     (r=(a)/(b))\n\
-#define   DivideMyFloatD(r,a,b)     (r=(a)/(double)(b))\n\
-#define   DivideMyFloatSI(r,a,b)     (r=(a)/(double)(b))\n\
+#define   DivideMyFloatD(r,a,b)     (r=(a)/(__float128)(b))\n\
+#define   DivideMyFloatSI           DivideMyFloatD\n\
 \n\
 /* division by an integer r=a/i */\n\
-#define   DivideMyFloatByInt(r,a,i) (r=(a)/(double)(i))\n\
-\n\
+#define   DivideMyFloatByInt(r,a,i)    (r=(a)/(__float128)(i))\n\
 /* negation r=-a*/\n\
-#define   NegateMyFloatA(r,a)       (r= -(a))\n\
+#define   NegateMyFloatA(r,a)          (r= -(a))\n\
 \n\
 /* square root r=sqrt(a) */\n\
-#define   sqrtMyFloatA(r,a)         (r=sqrt(a))\n\
+#define   sqrtMyFloatA(r,a)            (r=sqrtq(a))\n\
 /* exponentiation r=a^b */\n\
-#define   ExponentiateMyFloatA(r,a,b)  (r=exp(b * log(a)))\n\
+#define   ExponentiateMyFloatA(r,a,b)  (r=powq((a),(b)))\n\
 /* exponentiation r=a^b, b is an integer */\n\
-#define   ExponentiateMyFloatIA(r,a,b)  (r=pow((a),(double)(b)))\n\
+#define   ExponentiateMyFloatIA(r,a,b) (r=powq((a),(__float128)(b)))\n\
 /* sin(a)  r=sin(a) */\n\
-#define   sinMyFloatA(r,a)          (r=sin((a)))\n\
+#define   sinMyFloatA(r,a)             (r=sinq((a)))\n\
 /* cos(a)  r=cos(a) */\n\
-#define   cosMyFloatA(r,a)          (r=cos((a)))\n\
+#define   cosMyFloatA(r,a)             (r=cosq((a)))\n\
 /* tan(a)  r=tan(a) */\n\
-#define   tanMyFloatA(r,a)          (r=tan((a)))\n\
+#define   tanMyFloatA(r,a)             (r=tanq((a)))\n\
 /* atan(a) r=atan(a) */\n\
-#define   atanMyFloatA(r,a)         (r=atan((a)))\n\
+#define   atanMyFloatA(r,a)            (r=atanq((a)))\n\
 /* exp(a)  r=exp(a) */\n\
-#define   expMyFloatA(r,a)          (r=exp((a)))\n\
+#define   expMyFloatA(r,a)             (r=expq((a)))\n\
 /* log(a)  r=log(a) */\n\
-#define   logMyFloatA(r,a)          (r=log((a)))\n\
+#define   logMyFloatA(r,a)             (r=logq((a)))\n\
 /* sinh(a) r=sinh(a) */\n\
-#define   sinhMyFloatA(r,a)         (r=sinh(a))\n\
+#define   sinhMyFloatA(r,a)            (r=sinhq(a))\n\
 /* cosh(a) r=cosh(a) */\n\
-#define   coshMyFloatA(r,a)          (r=cosh(a))\n\
+#define   coshMyFloatA(r,a)            (r=coshq(a))\n\
 /* tanh(a) r=tanh(a) */\n\
-#define   tanhMyFloatA(r,a)          (r=tanh(a))\n\
+#define   tanhMyFloatA(r,a)            (r=tanhq(a))\n\
 \n\
 \n\
 /* log10(a)  r=log10(a) */\n\
-#define   log10MyFloatA(r,a)         (r=log10((a)))\n\
+#define   log10MyFloatA(r,a)           (r=log10q((a)))\n\
 /* fabs(a) r=fabs(a) */\n\
-#define   fabsMyFloatA(r,a)          (r=fabs(a))\n\
+#define   fabsMyFloatA(r,a)            (r=fabsq(a))\n\
 \n\
 /* convert to int */\n\
-#define   MyFloatToInt(ir,fa)       (ir=to_int(fa))\n\
+#define   MyFloatToInt(ir,fa)          (ir=(int)(fa))\n\
 /* convert to double */\n\
-#define   MyFloatToDouble(ir,fa)    (ir=to_double(fa))\n\
+#define   MyFloatToDouble(ir,fa)       (ir=(double)(fa))\n\
 \n\
 \n\
 /* boolean operation  */\n\
@@ -121,8 +122,10 @@ static char *qd_header="\
 #define   MyFloatA_NEQ_B(a,b)       ((a)!=(b))\n\
 \n\
 \n\
-#define   OutputMyFloat(a)           cout<<a \n\
-#define   OutputMyFloat3(file,fmt,a)           cout<<a \n\
+#define   OutputMyFloat(a)          quadmath_snprintf(f128_out_buf, 128, \"%.33Qe\", a),fprintf(stdout,\"%s \",f128_out_buf)\n\
+#define   OutputMyFloat3(file,format,a)     quadmath_snprintf(f128_out_buf, 128, format, a),fprintf(file,\"%s \",f128_out_buf)\n\
+\n\
 /************************************************************************/\n\
 ";
+
 
