@@ -35,7 +35,7 @@
 
 /****************************************************************/
 int num_jet_vars=0;
-int num_symbols=0;
+int num_jet_symbols=0;
 int deg_jet_vars=0;
 int state_jet_vars=0;
 int param_jet_vars=0;
@@ -92,19 +92,20 @@ int all_vars_are_jets=0;
 
 
 char *my_jet_prefixes[] = {\
- "",\
+ "jet_none",\
  "jet1_1", \
  "jet_1", \
  "jet1", \
- "jet2",
- "jet_2",
- "jet_m",
- "jet_tree",
+ "jet2", \
+ "jet_2", \
+ "jet_m", \
+ "jet_tree",\
+ "jet1_1_bis", \
  "jet"
 };
 
 char *my_float_api_macros = \
-    MY_SCAL_MACROS(MY_FLOAT_FIXES);
+    MY_FLOAT_MACROS(MY_FLOAT_FIXES);
 
 
 #define InitCleanFlag "&"
@@ -113,123 +114,210 @@ char *my_jet_preheaders[]= { \
   MY_JET_NONE_PREHEADER(NONE), \
   \
   MY_JET1_1_PREHEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
-                      MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                      MY_COEF_FUN, "MY_COEF", "MY_FLOAT", "int", \
+                      MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET_1_PREHEADER(MY_JET_1_FIXES, MY_JET_1_TYPE, \
-                     MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                     MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                     MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET1_PREHEADER(MY_JET1_FIXES, MY_JET1_TYPE, \
-                    MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                    MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                    MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET2_PREHEADER(MY_JET2_FIXES, MY_JET2_TYPE, \
-                    MY_FLOAT_FIXES, "MY_FLOAT", "int"),\
+                    MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                    MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
   \
   MY_JET_2_PREHEADER(MY_JET_2_FIXES, MY_JET_2_TYPE, \
-                    MY_FLOAT_FIXES, "MY_FLOAT", "int"),  \
+                     MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                     MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),  \
   \
   MY_JET_m_PREHEADER(MY_JET_m_FIXES, MY_JET_m_TYPE, \
-                    MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                     MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                     MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET_TREE_PREHEADER(MY_JET_TREE_FIXES, MY_JET_TREE_TYPE, \
-                        MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                        MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                        MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET1_1_PREHEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
+                      MY_COEF_FUN, "MY_COEF", "MY_FLOAT", "int", \
+                      MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
 };
 char *my_jet_headers[]= { \
   MY_JET_NONE_HEADER(NONE), \
   \
   MY_JET1_1_HEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
-                   MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                   MY_COEF_FUN, "MY_COEF", "MY_FLOAT", "int", \
+                   MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME,InitCleanFlagStruct) \
   "\n" \
-  MY_JET_MACROS(MY_JET1_1_FIXES,InitCleanFlag), \
+  MY_JET_MACROS(MY_JET1_1_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
   \
   MY_JET_1_HEADER(MY_JET_1_FIXES, MY_JET_1_TYPE, \
-                  MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                  MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME) \
   "\n" \
-  MY_JET_MACROS(MY_JET_1_FIXES,InitCleanFlag), \
+  MY_JET_MACROS(MY_JET_1_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
   \
   MY_JET1_HEADER(MY_JET1_FIXES, MY_JET1_TYPE, \
-                 MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                 MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                 MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME) \
   "\n" \
-  MY_JET_MACROS(MY_JET1_FIXES,InitCleanFlag), \
+  MY_JET_MACROS(MY_JET1_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
   \
-  MY_JET1_HEADER(MY_JET2_FIXES, MY_JET2_TYPE, \
-                 MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+  MY_JET2_HEADER(MY_JET2_FIXES, MY_JET2_TYPE, \
+                 MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                 MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME) \
   "\n" \
-  MY_JET_MACROS(MY_JET2_FIXES,InitCleanFlag), \
+  MY_JET_MACROS(MY_JET2_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
   \
   MY_JET_2_HEADER(MY_JET_2_FIXES, MY_JET_2_TYPE, \
-                  MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                  MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME) \
   "\n" \
-  MY_JET_MACROS(MY_JET_2_FIXES,InitCleanFlag), \
+  MY_JET_MACROS(MY_JET_2_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
   \
   MY_JET_m_HEADER(MY_JET_m_FIXES, MY_JET_m_TYPE, \
-                  MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                  MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME) \
   "\n" \
-  MY_JET_MACROS(MY_JET_m_FIXES,InitCleanFlag), \
+  MY_JET_MACROS(MY_JET_m_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
   \
   MY_JET_TREE_HEADER(MY_JET_TREE_FIXES, MY_JET_TREE_TYPE, \
-                     MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                     MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                     MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME) \
   "\n" \
-  MY_JET_MACROS(MY_JET_TREE_FIXES,InitCleanFlag) \
+  MY_JET_MACROS(MY_JET_TREE_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
+  \
+  MY_JET1_1_HEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
+                   MY_COEF_FUN, "MY_COEF", "MY_FLOAT", "int", \
+                   MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME,InitCleanFlag) \
+  "\n" \
+  MY_JET_MACROS(MY_JET1_1_FIXES,InitCleanFlag,MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME), \
 };
 char *my_jet_postheaders[]= { \
   MY_JET_NONE_POSTHEADER(NONE), \
   \
   MY_JET1_1_POSTHEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
-                       MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                       MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                       MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET_1_POSTHEADER(MY_JET_1_FIXES, MY_JET_1_TYPE, \
-                      MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                      MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                      MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET1_POSTHEADER(MY_JET1_FIXES, MY_JET1_TYPE, \
-                     MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                     MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                     MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET2_POSTHEADER(MY_JET2_FIXES, MY_JET2_TYPE, \
-                     MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                     MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                     MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET_2_POSTHEADER(MY_JET_2_FIXES, MY_JET_2_TYPE, \
-                      MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                      MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                      MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET_m_POSTHEADER(MY_JET_m_FIXES, MY_JET_m_TYPE, \
-                      MY_FLOAT_FIXES, "MY_FLOAT", "int"), \
+                      MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                      MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
   \
   MY_JET_TREE_POSTHEADER(MY_JET_TREE_FIXES, MY_JET_TREE_TYPE, \
-                         MY_FLOAT_FIXES, "MY_FLOAT", "int") \
+                         MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                         MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET1_1_POSTHEADER(MY_JET1_1_FIXES, MY_JET1_1_TYPE, \
+                       MY_COEF_FIXES, "MY_COEF", "MY_FLOAT", "int", \
+                       MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
 };
 
 char *my_jet_precodes[] = { \
   MY_JET_NONE_PRECODE(NONE), \
-  MY_JET1_1_PRECODE(MY_JET1_1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET_1_PRECODE(MY_JET_1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET1_PRECODE(MY_JET1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET2_PRECODE(MY_JET2_FIXES, MY_MP2_FIXES,MY_FLOAT_FIXES, "int"),\
-  MY_JET_2_PRECODE(MY_JET_2_FIXES, MY_FLOAT_FIXES, "int"), \
-  MY_JET_m_PRECODE(MY_JET_m_FIXES, MY_FLOAT_FIXES, "int"), \
-  MY_JET_TREE_PRECODE(MY_JET_TREE_FIXES,MY_TREE_FIXES,MY_FLOAT_FIXES, "int"), \
+  \
+  MY_JET1_1_PRECODE(MY_JET1_1_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET_1_PRECODE(MY_JET_1_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET1_PRECODE(MY_JET1_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET2_PRECODE(MY_JET2_FIXES, MY_MP2_FIXES,MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET_2_PRECODE(MY_JET_2_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET_m_PRECODE(MY_JET_m_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET_TREE_PRECODE(MY_JET_TREE_FIXES,MY_TREE_FIXES,MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET1_1_PRECODE(MY_JET1_1_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
 };
 char *my_jet_codes[] = { \
   MY_JET_NONE_CODE(NONE), \
-  MY_JET1_1_CODE(MY_JET1_1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET_1_CODE(MY_JET_1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET1_CODE(MY_JET1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET2_CODE(MY_JET2_FIXES, MY_MP2_FIXES,MY_FLOAT_FIXES, "int"),\
-  MY_JET_2_CODE(MY_JET_2_FIXES, MY_FLOAT_FIXES, "int"), \
-  MY_JET_m_CODE(MY_JET_m_FIXES, MY_FLOAT_FIXES, "int"), \
-  MY_JET_TREE_CODE(MY_JET_TREE_FIXES,MY_TREE_FIXES,MY_FLOAT_FIXES, "int"), \
+  \
+  MY_JET1_1_CODE(MY_JET1_1_FIXES,MY_COEF_FUN, MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME,InitCleanFlagStruct),\
+  \
+  MY_JET_1_CODE(MY_JET_1_FIXES, MY_COEF_FIXES,MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME, MY_JET_DATA_ACCESS),\
+  \
+  MY_JET1_CODE(MY_JET1_FIXES, MY_COEF_FIXES,MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME, MY_JET_DATA_ACCESS),\
+  \
+  MY_JET2_CODE(MY_JET2_FIXES, MY_MP2_FIXES,MY_COEF_FIXES,MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME, MY_JET_DATA_ACCESS),\
+  \
+  MY_JET_2_CODE(MY_JET_2_FIXES, MY_COEF_FIXES,MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME, MY_JET_DATA_ACCESS), \
+  \
+  MY_JET_m_CODE(MY_JET_m_FIXES, MY_COEF_FIXES,MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET_TREE_CODE(MY_JET_TREE_FIXES,MY_TREE_FIXES,MY_COEF_FIXES,MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME, MY_JET_DATA_ACCESS,MY_JET_RECURSION), \
+  \
+  MY_JET1_1_CODE(MY_JET1_1_FIXES,MY_COEF_FUN, MY_FLOAT_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME,InitCleanFlag),\
 };
 char *my_jet_postcodes[] = { \
   MY_JET_NONE_POSTCODE(NONE), \
-  MY_JET1_1_POSTCODE(MY_JET1_1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET_1_POSTCODE(MY_JET_1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET1_POSTCODE(MY_JET1_FIXES, MY_FLOAT_FIXES, "int"),\
-  MY_JET2_POSTCODE(MY_JET2_FIXES, MY_MP2_FIXES,MY_FLOAT_FIXES, "int"),\
-  MY_JET_2_POSTCODE(MY_JET_2_FIXES, MY_FLOAT_FIXES, "int"), \
-  MY_JET_m_POSTCODE(MY_JET_m_FIXES, MY_FLOAT_FIXES, "int"), \
-  MY_JET_TREE_POSTCODE(MY_JET_TREE_FIXES,MY_TREE_FIXES,MY_FLOAT_FIXES, "int"), \
+  \
+  MY_JET1_1_POSTCODE(MY_JET1_1_FIXES, MY_COEF_FUN, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET_1_POSTCODE(MY_JET_1_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET1_POSTCODE(MY_JET1_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET2_POSTCODE(MY_JET2_FIXES, MY_MP2_FIXES,MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
+  \
+  MY_JET_2_POSTCODE(MY_JET_2_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET_m_POSTCODE(MY_JET_m_FIXES, MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET_TREE_POSTCODE(MY_JET_TREE_FIXES,MY_TREE_FIXES,MY_COEF_FIXES, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME), \
+  \
+  MY_JET1_1_POSTCODE(MY_JET1_1_FIXES, MY_COEF_FUN, "int", \
+  MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
 };
 
 static char *words[2] = {MY_JET_PREFIX,MY_JET_SUFFIX};
+#define MY_JET_FUN_MACRO "#define " MY_JET_FUN(x) " " MY_JET_PREFIX "_ ## x ## _" MY_JET_SUFFIX
 
-static void print_and_subs(char *word[], char *str)
+void print_and_subs(char *word[], const char *str, const char *prefix, const char *suffix)
 {
   if(str == NULL) return;
   int length = strlen(str);
@@ -241,7 +329,7 @@ static void print_and_subs(char *word[], char *str)
       for(i = 0; i < location; i++) {fputc(str[i], outfile);}
       str += location + wlen[0];
       length -= (location + wlen[0]);
-      fprintf(outfile, "%s", my_jet_prefix);
+      fprintf(outfile, "%s", prefix);
 
       matchWord(str, word[1], length, &location);
       for(i = 0; i < location; i++) {fputc(str[i], outfile);}
@@ -252,66 +340,215 @@ static void print_and_subs(char *word[], char *str)
   fprintf(outfile,"%s\n", str);
 }
 
+
+#include <limits.h>
+void print_jet_tree_num_coef_homog_table(const char *prefix, const char *suffix, int nsymb, int deg)
+{
+  int **nch=NULL, m, k;
+
+  /* memory allocation */
+  k = (nsymb+1)*sizeof(__typeof__(*nch));
+  nch = (__typeof__(nch)) malloc(k);
+  if (nch == NULL)
+    {
+      fprintf(stderr, "%s:%d not enough memory to allocate %d\n", __FILE__, __LINE__, k);
+      fflush(stderr); exit(2);
+    }
+  for (m = 0; m <= nsymb; ++m)
+    {
+      k = (deg+1)*sizeof(__typeof__(**nch));
+      nch[m] = (__typeof__(*nch)) malloc(k);
+      if (nch[m] == NULL)
+        {
+          fprintf(stderr, "%s:%d not enough memory to allocate %d\n", __FILE__, __LINE__, k);
+          fflush(stderr); exit(2);
+        }
+    }
+
+  /* table computation */
+  nch[0][0] = 1;
+  for (k = 1; k <= deg; ++k) {nch[0][k] = 0;}
+  for (m = 1; m <= nsymb; ++m)
+    {
+      nch[m][0]= 1;
+      for (k = 1; k <= deg; ++k)
+        {
+          nch[m][k]= nch[m][k-1] + nch[m-1][k];
+          if (nch[m][k]> UINT_MAX - nch[m-1][k])
+            {
+              fprintf(stderr, "%s:%d impossible to generate table for nsymb=%d and deg=%d\n",
+                      __FILE__, __LINE__, nsymb, deg);
+              fflush(stderr); exit(3);
+            }
+        }
+    }
+
+  /* printing */
+  fprintf(outfile, "/*table for %d symbols and degree %d*/\n",nsymb, deg);
+  fprintf(outfile, "static int %s_num_coefs_homogeneous_%s[] = {\\\n",prefix,suffix);
+  for (m = 0; m <= nsymb; ++m)
+    {
+      for (k = 0; k <= deg; k++)
+        {
+          fprintf(outfile, "%d, ", nch[m][k]);
+        }
+      fprintf(outfile, "\\\n");
+    }
+  fprintf(outfile, "};\n");
+
+  /* deallocate memory */
+  for (m = 0; m <= nsymb; ++m) {free(nch[m]); nch[m]=NULL;}
+  free(nch); nch=NULL;
+}
+
+int setMyJetIndexes(void) {
+  if (my_jet_arith == ARITH_JET_NONE)
+    {
+      index_my_jet_prefix = PREFIX_NONE;
+      index_my_jet_header = HEADER_NONE;
+      index_my_jet_code = CODE_NONE;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* No jet */\n");
+    }
+  else if (my_jet_arith == ARITH_JET1_1)
+    {
+      index_my_jet_prefix = PREFIX_JET1_1;
+      index_my_jet_header = HEADER_JET1_1;
+      index_my_jet_code = CODE_JET1_1;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* Using jet lib: jet1_1. one symbol, degree one */\n");
+    }
+  else if (my_jet_arith == ARITH_JET1)
+    {
+      index_my_jet_prefix = PREFIX_JET1;
+      index_my_jet_header = HEADER_JET1;
+      index_my_jet_code = CODE_JET1;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* Using jet lib: jet1. one symbol, degree n */\n");
+    }
+  else if (my_jet_arith == ARITH_JET_1)
+    {
+      index_my_jet_prefix = PREFIX_JET_1;
+      index_my_jet_header = HEADER_JET_1;
+      index_my_jet_code = CODE_JET_1;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* Using jet lib: jet_1. n symbol, degree 1 */\n");
+    }
+  else if (my_jet_arith == ARITH_JET2)
+    {
+      index_my_jet_prefix = PREFIX_JET2;
+      index_my_jet_header = HEADER_JET2;
+      index_my_jet_code = CODE_JET2;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      jetStorageType=1;
+      fprintf(outfile, "/* Using jet lib: jet2. 2 symbol, degree n */\n");
+    }
+  else if (my_jet_arith == ARITH_JET_2)
+    {
+      index_my_jet_prefix = PREFIX_JET_2;
+      index_my_jet_header = HEADER_JET_2;
+      index_my_jet_code = CODE_JET_2;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* Using jet lib: jet_2. n symbol, degree 2 */\n");
+    }
+  else if (my_jet_arith == ARITH_JET_m)
+    {
+      index_my_jet_prefix = PREFIX_JET_m;
+      index_my_jet_header = HEADER_JET_m;
+      index_my_jet_code = CODE_JET_m;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* Using jet lib: jet_m. m symbol, degree n */\n");
+    }
+  else if (my_jet_arith == ARITH_JET_TREE)
+    {
+      index_my_jet_prefix = PREFIX_JET_TREE;
+      index_my_jet_header = HEADER_JET_TREE;
+      index_my_jet_code = CODE_JET_TREE;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      jetStorageType=2;
+      fprintf(outfile, "/* Using jet lib: jet_tree. m symbol, degree n */\n");
+    }
+  else if (my_jet_arith == ARITH_JET1_1_BIS)
+    {      
+      index_my_jet_prefix = PREFIX_JET1_1_BIS;
+      index_my_jet_header = HEADER_JET1_1_BIS;
+      index_my_jet_code = CODE_JET1_1_BIS;
+      my_jet_prefix = my_jet_prefixes[index_my_jet_prefix];
+      fprintf(outfile, "/* Using jet lib: jet1_1_bis. one symbol, degree one */\n");
+    }
+  else
+    {
+      /* jet lib invalid */
+      return 1;
+    }
+  return 0;
+}
+
 void genMyJetHeader(void) {
   if (outfile == NULL) return;
-
-  fprintf(outfile, "\n/*** MY_JET ***/\n#ifndef _MY_JET_H_\n");
-  fprintf(outfile, "#define _MY_JET_H_\n");
-
+  fprintf(outfile, "\n/*** MY_JET ***/\n#ifndef _MY_JET_H_\n#define _MY_JET_H_\n\n");
 
   //20200615
-  if(jetStorageType==0) {
-    fprintf(outfile, "#define MY_JET_DATA(x,i) ((x)[i])\n");        
+  if (my_jet_arith == ARITH_JET_NONE) {}
+  else if(jetStorageType==0) {
+    fprintf(outfile, "#define " MY_JET_DATA_ACCESS "(x,i) ((x)[i])\n");
   } else if(jetStorageType==1) {
-      fprintf(outfile, "#define MY_JET_DATA(x,i) ((*(x))[i])\n");            
+      fprintf(outfile, "#define " MY_JET_DATA_ACCESS "(x,i) ((*(x))[i])\n");
   } else if(jetStorageType==2) {
-    print_jet_tree_monomial_index_mapper();      
-    fprintf(outfile, "#define MY_JET_DATA(x,i) (((x)->coef)[_tr_idx_map_[i]])\n");        
+    print_jet_tree_monomial_index_mapper(my_jet_prefix, suffix, num_jet_symbols, deg_jet_vars);
+    fprintf(outfile, "#define " MY_JET_DATA_ACCESS "(x,i) (((x)->coef)[_%s_tr_idx_map_%s_[i]])\n",my_jet_prefix,suffix);
   } else {
-    fprintf(outfile, "#define MY_JET_DATA(x,i) ((x)[i])\n");        
+    fprintf(outfile, "#define " MY_JET_DATA_ACCESS "(x,i) ((x)[i])\n");
   }
   //
+
+  genMyCoefHeader();
+
+  print_and_subs(words, my_jet_preheaders[index_my_jet_header], my_jet_prefix, suffix);
+
+  print_and_subs(words, my_jet_headers[index_my_jet_header], my_jet_prefix, suffix);
+
+  print_and_subs(words, my_jet_postheaders[index_my_jet_header], my_jet_prefix, suffix);
   
-  print_and_subs(words, my_jet_preheaders[index_my_jet_header]);
+//   if (my_jet_arith != ARITH_JET_NONE)
+  print_and_subs(words, MY_JET_FUN_MACRO, my_jet_prefix, suffix);
 
-  print_and_subs(words, my_jet_headers[index_my_jet_header]);
-
-  print_and_subs(words, my_jet_postheaders[index_my_jet_header]);
-  fprintf(outfile, "#endif /*_MY_JET_H_ */ \n");
+  fprintf(outfile, "#endif /* _MY_JET_H_ */\n\n");
 }
 
 void genMyJetCode(void) {
   if (outfile == NULL) return;
-
-//  print_and_subs(words, my_float_api_macros);
   
   // 221104
-  extern int num_monomials(int, int);
   int i, k; 
-  fprintf(outfile,"static int _monomial_counts_[]  =      {1");
+  fprintf(outfile,"static int _%s_monomial_counts_%s_[]  =      {1", my_jet_prefix, suffix);
   for(i=1; i<= deg_jet_vars; i++) {
-    k=num_monomials(num_symbols, i);
+    k=num_monomials(num_jet_symbols, i);
     fprintf(outfile, ",%d", k);
   }
   fprintf(outfile, "};\n");
-  fprintf(outfile,"static int _monomial_offsets_[] =      {0");
+  fprintf(outfile,"static int _%s_monomial_offsets_%s_[] =      {0", my_jet_prefix, suffix);
   k=0;
   for(i=0;i<= deg_jet_vars; i++) {
-    k+= num_monomials(num_symbols, i);    
+    k+= num_monomials(num_jet_symbols, i);
     fprintf(outfile, ",%d", k);
   }  
   fprintf(outfile, "};\n");
   // 221104
-  
-  print_and_subs(words, my_jet_precodes[index_my_jet_code]);
-  
+
   if (index_my_jet_code == CODE_JET_TREE)
     {
-      print_jet_tree_num_coef_homog_table(num_symbols, deg_jet_vars);
+      print_jet_tree_num_coef_homog_table(my_jet_prefix, suffix, num_jet_symbols, deg_jet_vars);
     }
 
-  print_and_subs(words, my_jet_codes[index_my_jet_code]);
+  fprintf(outfile, "%s\n", my_float_api_macros);
+
+  if (genMyCoef) { genMyCoefCode(); }
+  
+  print_and_subs(words, my_jet_precodes[index_my_jet_code], my_jet_prefix, suffix);
+
+  print_and_subs(words, my_jet_codes[index_my_jet_code], my_jet_prefix, suffix);
   output_jet_multiplication_code();
 
-  print_and_subs(words, my_jet_postcodes[index_my_jet_code]);
+  print_and_subs(words, my_jet_postcodes[index_my_jet_code], my_jet_prefix, suffix);
 }

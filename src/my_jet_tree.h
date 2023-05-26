@@ -31,366 +31,426 @@
 /* *******  *******************  ******* */
 /* *******  MY_JET_TREE_HEADER   ******* */
 /* *******  *******************  ******* */
-#define MY_JET_TREE_TYPE1(PREFIX_JET_TREE,\
-  MY_TREE_TYPE,PREFIX_TREE,SCAL,I) "\
-" MY_TREE_TYPE(PREFIX_TREE,SCAL,I) "\n\
+#define MY_JET_TREE_TYPE1(PREFIX_MYJET,\
+  MY_TREE_TYPE,PREFIX_TREE,COEF,I) "\
+" MY_TREE_TYPE(PREFIX_TREE,COEF,I) "\n\
 \n\
-typedef " PREFIX_TREE(t) "* " PREFIX_JET_TREE(t) ";\n\
-//#define " PREFIX_JET_TREE(ptr) " " PREFIX_JET_TREE(t) "\n\
-typedef " PREFIX_JET_TREE(t) "* " PREFIX_JET_TREE(ptr) ";\n\
+typedef " PREFIX_TREE(t) "* " PREFIX_MYJET(t) ";\n\
+//#define " PREFIX_MYJET(ptr) " " PREFIX_MYJET(t) "\n\
+typedef " PREFIX_MYJET(t) "* " PREFIX_MYJET(ptr) ";\n\
 " \
 
 #define MY_JET_TREE_FIXES MY_JET_SPACE
-#define MY_JET_TREE_TYPE(PREFIX_JET,SCAL,I) \
-  MY_JET_TREE_TYPE1(PREFIX_JET,MY_TREE_TYPE,MY_TREE_FIXES,SCAL,I)
+#define MY_JET_TREE_TYPE(PREFIX_JET,COEF,I) \
+  MY_JET_TREE_TYPE1(PREFIX_JET,MY_TREE_TYPE,MY_TREE_FIXES,COEF,I)
 
-#define MY_JET_TREE_API(PREFIX_JET_TREE,MY_JET_TREE_TYPE,PREFIX_SCAL,SCAL,I) \
-  MY_JET_APIS(PREFIX_JET_TREE,MY_JET_TREE_TYPE,PREFIX_SCAL,SCAL,I) \
+#define MY_JET_TREE_API(PREFIX_MYJET,MY_JET_TREE_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                        MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) \
+  MY_JET_APIS(PREFIX_MYJET,MY_JET_TREE_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+              MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) \
 
-#define MY_JET_TREE_PREHEADER(PREFIX_JET_TREE,MY_JET_TREE_TYPE,PREFIX_SCAL,SCAL,I) "\
-/* HEADER " PREFIX_JET_TREE(t) " */\n " \
+#define MY_JET_TREE_PREHEADER(PREFIX_MYJET,MY_JET_TREE_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                              MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+/* HEADER " PREFIX_MYJET(t) " */\n " \
 
-#define MY_JET_TREE_HEADER(PREFIX_JET_TREE,MY_JET_TREE_TYPE,PREFIX_SCAL,SCAL,I) "\
-" MY_JET_TREE_API(PREFIX_JET_TREE,MY_JET_TREE_TYPE,PREFIX_SCAL,SCAL,I) "\n" \
+#define MY_JET_TREE_HEADER(PREFIX_MYJET,MY_JET_TREE_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                           MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+" MY_JET_TREE_API(PREFIX_MYJET,MY_JET_TREE_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                  MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\n\
+\n\
+/* advanced functions (in testing) */\n\
+void " PREFIX_MYJET(compo) "(" PREFIX_MYJET(t) ", " PREFIX_MYJET(t) ", " PREFIX_MYJET(t) "*);\n\
+void " PREFIX_MYJET(reverse) "(" PREFIX_MYJET(t) "*, " PREFIX_MYJET(t) "*);\n\
+void " PREFIX_MYJET(algT) "(" PREFIX_MYJET(t) "*, " PREFIX_MYJET(t) "*, " PREFIX_MYJET(t) "*);\n\
+void " PREFIX_MYJET(genidx) "(" I "[], " I ");\n\
+" \
 
-#define MY_JET_TREE_POSTHEADER(PREFIX_JET_TREE,MY_JET_TREE_TYPE,PREFIX_SCAL,SCAL,I) "\
-/* END HEADER " PREFIX_JET_TREE(t) " */\n" \
+#define MY_JET_TREE_POSTHEADER(PREFIX_MYJET,MY_JET_TREE_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                               MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+/* END HEADER " PREFIX_MYJET(t) " */\n" \
 
 /* *******  *****************  ******* */
 /* *******  MY_JET_TREE_CODE  ******* */
 /* *******  *****************  ******* */
-#define MY_JET_TREE_PRECODE(PREFIX_JET_TREE,PREFIX_TREE,PREFIX_SCAL,I) "\
-" MY_SCAL_MACROS(PREFIX_SCAL) "\n\
-/* CODE " PREFIX_JET_TREE(t) " */\n\
-int * " PREFIX_JET_TREE(monomial_counts) "(void) {return _monomial_counts_;}\n\
-int * " PREFIX_JET_TREE(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
+#define MY_JET_TREE_PRECODE(PREFIX_MYJET,PREFIX_TREE,PREFIX_MYCOEF,I,\
+                            MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+/* CODE " PREFIX_MYJET(t) " */\n\
+int * " PREFIX_MYJET(monomial_counts) "(void) {return _" PREFIX_MYJET(monomial_counts) "_;}\n\
+int * " PREFIX_MYJET(monomial_offsets) "(void) {return _" PREFIX_MYJET(monomial_offsets) "_;}\n\
 \n\
 #include <stdlib.h>\n\
 #include <stdio.h>\n\
 #include <math.h>\n\
+#include <string.h>\n\
 " \
 
-#define MY_JET_TREE_CODE(PREFIX_JET_TREE,PREFIX_TREE,PREFIX_SCAL,I) "\
+#define MY_JET_TREE_CODE(PREFIX_MYJET,PREFIX_TREE,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,\
+                         MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME,\
+                         MYDATA_ACCESS,MY_RECURSION) "\
 \n\
-#define my_scal_tmp " PREFIX_JET_TREE(saux) "\n\
-#define my_jet_tmp " PREFIX_JET_TREE(jaux) "\n\
-static " PREFIX_SCAL(t) " my_scal_tmp;\n\
-static " PREFIX_JET_TREE(t) " my_jet_tmp=NULL;\n\
-#pragma omp threadprivate(my_scal_tmp,my_jet_tmp)\n\
+static " PREFIX_MYFLOAT(t) " " PREFIX_MYJET(faux) ";\n\
+static " PREFIX_MYCOEF(t) " " PREFIX_MYJET(caux) ";\n\
+static " PREFIX_MYJET(t) " " PREFIX_MYJET(jaux) "=NULL;\n\
+#pragma omp threadprivate(" PREFIX_MYJET(faux) "," PREFIX_MYJET(caux) "," PREFIX_MYJET(jaux) ")\n\
 \n\
-#ifndef _NUMBER_OF_MAX_SYMBOLS_\n\
-#define _NUMBER_OF_MAX_SYMBOLS_ 1\n\
-#endif\n\
-#ifndef _MAX_DEGREE_OF_JET_VARS_\n\
-#define _MAX_DEGREE_OF_JET_VARS_ 0\n\
-#endif\n\
-#define max_nsymb _NUMBER_OF_MAX_SYMBOLS_ \n\
-#define max_deg _MAX_DEGREE_OF_JET_VARS_ \n\
-static int flag_init_jet_library=0;\n\
-static " I " nsymb=0,deg=0;\n\
-#pragma omp threadprivate(nsymb,deg)\n\
+/* for advanced special functions */\n\
+static " I " " PREFIX_MYJET(ipool) "=0;\n\
+static " PREFIX_MYJET(t) " *" PREFIX_MYJET(pool) "=NULL;\n\
+#pragma omp threadprivate(" PREFIX_MYJET(ipool) "," PREFIX_MYJET(pool) ")\n\
 \n\
-#define " PREFIX_SCAL(axpy) "(y,a,x) {\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,a,x);\\\n\
-  " PREFIX_SCAL(add2) "(y,y,my_scal_tmp);}\n\
-#define " PREFIX_SCAL(sixpy) "(y,a,x) {\\\n\
-  " PREFIX_SCAL(mul2_si) "(my_scal_tmp,x,a);\\\n\
-  " PREFIX_SCAL(add2) "(y,y,my_scal_tmp);}\n\
+static int " PREFIX_MYJET(flag_init_jet_library) "=0;\n\
+static " I " " PREFIX_MYJET(nsymb) "=" MAX_NUM_SYMBOLS_NAME "," PREFIX_MYJET(deg) "=" MAX_DEGREE_NAME ";\n\
+#pragma omp threadprivate(" PREFIX_MYJET(flag_init_jet_library) "," PREFIX_MYJET(nsymb) "," PREFIX_MYJET(deg) ")\n\
 \n\
-#define " PREFIX_SCAL(axpy_scal) "(y,s,a,x) {\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,a,x);\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,my_scal_tmp,s);\\\n\
-  " PREFIX_SCAL(add2) "(y,y,my_scal_tmp);}\n\
-#define " PREFIX_SCAL(axpy_si) "(y,s,a,x) {\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,a,x);\\\n\
-  " PREFIX_SCAL(mul2_si) "(my_scal_tmp,my_scal_tmp,s);\\\n\
-  " PREFIX_SCAL(add2) "(y,y,my_scal_tmp);}\n\
+#define " PREFIX_MYCOEF(axpy) "(y,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(add2) "(y,y," PREFIX_MYJET(caux) ");}\n\
+#define " PREFIX_MYCOEF(sixpy) "(y,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2_si) "(" PREFIX_MYJET(caux) ",x,a);\\\n\
+  " PREFIX_MYCOEF(add2) "(y,y," PREFIX_MYJET(caux) ");}\n\
+\n\
+#define " PREFIX_MYCOEF(axpy_coef) "(y,s,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) "," PREFIX_MYJET(caux) ",s);\\\n\
+  " PREFIX_MYCOEF(add2) "(y,y," PREFIX_MYJET(caux) ");}\n\
+#define " PREFIX_MYCOEF(axpy_myfloat) "(y,s,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(mul2_myfloat) "(" PREFIX_MYJET(caux) "," PREFIX_MYJET(caux) ",s);\\\n\
+  " PREFIX_MYCOEF(add2) "(y,y," PREFIX_MYJET(caux) ");}\n\
+#define " PREFIX_MYCOEF(axpy_si) "(y,s,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(mul2_si) "(" PREFIX_MYJET(caux) "," PREFIX_MYJET(caux) ",s);\\\n\
+  " PREFIX_MYCOEF(add2) "(y,y," PREFIX_MYJET(caux) ");}\n\
 \n\
 \n\
-#define " PREFIX_SCAL(axmy) "(y,a,x) {\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,a,x);\\\n\
-  " PREFIX_SCAL(sub2) "(y,y,my_scal_tmp);}\n\
-#define " PREFIX_SCAL(sixmy) "(y,a,x) {\\\n\
-  " PREFIX_SCAL(mul2_si) "(my_scal_tmp,x,a);\\\n\
-  " PREFIX_SCAL(sub2) "(y,y,my_scal_tmp);}\n\
+#define " PREFIX_MYCOEF(axmy) "(y,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(sub2) "(y,y," PREFIX_MYJET(caux) ");}\n\
+#define " PREFIX_MYCOEF(sixmy) "(y,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2_si) "(" PREFIX_MYJET(caux) ",x,a);\\\n\
+  " PREFIX_MYCOEF(sub2) "(y,y," PREFIX_MYJET(caux) ");}\n\
 \n\
-#define " PREFIX_SCAL(axmy_scal) "(y,s,a,x) {\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,a,x);\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,my_scal_tmp,s);\\\n\
-  " PREFIX_SCAL(sub2) "(y,y,my_scal_tmp);}\n\
-#define " PREFIX_SCAL(axmy_si) "(y,s,a,x) {\\\n\
-  " PREFIX_SCAL(mul2) "(my_scal_tmp,a,x);\\\n\
-  " PREFIX_SCAL(mul2_si) "(my_scal_tmp,my_scal_tmp,s);\\\n\
-  " PREFIX_SCAL(sub2) "(y,y,my_scal_tmp);}\n\
+#define " PREFIX_MYCOEF(axmy_coef) "(y,s,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) "," PREFIX_MYJET(caux) ",s);\\\n\
+  " PREFIX_MYCOEF(sub2) "(y,y," PREFIX_MYJET(caux) ");}\n\
+#define " PREFIX_MYCOEF(axmy_si) "(y,s,a,x) {\\\n\
+  " PREFIX_MYCOEF(mul2) "(" PREFIX_MYJET(caux) ",a,x);\\\n\
+  " PREFIX_MYCOEF(mul2_si) "(" PREFIX_MYJET(caux) "," PREFIX_MYJET(caux) ",s);\\\n\
+  " PREFIX_MYCOEF(sub2) "(y,y," PREFIX_MYJET(caux) ");}\n\
 \n\
-" MY_TREE_CODE(PREFIX_TREE,PREFIX_SCAL,I) "\n\
+#define " PREFIX_TREE(nch) "(n,k) " PREFIX_MYJET(num_coefs_homogeneous) "[(n)*(" MAX_DEGREE_NAME "+1)+(k)]\n\
 \n\
-size_t " PREFIX_JET_TREE(init) "(" PREFIX_JET_TREE(ptr) " s)\n\
+" MY_TREE_CODE(PREFIX_TREE,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,PREFIX_MYJET(faux),MY_RECURSION) "\n\
+\n\
+size_t " PREFIX_MYJET(init) "(" PREFIX_MYJET(ptr) " s)\n\
 {\n\
   // assert(s);\n\
   " I " i, j;\n\
-  " PREFIX_SCAL(t) " *coef=NULL;\n\
+  " PREFIX_MYCOEF(t) " *coef=NULL;\n\
   size_t mem, k;\n\
 \n\
-  k = (max_deg + 1) * sizeof(**s);\n\
+  k = (" MAX_DEGREE_NAME " + 1) * sizeof(**s);\n\
   *s = (__typeof__(*s)) malloc(k);\n\
   if (*s==NULL) {\n\
     fprintf(stderr,\"\%s:\%d Not enough memory\\n\",__FILE__,__LINE__);\n\
     fflush(stderr); exit(2);\n\
    }\n\
   mem = k;\n\
-  k = _JET_COEFFICIENTS_COUNT_TOTAL_;\n\
+  k = " MAX_COEFFS_COUNT_NAME ";\n\
   coef = (__typeof__(coef)) malloc(k * sizeof(*coef));\n\
   if (coef==NULL) {\n\
     fprintf(stderr,\"\%s:\%d Not enough memory\\n\",__FILE__,__LINE__);\n\
     fflush(stderr); exit(2);\n\
    }\n\
-  for (j = 0; j < k; ++j) {" PREFIX_SCAL(init) "(coef[j]);}\n\
+  for (j = 0; j < k; ++j) {" PREFIX_MYCOEF(init) "(coef[j]);}\n\
   mem+= k * sizeof(*coef);\n\
-  for (i = 0; i <= max_deg; ++i)\n\
+  for (i = 0; i <= " MAX_DEGREE_NAME "; ++i)\n\
     {\n\
-      /*k = " PREFIX_TREE(nch) "(max_nsymb, i);\n\
+      /*k = " PREFIX_TREE(nch) "(" MAX_NUM_SYMBOLS_NAME ", i);\n\
       coef = (__typeof__(coef)) malloc(k * sizeof(*coef));\n\
       if (coef==NULL) {\n\
         fprintf(stderr,\"\%s:\%d Not enough memory\\n\",__FILE__,__LINE__);\n\
         fflush(stderr); exit(2);\n\
        }\n\
-      for (j = 0; j < k; ++j) {" PREFIX_SCAL(init) "(coef[j]);}\n\
+      for (j = 0; j < k; ++j) {" PREFIX_MYCOEF(init) "(coef[j]);}\n\
       mem += k * sizeof(*coef);*/\n\
-      mem += " PREFIX_TREE(init) "((*s) + i, max_nsymb, i, coef);\n\
-      coef+= " PREFIX_TREE(nch) "(max_nsymb, i);\n\
+      mem += " PREFIX_TREE(init) "((*s) + i, " MAX_NUM_SYMBOLS_NAME ", i, coef);\n\
+      coef+= " PREFIX_TREE(nch) "(" MAX_NUM_SYMBOLS_NAME ", i);\n\
     }\n\
   return mem;\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(initup) "(" I " ns, " I " dg)\n\
+void " PREFIX_MYJET(initup2) "(" I " ns, " I " dg)\n\
 {\n\
-  if (flag_init_jet_library==1) return;\n\
+  if (" PREFIX_MYJET(flag_init_jet_library) "==1) return;\n\
 #pragma omp single\n\
 {\n\
-  if (ns > max_nsymb) {\n\
-    fprintf(stderr, \"\%s:\%d nsymb value illegal \%d > \%d\\n\", __FILE__,__LINE__, ns, max_nsymb);\n\
+  if (ns > " MAX_NUM_SYMBOLS_NAME ") {\n\
+    fprintf(stderr, \"\%s:\%d nsymb value illegal \%d > \%d\\n\", __FILE__,__LINE__, ns, " MAX_NUM_SYMBOLS_NAME ");\n\
     fflush(stderr); exit(1);\n\
   }\n\
-  if (dg > max_deg) {\n\
-    fprintf(stderr, \"\%s:\%d deg value illegal \%d > \%d\\n\", __FILE__,__LINE__, dg, max_deg);\n\
+  if (dg > " MAX_DEGREE_NAME ") {\n\
+    fprintf(stderr, \"\%s:\%d deg value illegal \%d > \%d\\n\", __FILE__,__LINE__, dg, " MAX_DEGREE_NAME ");\n\
     fflush(stderr); exit(1);\n\
   }\n\
-  /*max_nsymb = ns;\n\
-  max_deg = dg;*/\n\
 }\n\
-  nsymb = ns;\n\
-  deg = dg;\n\
-  " PREFIX_JET_TREE(init) "(&my_jet_tmp);\n\
-  " PREFIX_SCAL(init) "(my_scal_tmp);\n\
-  flag_init_jet_library=1;\n\
+  " PREFIX_MYJET(nsymb) " = ns;\n\
+  " PREFIX_MYJET(deg) " = dg;\n\
+  " PREFIX_MYCOEF(initup) "();\n\
+  " PREFIX_MYFLOAT(init) "(" PREFIX_MYJET(faux) ");\n\
+  " PREFIX_MYCOEF(init) "(" PREFIX_MYJET(caux) ");\n\
+  \n\
+  {\n\
+  " I " i;\n\
+  " PREFIX_MYJET(pool) " = (__typeof__(" PREFIX_MYJET(pool) ")) malloc((2*" MAX_NUM_SYMBOLS_NAME "+1)*sizeof(*" PREFIX_MYJET(pool) "));\n\
+  if (" PREFIX_MYJET(pool) "==NULL)\n\
+    {\n\
+      fprintf(stderr,\"\%s:\%d Not enough memory\\n\",__FILE__,__LINE__);\n\
+      fflush(stderr); exit(2);\n\
+    }\n\
+  for (i = 0; i <= 2*" MAX_NUM_SYMBOLS_NAME "; ++i)\n\
+    {\n\
+//      " PREFIX_MYJET(pool) "[i] = (__typeof__(*" PREFIX_MYJET(pool) ")) malloc(1*sizeof(**" PREFIX_MYJET(pool) "));\n\
+//      if (" PREFIX_MYJET(pool) "[i]==NULL)\n\
+//        {\n\
+//          fprintf(stderr,\"\%s:\%d Not enough memory\\n\",__FILE__,__LINE__);\n\
+//          fflush(stderr); exit(2);\n\
+//        }\n\
+      " PREFIX_MYJET(init) "(&" PREFIX_MYJET(pool) "[i]);\n\
+    }\n\
+  " PREFIX_MYJET(ipool) " = 0;\n\
+  }\n\
+  " PREFIX_MYJET(jaux) "=" PREFIX_MYJET(pool) "[0];\n\
+  \n\
+  " PREFIX_MYJET(flag_init_jet_library) "=1;\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(clean) "(" PREFIX_JET_TREE(ptr) " s)\n\
+void " PREFIX_MYJET(clean) "(" PREFIX_MYJET(ptr) " s)\n\
 {\n\
   if (s==NULL || *s==NULL) return;\n\
 \n\
-  " I " j, k = _JET_COEFFICIENTS_COUNT_TOTAL_;\n\
+  " I " j, k = " MAX_COEFFS_COUNT_NAME ";\n\
   __typeof__(*s) st, sf;\n\
-  for (st = *s, sf = st + max_deg;\n\
-       st < sf;\n\
+  for (st = *s, sf = st + " MAX_DEGREE_NAME ";\n\
+       st <= sf;\n\
        ++st) {\n\
     " PREFIX_TREE(clean) "(st);\n\
     /*free(st->coef); st->coef = NULL;*/\n\
   }\n\
-  " PREFIX_TREE(clean) "(st);\n\
-  /*free(st->coef); st->coef = NULL;*/\n\
-  for (j = 0; j < k; ++j) {" PREFIX_SCAL(clean) "((*s)->coef[j]);}\n\
+  for (j = 0; j < k; ++j) {" PREFIX_MYCOEF(clean) "((*s)->coef[j]);}\n\
   free((*s)->coef); (*s)->coef = NULL;\n\
 \n\
   free(*s); *s = NULL;\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(cleanup) "(void)\n\
+void " PREFIX_MYJET(cleanup) "(void)\n\
 {\n\
-  if (flag_init_jet_library==0) return;\n\
-  " PREFIX_SCAL(clean) "(my_scal_tmp);\n\
-  " PREFIX_JET_TREE(clean) "(&my_jet_tmp);\n\
-  nsymb = 0;\n\
-  deg = 0;\n\
-/*#pragma omp single\n\
-{\n\
-  max_nsymb = 0;\n\
-  max_deg = 0;\n\
-}*/\n\
-  flag_init_jet_library=0;\n\
+  if (" PREFIX_MYJET(flag_init_jet_library) "==0) return;\n\
+  {\n\
+  " I " i;\n\
+  for (i = 0; i <= 2*" MAX_NUM_SYMBOLS_NAME "; ++i)\n\
+    {\n\
+      " PREFIX_MYJET(clean) "(&" PREFIX_MYJET(pool) "[i]);\n\
+//      free(" PREFIX_MYJET(pool) "[i]); " PREFIX_MYJET(pool) "[i]=NULL;\n\
+    }\n\
+  " PREFIX_MYJET(ipool) " = 0;\n\
+  free(" PREFIX_MYJET(pool) "); " PREFIX_MYJET(pool) "=NULL;\n\
+  }\n\
+//  " PREFIX_MYJET(clean) "(&" PREFIX_MYJET(jaux) ");\n\
+  " PREFIX_MYCOEF(clean) "(" PREFIX_MYJET(caux) ");\n\
+  " PREFIX_MYFLOAT(clean) "(" PREFIX_MYJET(faux) ");\n\
+  " PREFIX_MYCOEF(cleanup) "();\n\
+  " PREFIX_MYJET(nsymb) " = 0;\n\
+  " PREFIX_MYJET(deg) " = 0;\n\
+  " PREFIX_MYJET(flag_init_jet_library) "=0;\n\
 }\n\
 \n\
-" I " " PREFIX_JET_TREE(get_num_symbs) "(void)\
+" I " " PREFIX_MYJET(get_num_symbs) "(void)\
 {\
-return nsymb;\
+return " PREFIX_MYJET(nsymb) ";\
 }\n\
 \n\
-" I " " PREFIX_JET_TREE(get_deg) "(void)\
+" I " " PREFIX_MYJET(get_deg) "(void)\
 {\
-return deg;\
+return " PREFIX_MYJET(deg) ";\
 }\n\
 \n\
-" I " " PREFIX_JET_TREE(set_num_symbs) "(" I " nsymbs)\n\
+" I " " PREFIX_MYJET(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
-  fprintf(stderr,\"%s:%d Action not allowed\\n\",__FILE__,__LINE__); fflush(stderr); exit(1);\n\
+  fprintf(stderr,\"\%s:\%d Action not allowed\\n\",__FILE__,__LINE__); fflush(stderr); exit(1);\n\
   return 0;\n\
 }\n\
 \n\
-" I " " PREFIX_JET_TREE(set_deg) "(" I " degree)\n\
+" I " " PREFIX_MYJET(set_deg) "(" I " degree)\n\
 {\n\
-  " I " k=deg;\n\
-  if (degree > max_deg) {\n\
-    fprintf(stderr,\"%s:%d Invalid degree \%d > \%d\\n\",__FILE__,__LINE__,degree,max_deg);\n\
+  " I " k=" PREFIX_MYJET(deg) ";\n\
+  if (degree > " MAX_DEGREE_NAME ") {\n\
+    fprintf(stderr,\"\%s:\%d Invalid degree \%d > \%d\\n\",__FILE__,__LINE__,degree," MAX_DEGREE_NAME ");\n\
     fflush(stderr); exit(1);\n\
   }\n\
-  deg = degree;\n\
+  " PREFIX_MYJET(deg) " = degree;\n\
   return k;\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  // assert(s && a); // assert(s->nsymb == a->nsymb); // assert(deg == deg);\n\
   if (s == a) return;\n\
 \n\
   __typeof__(s) st, at, sf;\n\
-  for (st = s, sf = st + deg, at= a;\n\
-       st < sf;\n\
-       " PREFIX_TREE(set) "(st,at), ++st, ++at){}\n\
-  " PREFIX_TREE(set) "(st,at);\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ", at= a;\n\
+       st <= sf;\n\
+       ++st, ++at){" PREFIX_TREE(set) "(st,at);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_scal) "(" PREFIX_JET_TREE(t) " s, " PREFIX_SCAL(t) " scal)\n\
+void " PREFIX_MYJET(set_zero) "(" PREFIX_MYJET(t) " s)\n\
+{\n\
+  __typeof__(s) st, sf;\n\
+  " PREFIX_MYCOEF(t) " *hc, *hf;\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
+       st <= sf; ++st)\n\
+  {" PREFIX_TREE(set_zero) "(*st,hc,hf);}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(set_coef) "(" PREFIX_MYJET(t) " s, " PREFIX_MYCOEF(t) " coef)\n\
 {\n\
   // assert(s && *s);\n\
   __typeof__(s) st, sf;\n\
 \n\
-  " PREFIX_TREE(set_scal) "(s,scal);\n\
-  for (st = s, sf = st + deg;\n\
+  " PREFIX_TREE(set_coef) "(s,coef);\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
        st < sf;\n\
        ++st, " PREFIX_TREE(set_si) "(st,0)){}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_d) "(" PREFIX_JET_TREE(t) " s, double d)\n\
+void " PREFIX_MYJET(set_myfloat) "(" PREFIX_MYJET(t) " s, " PREFIX_MYFLOAT(t) " myf)\n\
 {\n\
-  // assert(s && *s);\n\
+  __typeof__(s) st, sf;\n\
+\n\
+  " PREFIX_TREE(set_myfloat) "(s,myf);\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
+       st < sf;\n\
+       ++st, " PREFIX_TREE(set_si) "(st,0)){}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(set_d) "(" PREFIX_MYJET(t) " s, double d)\n\
+{\n\
   __typeof__(s) st, sf;\n\
 \n\
   " PREFIX_TREE(set_d) "(s,d);\n\
-  for (st = s, sf = st + deg;\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
        st < sf;\n\
        ++st, " PREFIX_TREE(set_si) "(st,0)){}\n\
 }\n\
 \n\
 \n\
-void " PREFIX_JET_TREE(set_si) "(" PREFIX_JET_TREE(t) " s, int d)\n\
+void " PREFIX_MYJET(set_si) "(" PREFIX_MYJET(t) " s, int d)\n\
 {\n\
-  // assert(s && *s);\n\
   __typeof__(s) st, sf;\n\
 \n\
   " PREFIX_TREE(set_si) "(s,d);\n\
-  for (st = s, sf = st + deg;\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
        st < sf;\n\
        ++st, " PREFIX_TREE(set_si) "(st,0)){}\n\
 }\n\
-void " PREFIX_JET_TREE(set_scal_array) "(" PREFIX_JET_TREE(t) " s," PREFIX_SCAL(t) " *b)\n\
+void " PREFIX_MYJET(set_coef_array) "(" PREFIX_MYJET(t) " s," PREFIX_MYCOEF(t) " *b)\n\
 {\n\
-  int i;\n\
+  " I " i;\n\
 \n\
-  for (i=0;i <_JET_COEFFICIENTS_COUNT_TOTAL_;\n\
-        b++, i++){" PREFIX_SCAL(set) "( MY_JET_DATA(s,i) ,*b);}\n\
+  for (i=0;i <" MAX_COEFFS_COUNT_NAME ";\n\
+        b++, i++){" PREFIX_MYCOEF(set) "( " MYDATA_ACCESS "(s,i) ,*b);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_jet_2_scal_array) "(" PREFIX_SCAL(t) " *b, " PREFIX_JET_TREE(t) " s)\n\
+void " PREFIX_MYJET(set_jet_2_coef_array) "(" PREFIX_MYCOEF(t) " *b, " PREFIX_MYJET(t) " s)\n\
 {\n\
- int i;\n\
+ " I " i;\n\
 \n\
-  for (i=0 ; i < _JET_COEFFICIENTS_COUNT_TOTAL_;\n\
-        b++, i++){" PREFIX_SCAL(set) "(*b, MY_JET_DATA(s,i) );}\n\
+  for (i=0 ; i < " MAX_COEFFS_COUNT_NAME ";\n\
+        b++, i++){" PREFIX_MYCOEF(set) "(*b, " MYDATA_ACCESS "(s,i));}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(to_scal) "(" PREFIX_SCAL(t) " coef[1], " PREFIX_JET_TREE(t) " s)\n\
+" PREFIX_MYFLOAT(t) "* " PREFIX_MYJET(to_myfloat) "(" PREFIX_MYJET(t) " s)\n\
 {\
-  " PREFIX_SCAL(set) "(*coef,*get_zero_coef(s));\
+  return " PREFIX_MYCOEF(to_myfloat) "(*" PREFIX_TREE(get_zero_coef) "(s));\
 }\n\
 \n\
-void " PREFIX_JET_TREE(get_coef) "(" PREFIX_SCAL(t) " val[1], " PREFIX_JET_TREE(t) " s, const " I " idx[])\n\
+" PREFIX_MYCOEF(t) "* " PREFIX_MYJET(get_coef) "(" PREFIX_MYJET(t) " s, const " I " idx[])\n\
 {\n\
   " I " i, k;\n\
   for (i = 0, k = 0; i < s->nsymb; k += idx[i], ++i){}\n\
   \n\
-  " PREFIX_SCAL(set) "(*val,*" PREFIX_TREE(get_coef) "(s+k, idx));\n\
+  return " PREFIX_TREE(get_coef) "(s+k, idx);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_coef) "(" PREFIX_JET_TREE(t) " s, const " I " idx[], " PREFIX_SCAL(t) " val)\n\
+" PREFIX_MYCOEF(t) "* " PREFIX_MYJET(coef0) "(" PREFIX_MYJET(t) " s)\n\
+{\
+  return " PREFIX_TREE(get_zero_coef) "(s);\
+}\n\
+" PREFIX_MYCOEF(t) "* " PREFIX_MYJET(coef1) "(" PREFIX_MYJET(t) " s, " I " i)\n\
 {\n\
-  " I " i, k;\n\
-  for (i = 0, k = 0; i < s->nsymb; k += idx[i], ++i){}\n\
-  \n\
-  " PREFIX_SCAL(set) "(*" PREFIX_TREE(get_coef) "(s+k, idx),val);\n\
+  " I " k, idx[s->nsymb];\n\
+  for (k = 0; k < s->nsymb; ++k){idx[k]=0;}\n\
+  idx[i]=1;\n\
+  return " PREFIX_MYJET(get_coef) "(s,idx);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(nrminf) "(" PREFIX_SCAL(t) " nrm[1], " PREFIX_JET_TREE(t) " s)\n\
-{\n\
-  __typeof__(s) st, sf;\n\
-  " PREFIX_SCAL(set_si) "(*nrm,0);\n\
-  for (st = s, sf = st + deg;\n\
-       st < sf;\n\
-       " PREFIX_TREE(nrminf) "(nrm,st), ++st){}\n\
-   " PREFIX_TREE(nrminf) "(nrm,st);\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(nrm2) "(" PREFIX_SCAL(t) " nrm[1], " PREFIX_JET_TREE(t) " s)\n\
+void " PREFIX_MYJET(nrminf) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_MYJET(t) " s)\n\
 {\n\
   __typeof__(s) st, sf;\n\
-  " PREFIX_SCAL(set_si) "(*nrm,0);\n\
-  for (st = s, sf = st + deg;\n\
-       st < sf;\n\
-       " PREFIX_TREE(nrm2) "(nrm,st), ++st){}\n\
-   " PREFIX_TREE(nrm2) "(nrm,st);\n\
+  /* WARNING initial value for nrm GIVEN!! */\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
+       st <= sf;\n\
+       ++st){" PREFIX_TREE(nrminf) "(nrm,st);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(neg) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a )\n\
+void " PREFIX_MYJET(nrm2) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_MYJET(t) " s)\n\
+{\n\
+  __typeof__(s) st, sf;\n\
+  /* WARNING initial value for nrm GIVEN!! */\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ";\n\
+       st <= sf;\n\
+       ++st){" PREFIX_TREE(nrm2) "(nrm,st);}\n\
+  " PREFIX_MYFLOAT(set_sqrt) "(*nrm,*nrm);\n\
+}\n\
+\n\
+void " PREFIX_MYJET(neg) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a )\n\
 {\n\
   // assert(s && a); // assert(s->nsymb == a->nsymb); // assert(deg == deg);\n\
   // assert(*s && *a);\n\
-  if (s == a) return;\n\
 \n\
   __typeof__(s) st, at, sf;\n\
-  for (st = s, sf = st + deg, at = a;\n\
-       st < sf;\n\
-       " PREFIX_TREE(neg) "(st,at), ++st, ++at){}\n\
-  " PREFIX_TREE(neg) "(st,at);\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ", at = a;\n\
+       st <= sf;\n\
+       ++st, ++at){" PREFIX_TREE(neg) "(st,at);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(add2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_JET_TREE(t) " b)\n\
+void " PREFIX_MYJET(add2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYJET(t) " b)\n\
 {\n\
   // assert(s && a && b);\n\
 \n\
   " I " i;\n\
-  for (i = 0; i <= deg; ++i) {\
-" PREFIX_TREE(add2) "(s+i, a+i, b+i);}\n\
+  for (i = 0; i <= " PREFIX_MYJET(deg) "; ++i) {" PREFIX_TREE(add2) "(s+i, a+i, b+i);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(sub2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_JET_TREE(t) " b)\n\
+void " PREFIX_MYJET(sub2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYJET(t) " b)\n\
 {\n\
   // assert(s && a && b);\n\
 \n\
   " I " i;\n\
-  for (i = 0; i <= deg; ++i) " PREFIX_TREE(sub2) "(s+i, a+i, b+i);\n\
+  for (i = 0; i <= " PREFIX_MYJET(deg) "; ++i) {" PREFIX_TREE(sub2) "(s+i, a+i, b+i);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_sq) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_sq) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
   // assert(s && a); // assert(s != a);\n\
   // assert(*s && *a);\n\
 \n\
-  " PREFIX_SCAL(t) " *a0, *sc, *sf;\n\
-  sc = get_zero_coef(s);\n\
-  a0 = get_zero_coef(a);\n\
-  " PREFIX_SCAL(mul2) "((*sc),(*a0),(*a0));\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc, *sf;\n\
+  sc = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  " PREFIX_MYCOEF(mul2) "((*sc),(*a0),(*a0));\n\
 \n\
-  " I " i, j, k, ord=deg;\n\
+  " I " i, j, k, ord=" PREFIX_MYJET(deg) ";\n\
   if (ord % 2)\n\
     {\n\
       i = ord;\n\
@@ -420,15 +480,15 @@ void " PREFIX_JET_TREE(set_sq) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) 
     }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(mul2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_JET_TREE(t) " b)\n\
+void " PREFIX_MYJET(mul2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYJET(t) " b)\n\
 {\n\
 // assert(s && a && b); // assert(s != a && s != b);\n\
 // assert(*s && *a && *b);\n\
   " I " i, j;\n\
-  " PREFIX_SCAL(t) " *sc,*sf;\n\
+  " PREFIX_MYCOEF(t) " *sc,*sf;\n\
 \n\
-  if (a == b) {" PREFIX_JET_TREE(set_sq) "(s,a); return;}\n\
-  for (i = 0; i <= deg; ++i)\n\
+  if (a == b) {" PREFIX_MYJET(set_sq) "(s,a); return;}\n\
+  for (i = 0; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
       " PREFIX_TREE(set_zero) "(s[i], sc,sf);\n\
       for (j = 0; j <= i; ++j)\n\
@@ -436,200 +496,276 @@ void " PREFIX_JET_TREE(mul2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " 
     }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(div2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_JET_TREE(t) " b)\n\
+void " PREFIX_MYJET(div2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYJET(t) " b)\n\
 {\n\
   // assert(s && a && b); // assert(s != b);\n\
   // assert(*s && *a && *b);\n\
-  " PREFIX_SCAL(t) " *b0, *sc,*sf,*sc1;\n\
+  " PREFIX_MYCOEF(t) " *b0, *sc,*sf,*sc1;\n\
   " I " i, j;\n\
-  sc = get_zero_coef(a);\n\
-  b0 = get_zero_coef(b);\n\
-  sf = get_zero_coef(s);\n\
-  " PREFIX_SCAL(div2) "(*sf,*sc,*b0);\n\
-  for (i = 1; i <= deg; ++i)\n\
+  sc = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  b0 = " PREFIX_TREE(get_zero_coef) "(b);\n\
+  sf = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(div2) "(*sf,*sc,*b0);\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
       " PREFIX_TREE(set) "(s+i, a+i);\n\
       for (j = 0; j < i; ++j) {" PREFIX_TREE(mph) "(s+i, s+j, b + (i-j));}\n\
-      " PREFIX_TREE(div2_scal) "(s[i], s[i],(*b0), sc,sf,sc1);\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i],(*b0), sc,sf,sc1);\n\
     }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(add2_scal) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_SCAL(t) " b)\n\
+void " PREFIX_MYJET(add2_coef) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYCOEF(t) " b)\n\
 {\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(add2) "(*(s->coef),*(a->coef),b);\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(add2) "(*(s->coef),*(a->coef),b);\n\
   if (s != a) for (st = s, at = a;\n\
        st < sf; ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(sub2_scal) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_SCAL(t) " b)\n\
+void " PREFIX_MYJET(sub2_coef) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYCOEF(t) " b)\n\
 {\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(sub2) "(*(s->coef),*(a->coef),b);\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(sub2) "(*(s->coef),*(a->coef),b);\n\
   if (s != a) for (st = s, at = a;\n\
        st < sf; \n\
        ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(scal_sub2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_SCAL(t) " b, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(coef_sub2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYCOEF(t) " b, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(sub2) "(*(s->coef),b,*(a->coef));\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(sub2) "(*(s->coef),b,*(a->coef));\n\
   for (st = s, at= a;\n\
        st < sf; \n\
        ++st, ++at, " PREFIX_TREE(neg) "(st,at)){}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(mul2_scal) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_SCAL(t) " b)\n\
+void " PREFIX_MYJET(mul2_coef) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYCOEF(t) " b)\n\
 {\n\
   " I " k;\n\
-  " PREFIX_SCAL(t) " *sc, *scf, *ac;\n\
-  for (k = 0; k <= deg; ++k)\n\
-  {" PREFIX_TREE(mul2_scal) "(s[k],a[k],b, sc,scf,ac);}\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
+  for (k = 0; k <= " PREFIX_MYJET(deg) "; ++k)\n\
+  {" PREFIX_TREE(mul2_coef) "(s[k],a[k],b, sc,scf,ac);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(div2_scal) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_SCAL(t) " b)\n\
+void " PREFIX_MYJET(div2_coef) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYCOEF(t) " b)\n\
 {\n\
   // assert(s && a);\n\
-  // assert(scal);\n\
+  // assert(coef);\n\
 \n\
-  " PREFIX_SCAL(t) " *sc, *scf, *ac;\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
   __typeof__(s) st, sf, at;\n\
-  for (st = s, sf = st + deg, at= a;\n\
-       st < sf;\n\
-       ++st, ++at) {" PREFIX_TREE(div2_scal) "(st[0], at[0], b, sc,scf,ac);}\n\
-  " PREFIX_TREE(div2_scal) "(st[0], at[0], b, sc,scf,ac);\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ", at= a;\n\
+       st <= sf;\n\
+       ++st, ++at) {" PREFIX_TREE(div2_coef) "(st[0], at[0], b, sc,scf,ac);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(scal_div2) "(" PREFIX_JET_TREE(t) " s, " PREFIX_SCAL(t) " b, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(coef_div2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYCOEF(t) " b, " PREFIX_MYJET(t) " a)\n\
 {\n\
   // assert(s && a); // assert(s != a);\n\
-  // assert(scal);\n\
-  " PREFIX_SCAL(t) " *a0, *sc,*sf,*sc1;\n\
+  // assert(coef);\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc,*sf,*sc1;\n\
   " I " i, j;\n\
-  a0 = get_zero_coef(a);\n\
-  sf = get_zero_coef(s);\n\
-  " PREFIX_SCAL(div2) "(*sf,b,*a0);\n\
-  for (i = 1; i <= deg; ++i)\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  sf = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(div2) "(*sf,b,*a0);\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
       " PREFIX_TREE(set_zero) "(s[i], sc,sf);\n\
       for (j = 0; j < i; ++j) {" PREFIX_TREE(mph) "(s+i, s+j, a+(i-j));}\n\
-      " PREFIX_TREE(div2_scal) "(s[i], s[i],(*a0), sc,sf,sc1);\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i],(*a0), sc,sf,sc1);\n\
     }\n\
 }\n\
 \n\
 \n\
-void " PREFIX_JET_TREE(add2_d) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, double b)\n\
+void " PREFIX_MYJET(add2_myfloat) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYFLOAT(t) " b)\n\
 {\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(add2_d) "(*(s->coef),*(a->coef),b);\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(add2_myfloat) "(*(s->coef),*(a->coef),b);\n\
   if (s != a) for (st = s, at = a;\n\
        st < sf; ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(sub2_d) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, double b)\n\
+void " PREFIX_MYJET(sub2_myfloat) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYFLOAT(t) " b)\n\
 {\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(sub2_d) "(*(s->coef),*(a->coef),b);\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(sub2_myfloat) "(*(s->coef),*(a->coef),b);\n\
   if (s != a) for (st = s, at = a;\n\
        st < sf; \n\
        ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(d_sub2) "(" PREFIX_JET_TREE(t) " s, double b, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(myfloat_sub2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYFLOAT(t) " b, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  fprintf(stderr,\"%s:%d to implement\\n\",__FILE__,__LINE__); exit(1);\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(mul2_d) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, double b)\n\
-{\n\
-  " I " k;\n\
-  " PREFIX_SCAL(t) " *sc, *scf, *ac;\n\
-  for (k = 0; k <= deg; ++k)\n\
-  {" PREFIX_TREE(mul2_d) "(s[k],a[k],b, sc,scf,ac);}\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(div2_d) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, double b)\n\
-{\n\
-  fprintf(stderr,\"%s:%d to implement\\n\",__FILE__,__LINE__); exit(1);\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(d_div2) "(" PREFIX_JET_TREE(t) " s, double b, " PREFIX_JET_TREE(t) " a)\n\
-{\n\
-  fprintf(stderr,\"%s:%d to implement\\n\",__FILE__,__LINE__); exit(1);\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(add2_si) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, int b)\n\
-{\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(add2_si) "(*(s->coef),*(a->coef),b);\n\
-  if (s != a) for (st = s, at = a;\n\
-       st < sf; ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(sub2_si) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, int b)\n\
-{\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(sub2_si) "(*(s->coef),*(a->coef),b);\n\
-  if (s != a) for (st = s, at = a;\n\
-       st < sf; \n\
-       ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
-}\n\
-\n\
-void " PREFIX_JET_TREE(si_sub2) "(" PREFIX_JET_TREE(t) " s, int b, " PREFIX_JET_TREE(t) " a)\n\
-{\n\
-  __typeof__(s) st, at, sf = s + deg;\n\
-  " PREFIX_SCAL(si_sub2) "(*(s->coef),b,*(a->coef));\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(myfloat_sub2) "(*(s->coef),b,*(a->coef));\n\
   for (st = s, at= a;\n\
        st < sf; \n\
        ++st, ++at, " PREFIX_TREE(neg) "(st,at)){}\n\
-//  fprintf(stderr,\"%s:%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(mul2_si) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, int b)\n\
+void " PREFIX_MYJET(mul2_myfloat) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYFLOAT(t) " b)\n\
 {\n\
   " I " k;\n\
-  " PREFIX_SCAL(t) " *sc, *scf, *ac;\n\
-  for (k = 0; k <= deg; ++k)\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
+  for (k = 0; k <= " PREFIX_MYJET(deg) "; ++k)\n\
+  {" PREFIX_TREE(mul2_myfloat) "(s[k],a[k],b, sc,scf,ac);}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(div2_myfloat) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYFLOAT(t) " b)\n\
+{\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
+  __typeof__(s) st, sf, at;\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ", at= a;\n\
+       st <= sf;\n\
+       ++st, ++at) {" PREFIX_TREE(div2_myfloat) "(st[0], at[0], b, sc,scf,ac);}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(myfloat_div2) "(" PREFIX_MYJET(t) " s, " PREFIX_MYFLOAT(t) " b, " PREFIX_MYJET(t) " a)\n\
+{\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc,*sf,*sc1;\n\
+  " I " i, j;\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  sf = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(myfloat_div2) "(*sf,b,*a0);\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
+    {\n\
+      " PREFIX_TREE(set_zero) "(s[i], sc,sf);\n\
+      for (j = 0; j < i; ++j) {" PREFIX_TREE(mph) "(s+i, s+j, a+(i-j));}\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i],(*a0), sc,sf,sc1);\n\
+    }\n\
+}\n\
+\n\
+\n\
+void " PREFIX_MYJET(add2_d) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, double b)\n\
+{\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(add2_d) "(*(s->coef),*(a->coef),b);\n\
+  if (s != a) for (st = s, at = a;\n\
+       st < sf; ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(sub2_d) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, double b)\n\
+{\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(sub2_d) "(*(s->coef),*(a->coef),b);\n\
+  if (s != a) for (st = s, at = a;\n\
+       st < sf; \n\
+       ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(d_sub2) "(" PREFIX_MYJET(t) " s, double b, " PREFIX_MYJET(t) " a)\n\
+{\n\
+  fprintf(stderr,\"\%s:\%d to implement\\n\",__FILE__,__LINE__); exit(1);\n\
+}\n\
+\n\
+void " PREFIX_MYJET(mul2_d) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, double b)\n\
+{\n\
+  " I " k;\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
+  for (k = 0; k <= " PREFIX_MYJET(deg) "; ++k)\n\
+  {" PREFIX_TREE(mul2_d) "(s[k],a[k],b, sc,scf,ac);}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(div2_d) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, double b)\n\
+{\n\
+  fprintf(stderr,\"\%s:\%d to implement\\n\",__FILE__,__LINE__); exit(1);\n\
+}\n\
+\n\
+void " PREFIX_MYJET(d_div2) "(" PREFIX_MYJET(t) " s, double b, " PREFIX_MYJET(t) " a)\n\
+{\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc,*sf,*sc1;\n\
+  " I " i, j;\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  sf = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(d_div2) "(*sf,b,*a0);\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
+    {\n\
+      " PREFIX_TREE(set_zero) "(s[i], sc,sf);\n\
+      for (j = 0; j < i; ++j) {" PREFIX_TREE(mph) "(s+i, s+j, a+(i-j));}\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i],(*a0), sc,sf,sc1);\n\
+    }\n\
+}\n\
+\n\
+void " PREFIX_MYJET(add2_si) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, int b)\n\
+{\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(add2_si) "(*(s->coef),*(a->coef),b);\n\
+  if (s != a) for (st = s, at = a;\n\
+       st < sf; ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(sub2_si) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, int b)\n\
+{\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(sub2_si) "(*(s->coef),*(a->coef),b);\n\
+  if (s != a) for (st = s, at = a;\n\
+       st < sf; \n\
+       ++st, ++at, " PREFIX_TREE(set) "(st,at)){}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(si_sub2) "(" PREFIX_MYJET(t) " s, int b, " PREFIX_MYJET(t) " a)\n\
+{\n\
+  __typeof__(s) st, at, sf = s + " PREFIX_MYJET(deg) ";\n\
+  " PREFIX_MYCOEF(si_sub2) "(*(s->coef),b,*(a->coef));\n\
+  for (st = s, at= a;\n\
+       st < sf; \n\
+       ++st, ++at, " PREFIX_TREE(neg) "(st,at)){}\n\
+//  fprintf(stderr,\"\%s:\%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
+}\n\
+\n\
+void " PREFIX_MYJET(mul2_si) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, int b)\n\
+{\n\
+  " I " k;\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
+  for (k = 0; k <= " PREFIX_MYJET(deg) "; ++k)\n\
   {" PREFIX_TREE(mul2_si) "(s[k],a[k],b, sc,scf,ac);}\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(div2_si) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, int b)\n\
+void " PREFIX_MYJET(div2_si) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, int b)\n\
 {\n\
-  " PREFIX_SCAL(t) " *sc, *scf, *ac;\n\
+  " PREFIX_MYCOEF(t) " *sc, *scf, *ac;\n\
   __typeof__(s) st, sf, at;\n\
-  for (st = s, sf = st + deg, at= a;\n\
-       st < sf;\n\
+  for (st = s, sf = st + " PREFIX_MYJET(deg) ", at= a;\n\
+       st <= sf;\n\
        ++st, ++at) {" PREFIX_TREE(div2_si) "(st[0], at[0], b, sc,scf,ac);}\n\
-  " PREFIX_TREE(div2_si) "(st[0], at[0], b, sc,scf,ac);\n\
-//  fprintf(stderr,\"%s:%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(si_div2) "(" PREFIX_JET_TREE(t) " s, int b, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(si_div2) "(" PREFIX_MYJET(t) " s, int b, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  fprintf(stderr,\"%s:%d to implement\\n\",__FILE__,__LINE__); exit(1);\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc,*sf,*sc1;\n\
+  " I " i, j;\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  sf = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(si_div2) "(*sf,b,*a0);\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
+    {\n\
+      " PREFIX_TREE(set_zero) "(s[i], sc,sf);\n\
+      for (j = 0; j < i; ++j) {" PREFIX_TREE(mph) "(s+i, s+j, a+(i-j));}\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i],(*a0), sc,sf,sc1);\n\
+    }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_sqrt) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_sqrt) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
   // assert(s && a);\n\
   // assert(*s && *a);\n\
 \n\
-  " PREFIX_SCAL(t) " *s0,*sc,*scf,*sc2;\n\
-  s0 = get_zero_coef(s);\n\
-  " PREFIX_SCAL(set_sqrt) "((*s0), *get_zero_coef(a)); // assert(fabs(*s0) > ZERO_TOL);\n\
+  " PREFIX_MYCOEF(t) " *s0,*sc,*scf,*sc2;\n\
+  s0 = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(set_sqrt) "((*s0), *" PREFIX_TREE(get_zero_coef) "(a)); // assert(fabs(*s0) > ZERO_TOL);\n\
 \n\
   " I " i, j, k;\n\
-  for (i = 1; i <= deg; ++i)\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
        /* odd case */\n\
       " PREFIX_TREE(set) "(s+i, a+i);\n\
       " PREFIX_TREE(div2_si) "(s[i], s[i], 2, sc,scf,sc2);\n\
       k = i/2;\n\
       for (j = 1; j <= k; ++j) " PREFIX_TREE(mph) "(s+i, s+j, s+(i-j));\n\
-      " PREFIX_TREE(div2_scal) "(s[i], s[i], *s0, sc,scf,sc2);\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i], *s0, sc,scf,sc2);\n\
 \n\
-      if (++i > deg) break;\n\
+      if (++i > " PREFIX_MYJET(deg) ") break;\n\
 \n\
       /* even case */\n\
       " PREFIX_TREE(set) "(s+i, a+i);\n\
@@ -637,49 +773,48 @@ void " PREFIX_JET_TREE(set_sqrt) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t
       " PREFIX_TREE(mph) "(s+i, s+k, s+k);\n\
       " PREFIX_TREE(div2_si) "(s[i], s[i], 2, sc,scf,sc2);\n\
       for (j = 1; j < k; ++j) " PREFIX_TREE(mph) "(s+i, s+j, s+(i-j));\n\
-      " PREFIX_TREE(div2_scal) "(s[i], s[i], *s0, sc,scf,sc2);\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i], *s0, sc,scf,sc2);\n\
     }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_pow_scal) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a, " PREFIX_SCAL(t) " scal)\n\
+void " PREFIX_MYJET(set_pow_myfloat) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a, " PREFIX_MYFLOAT(t) " myf)\n\
 {\n\
   // assert(s && a); // assert(s != a);\n\
-//  if (scal == 2)     {" PREFIX_JET_TREE(set_sq) "(s,a); return;}\n\
-//  if (scal == 0.5e0) {" PREFIX_JET_TREE(set_sqrt) "(s,a); return;}\n\
+//  if (myf == 2)     {" PREFIX_MYJET(set_sq) "(s,a); return;}\n\
+//  if (myf == 0.5e0) {" PREFIX_MYJET(set_sqrt) "(s,a); return;}\n\
   // assert(*s && *a);\n\
 \n\
-  " PREFIX_SCAL(t) " *a0, *s0, *tmp, *sc,*sf,*sc1;\n\
-  tmp = get_zero_coef(my_jet_tmp);\n\
-  sc = get_zero_coef(s);\n\
-  a0 = get_zero_coef(a); // assert(fabs(*a0) > ZERO_TOL);\n\
-  " PREFIX_SCAL(set_pow) "((*sc), *a0, scal);\n\
+  " PREFIX_MYCOEF(t) " *a0, *s0, *tmp, *sc,*sf,*sc1;\n\
+  tmp = " PREFIX_TREE(get_zero_coef) "(" PREFIX_MYJET(jaux) ");\n\
+  sc = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a); // assert(fabs(*a0) > ZERO_TOL);\n\
+  " PREFIX_MYCOEF(set_pow_myfloat) "((*sc), *a0, myf);\n\
 \n\
   " I " i, j;\n\
-  for (i = 1; i <= deg; ++i)\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
       " PREFIX_TREE(set_zero) "(s[i], sc,sf);\n\
       for (j = 0; j < i; ++j) {\n\
-        " PREFIX_SCAL(mul2_si) "(*tmp,scal,i-j);\n\
-        " PREFIX_SCAL(sub2_si) "(*tmp,*tmp,j);\n\
-        " PREFIX_TREE(pph_scal) "(s+i, *tmp, a+(i-j), s+j);\n\
+        " PREFIX_MYFLOAT(mul2_si) "(" PREFIX_MYJET(faux) ",myf,i-j);\n\
+        " PREFIX_MYFLOAT(sub2_si) "(" PREFIX_MYJET(faux) "," PREFIX_MYJET(faux) ",j);\n\
+        " PREFIX_TREE(pph_myfloat) "(s+i, " PREFIX_MYJET(faux) ", a+(i-j), s+j);\n\
       }\n\
-      " PREFIX_SCAL(mul2_si) "(*tmp,*a0,i);\n\
-      " PREFIX_TREE(div2_scal) "(s[i], s[i], (*tmp), sc,sf,sc1);\n\
+      " PREFIX_MYCOEF(mul2_si) "(*tmp,*a0,i);\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i], (*tmp), sc,sf,sc1);\n\
     }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_exp) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_exp) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
   // assert(s && a); // assert(s != a);\n\
   // assert(*s && *a);\n\
 \n\
-  " PREFIX_SCAL(t) " *s0,*scf,*sc;\n\
-  s0 = get_zero_coef(s);\n\
-  s0 = get_zero_coef(s);\n\
-  " PREFIX_SCAL(set_exp) "((*s0), *get_zero_coef(a));\n\
+  " PREFIX_MYCOEF(t) " *s0,*scf,*sc;\n\
+  s0 = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  " PREFIX_MYCOEF(set_exp) "((*s0), *" PREFIX_TREE(get_zero_coef) "(a));\n\
 \n\
   " I " i, j;\n\
-  for (i = 1; i <= deg; ++i)\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
       " PREFIX_TREE(set_zero) "(s[i], sc,scf);\n\
       for (j = 0; j < i; ++j)\n\
@@ -688,204 +823,375 @@ void " PREFIX_JET_TREE(set_exp) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t)
     }\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_log) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_log) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
   // assert(s && a); // assert(s != a);\n\
   // assert(*s && *a);\n\
 \n\
-  " PREFIX_SCAL(t) " *a0, *sc,*sf,*sc1, *tmp;\n\
-  tmp = get_zero_coef(my_jet_tmp);\n\
-  sc = get_zero_coef(s);\n\
-  a0 = get_zero_coef(a);\n\
-  " PREFIX_SCAL(set_log) "((*sc), *get_zero_coef(a));\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc,*sf,*sc1;\n\
+  sc = " PREFIX_TREE(get_zero_coef) "(s);\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\n\
+  " PREFIX_MYCOEF(set_log) "((*sc), *" PREFIX_TREE(get_zero_coef) "(a));\n\
 \n\
   " I " i, j;\n\
-  for (i = 1; i <= deg; ++i)\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\n\
     {\n\
       " PREFIX_TREE(set) "(s+i, a+i);\n\
       for (j = 1; j < i; ++j) {\n\
-        " PREFIX_SCAL(set_si) "(*tmp, -j);\n\
-        " PREFIX_SCAL(div2_si) "(*tmp, *tmp, i);\n\
-        " PREFIX_TREE(pph_scal) "(s+i, *tmp, a+(i-j), s+j);\n\
+        " PREFIX_MYFLOAT(set_si) "(" PREFIX_MYJET(faux) ", -j);\n\
+        " PREFIX_MYFLOAT(div2_si) "(" PREFIX_MYJET(faux) ", " PREFIX_MYJET(faux) ", i);\n\
+        " PREFIX_TREE(pph_myfloat) "(s+i, " PREFIX_MYJET(faux) ", a+(i-j), s+j);\n\
       }\n\
-      " PREFIX_TREE(div2_scal) "(s[i], s[i], *a0, sc,sf,sc1);\n\
+      " PREFIX_TREE(div2_coef) "(s[i], s[i], *a0, sc,sf,sc1);\n\
     }\n\
 }\n\
 \n\
-#define " PREFIX_JET_TREE(sincos) "(s,c,a)\\\n\
+#define " PREFIX_MYJET(sincos) "(s,c,a)\\\n\
 {\\\n\
   /* assert(s && c && a); assert(s != a && s != c && c != a);*/\\\n\
   /* assert(*s && *c && *a);*/\\\n\
 \\\n\
   " I " i, j;\\\n\
-  " PREFIX_SCAL(t) " aux1,aux2;\\\n\
-  " PREFIX_SCAL(t) " *a0, *sc, *sf;\\\n\
-  " PREFIX_SCAL(init) "(aux1);\\\n\
-  " PREFIX_SCAL(init) "(aux2);\\\n\
-  a0 = get_zero_coef(a);\\\n\
-  " PREFIX_SCAL(set_sin) "((*get_zero_coef(s)),(*a0));\\\n\
-  " PREFIX_SCAL(set_cos) "((*get_zero_coef(c)),(*a0));\\\n\
+  " PREFIX_MYFLOAT(t) " aux1,aux2;\\\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc, *sf;\\\n\
+  " PREFIX_MYFLOAT(init) "(aux1);\\\n\
+  " PREFIX_MYFLOAT(init) "(aux2);\\\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\\\n\
+  " PREFIX_MYCOEF(set_sin) "((*" PREFIX_TREE(get_zero_coef) "(s)),(*a0));\\\n\
+  " PREFIX_MYCOEF(set_cos) "((*" PREFIX_TREE(get_zero_coef) "(c)),(*a0));\\\n\
 \\\n\
-  for (i = 1; i <= deg; ++i)\\\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\\\n\
     {\\\n\
       " PREFIX_TREE(set_zero) "((s)[i], sc,sf);\\\n\
       " PREFIX_TREE(set_zero) "((c)[i], sc,sf);\\\n\
 \\\n\
       for (j = 0; j < i; ++j)\\\n\
         {\\\n\
-          " PREFIX_SCAL(set_si) "(aux1,j);\\\n\
-          " PREFIX_SCAL(div2_si) "(aux1,aux1,i);\\\n\
-          " PREFIX_SCAL(sub2_si) "(aux2,aux1,1);\\\n\
-          " PREFIX_SCAL(si_sub2) "(aux1,1,aux1);\\\n\
+          " PREFIX_MYFLOAT(set_si) "(aux1,j);\\\n\
+          " PREFIX_MYFLOAT(div2_si) "(aux1,aux1,i);\\\n\
+          " PREFIX_MYFLOAT(sub2_si) "(aux2,aux1,1);\\\n\
+          " PREFIX_MYFLOAT(si_sub2) "(aux1,1,aux1);\\\n\
 \\\n\
-          " PREFIX_TREE(pph_scal) "((s)+i, aux1, (a)+(i-j), (c)+j);\\\n\
-          " PREFIX_TREE(pph_scal) "((c)+i, aux2, (a)+(i-j), (s)+j);\\\n\
+          " PREFIX_TREE(pph_myfloat) "((s)+i, aux1, (a)+(i-j), (c)+j);\\\n\
+          " PREFIX_TREE(pph_myfloat) "((c)+i, aux2, (a)+(i-j), (s)+j);\\\n\
         }\\\n\
     }\\\n\
-  " PREFIX_SCAL(clean) "(aux2);\\\n\
-  " PREFIX_SCAL(clean) "(aux1);\\\n\
+  " PREFIX_MYFLOAT(clean) "(aux2);\\\n\
+  " PREFIX_MYFLOAT(clean) "(aux1);\\\n\
 }\\\n\
 \n\
-void " PREFIX_JET_TREE(set_sin) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_sin) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  " PREFIX_JET_TREE(sincos) "(s,my_jet_tmp,a);\n\
+  " PREFIX_MYJET(sincos) "(s," PREFIX_MYJET(jaux) ",a);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_cos) "(" PREFIX_JET_TREE(t) " c, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_cos) "(" PREFIX_MYJET(t) " c, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  " PREFIX_JET_TREE(sincos) "(my_jet_tmp,c,a);\n\
+  " PREFIX_MYJET(sincos) "(" PREFIX_MYJET(jaux) ",c,a);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_tan) "(" PREFIX_JET_TREE(t) " t, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_tan) "(" PREFIX_MYJET(t) " t, " PREFIX_MYJET(t) " a)\n\
 {\n\
   " I " j,k,ii,jj ,nk;\n\
-  " PREFIX_SCAL(t) " *t0,*tcf,*tc;\n\
-  " PREFIX_SCAL(set_tan) "(*get_zero_coef(t),*get_zero_coef(a));\n\
-  " PREFIX_SCAL(mul2) "(*get_zero_coef(my_jet_tmp),*get_zero_coef(t),*get_zero_coef(t));\n\
+  " PREFIX_MYCOEF(t) " *t0,*tcf,*tc;\n\
+  " PREFIX_MYCOEF(set_tan) "(*" PREFIX_TREE(get_zero_coef) "(t),*" PREFIX_TREE(get_zero_coef) "(a));\n\
+  " PREFIX_MYCOEF(mul2) "(*" PREFIX_TREE(get_zero_coef) "(" PREFIX_MYJET(jaux) "),*" PREFIX_TREE(get_zero_coef) "(t),*" PREFIX_TREE(get_zero_coef) "(t));\n\
 \n\
-  nk = (deg+1) - ((deg+1)%2==0);\n\
+  nk = (" PREFIX_MYJET(deg) "+1) - ((" PREFIX_MYJET(deg) "+1)%2==0);\n\
   for (k = 1; k < nk; k++) {\n\
     " PREFIX_TREE(set_zero) "(t[k], tc,tcf);\n\
     for (j = 0; j < k; j++) \n\
-    {" PREFIX_TREE(pph_si) "(t+k,k-j,a+(k-j),my_jet_tmp+j);}\n\
+    {" PREFIX_TREE(pph_si) "(t+k,k-j,a+(k-j)," PREFIX_MYJET(jaux) "+j);}\n\
     " PREFIX_TREE(div2_si) "(t[k],t[k],k, tc,tcf,t0);\n\
     " PREFIX_TREE(add2) "(t+k,t+k,a+k);\n\
 \n\
     /* k odd */\n\
-    " PREFIX_TREE(set_zero) "(my_jet_tmp[k], tc,tcf);\n\
+    " PREFIX_TREE(set_zero) "(" PREFIX_MYJET(jaux) "[k], tc,tcf);\n\
     for (j = 0; j <= (k-1)/2; j++)\n\
-    {" PREFIX_TREE(pph) "(my_jet_tmp+k,t+j,t+(k-j));}\n\
-    " PREFIX_TREE(mul2_si) "(my_jet_tmp[k],my_jet_tmp[k],2, tc,tcf,t0);\n\
+    {" PREFIX_TREE(pph) "(" PREFIX_MYJET(jaux) "+k,t+j,t+(k-j));}\n\
+    " PREFIX_TREE(mul2_si) "(" PREFIX_MYJET(jaux) "[k]," PREFIX_MYJET(jaux) "[k],2, tc,tcf,t0);\n\
 \n\
     ++k;\n\
 \n\
     " PREFIX_TREE(set_zero) "(t[k], tc,tcf);\n\
     for (j = 0; j < k; j++) \n\
-    {" PREFIX_TREE(pph_si) "(t+k,k-j,a+(k-j),my_jet_tmp+j);}\n\
+    {" PREFIX_TREE(pph_si) "(t+k,k-j,a+(k-j)," PREFIX_MYJET(jaux) "+j);}\n\
     " PREFIX_TREE(div2_si) "(t[k],t[k],k, tc,tcf,t0);\n\
     " PREFIX_TREE(add2) "(t+k,t+k,a+k);\n\
 \n\
     /* k even */\n\
-    " PREFIX_TREE(set_zero) "(my_jet_tmp[k], tc,tcf);\n\
+    " PREFIX_TREE(set_zero) "(" PREFIX_MYJET(jaux) "[k], tc,tcf);\n\
     for (j = 0; j <= (k-2)/2; j++)\n\
-    {" PREFIX_TREE(pph) "(my_jet_tmp+k,t+j,t+(k-j));}\n\
-    " PREFIX_TREE(mul2_si) "(my_jet_tmp[k],my_jet_tmp[k],2, tc,tcf,t0);\n\
+    {" PREFIX_TREE(pph) "(" PREFIX_MYJET(jaux) "+k,t+j,t+(k-j));}\n\
+    " PREFIX_TREE(mul2_si) "(" PREFIX_MYJET(jaux) "[k]," PREFIX_MYJET(jaux) "[k],2, tc,tcf,t0);\n\
 \n\
     j = k/2;\n\
-    " PREFIX_TREE(pph) "(my_jet_tmp+k,t+j,t+j);\n\
+    " PREFIX_TREE(pph) "(" PREFIX_MYJET(jaux) "+k,t+j,t+j);\n\
   }\n\
-  if ((deg+1)%2==0) {\n\
-    k = deg;\n\
+  if ((" PREFIX_MYJET(deg) "+1)%2==0) {\n\
+    k = " PREFIX_MYJET(deg) ";\n\
     " PREFIX_TREE(set_zero) "(t[k], tc,tcf);\n\
     for (j = 0; j < k; j++) \n\
-    {" PREFIX_TREE(pph_si) "(t+k,k-j,a+(k-j),my_jet_tmp+j);}\n\
+    {" PREFIX_TREE(pph_si) "(t+k,k-j,a+(k-j)," PREFIX_MYJET(jaux) "+j);}\n\
     " PREFIX_TREE(div2_si) "(t[k],t[k],k, tc,tcf,t0);\n\
     " PREFIX_TREE(add2) "(t+k,t+k,a+k);\n\
   }\n\
 \n\
-//  fprintf(stderr,\"%s:%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
+//  fprintf(stderr,\"\%s:\%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
 }\n\
-void " PREFIX_JET_TREE(set_atan) "(" PREFIX_JET_TREE(t) " t, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_atan) "(" PREFIX_MYJET(t) " t, " PREFIX_MYJET(t) " a)\n\
 {\n\
   " I " j,k,ii,jj;\n\
-  " PREFIX_SCAL(t) " *t0,*tcf,*tc;\n\
-  " PREFIX_SCAL(set_atan) "(*get_zero_coef(t),*get_zero_coef(a));\n\
-  " PREFIX_JET_TREE(set_sq) "(my_jet_tmp,a);\n\
-  " PREFIX_JET_TREE(add2_si) "(my_jet_tmp,my_jet_tmp,1);\n\
-  for (k = 1; k <= deg; k++) {\n\
+  " PREFIX_MYCOEF(t) " *t0,*tcf,*tc;\n\
+  " PREFIX_MYCOEF(set_atan) "(*" PREFIX_TREE(get_zero_coef) "(t),*" PREFIX_TREE(get_zero_coef) "(a));\n\
+  " PREFIX_MYJET(set_sq) "(" PREFIX_MYJET(jaux) ",a);\n\
+  " PREFIX_MYJET(add2_si) "(" PREFIX_MYJET(jaux) "," PREFIX_MYJET(jaux) ",1);\n\
+  for (k = 1; k <= " PREFIX_MYJET(deg) "; k++) {\n\
     " PREFIX_TREE(set_zero) "(t[k], tc,tcf);\n\
     for (j = 1; j < k; j++) \n\
-    {" PREFIX_TREE(pph_si) "(t+k, j, my_jet_tmp+(k-j), t+j);}\n\
+    {" PREFIX_TREE(pph_si) "(t+k, j, " PREFIX_MYJET(jaux) "+(k-j), t+j);}\n\
     " PREFIX_TREE(div2_si) "(t[k],t[k],k, tc,tcf,t0);\n\
     " PREFIX_TREE(sub2) "(t+k,a+k,t+k);\n\
-    " PREFIX_TREE(div2_scal) "(t[k],t[k],*get_zero_coef(my_jet_tmp), tc,tcf,t0);\n\
+    " PREFIX_TREE(div2_coef) "(t[k],t[k],*" PREFIX_TREE(get_zero_coef) "(" PREFIX_MYJET(jaux) "), tc,tcf,t0);\n\
   }\n\
-//  fprintf(stderr,\"%s:%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
+//  fprintf(stderr,\"\%s:\%d to test\\n\",__FILE__,__LINE__); exit(1);\n\
 }\n\
 \n\
-#define " PREFIX_JET_TREE(sinhcosh) "(s,c,a)\\\n\
+#define " PREFIX_MYJET(sinhcosh) "(s,c,a)\\\n\
 {\\\n\
   /* assert(s && c && a); assert(s != a && s != c && c != a);*/\\\n\
   /* assert(*s && *c && *a);*/\\\n\
 \\\n\
   " I " i, j;\\\n\
-  " PREFIX_SCAL(t) " aux1;\\\n\
-  " PREFIX_SCAL(t) " *a0, *sc,*sf;\\\n\
-  " PREFIX_SCAL(init) "(aux1);\\\n\
-  a0 = get_zero_coef(a);\\\n\
-  " PREFIX_SCAL(set_sinh) "((*get_zero_coef(s)),(*a0));\\\n\
-  " PREFIX_SCAL(set_cosh) "((*get_zero_coef(c)),(*a0));\\\n\
+  " PREFIX_MYFLOAT(t) " aux1;\\\n\
+  " PREFIX_MYCOEF(t) " *a0, *sc,*sf;\\\n\
+  " PREFIX_MYFLOAT(init) "(aux1);\\\n\
+  a0 = " PREFIX_TREE(get_zero_coef) "(a);\\\n\
+  " PREFIX_MYCOEF(set_sinh) "((*" PREFIX_TREE(get_zero_coef) "(s)),(*a0));\\\n\
+  " PREFIX_MYCOEF(set_cosh) "((*" PREFIX_TREE(get_zero_coef) "(c)),(*a0));\\\n\
 \\\n\
-  for (i = 1; i <= deg; ++i)\\\n\
+  for (i = 1; i <= " PREFIX_MYJET(deg) "; ++i)\\\n\
     {\\\n\
       " PREFIX_TREE(set_zero) "(s[i], sc,sf);\\\n\
       " PREFIX_TREE(set_zero) "(c[i], sc,sf);\\\n\
 \\\n\
       for (j = 0; j < i; ++j)\\\n\
         {\\\n\
-          " PREFIX_SCAL(set_si) "(aux1,j);\\\n\
-          " PREFIX_SCAL(div2_si) "(aux1,aux1,i);\\\n\
-          " PREFIX_SCAL(si_sub2) "(aux1,1,aux1);\\\n\
+          " PREFIX_MYFLOAT(set_si) "(aux1,j);\\\n\
+          " PREFIX_MYFLOAT(div2_si) "(aux1,aux1,i);\\\n\
+          " PREFIX_MYFLOAT(si_sub2) "(aux1,1,aux1);\\\n\
 \\\n\
-          " PREFIX_TREE(pph_scal) "(s+i, aux1, a+(i-j), c+j);\\\n\
-          " PREFIX_TREE(pph_scal) "(c+i, aux1, a+(i-j), s+j);\\\n\
+          " PREFIX_TREE(pph_myfloat) "(s+i, aux1, a+(i-j), c+j);\\\n\
+          " PREFIX_TREE(pph_myfloat) "(c+i, aux1, a+(i-j), s+j);\\\n\
         }\\\n\
     }\\\n\
-  " PREFIX_SCAL(clean) "(aux1);\\\n\
+  " PREFIX_MYFLOAT(clean) "(aux1);\\\n\
 }\\\n\
 \n\
-void " PREFIX_JET_TREE(set_sinh) "(" PREFIX_JET_TREE(t) " s, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_sinh) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  " PREFIX_JET_TREE(sinhcosh) "(s,my_jet_tmp,a);\n\
+  " PREFIX_MYJET(sinhcosh) "(s," PREFIX_MYJET(jaux) ",a);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(set_cosh) "(" PREFIX_JET_TREE(t) " c, " PREFIX_JET_TREE(t) " a)\n\
+void " PREFIX_MYJET(set_cosh) "(" PREFIX_MYJET(t) " c, " PREFIX_MYJET(t) " a)\n\
 {\n\
-  " PREFIX_JET_TREE(sinhcosh) "(my_jet_tmp,c,a);\n\
+  " PREFIX_MYJET(sinhcosh) "(" PREFIX_MYJET(jaux) ",c,a);\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(eval) "(" PREFIX_SCAL(t) " val[1], " PREFIX_JET_TREE(t) " x, " PREFIX_SCAL(t) " s[])\n\
+void " PREFIX_MYJET(eval) "(" PREFIX_MYCOEF(t) " val[1], " PREFIX_MYJET(t) " x, " PREFIX_MYFLOAT(t) " s[])\n\
 {\n\
   " I " k, m;\n\
-  " PREFIX_SCAL(set_zero) "(*val);\n\
-  for (k = deg; k > 0; --k) {\n\
-    " PREFIX_TREE(sumeval) " (val, x + k, s);\n\
+  " PREFIX_MYCOEF(set_zero) "(*val);\n\
+  for (k = " PREFIX_MYJET(deg) "; k > 0; --k) {\n\
+    " PREFIX_TREE(sumeval) "(val, x + k, s);\n\
+    /* TODO possible memory improvement... */\n\
   }\n\
-  " PREFIX_SCAL(add2) "(*val,*val, *(get_zero_coef(x)));\n\
+  " PREFIX_MYCOEF(add2) "(*val,*val, *(" PREFIX_TREE(get_zero_coef) "(x)));\n\
 }\n\
 \n\
-void " PREFIX_JET_TREE(fprintf) "(FILE *file, const char *fmt, " PREFIX_JET_TREE(t) " s)\n\
+/* special functions */\n\
+\n\
+static " PREFIX_MYJET(t) " " PREFIX_TREE(compoh) "(" PREFIX_TREE(ptr) " h, " PREFIX_MYJET(t) " *v)\n\
 {\n\
-  int i;\n\
-  for (i=0;i <_JET_COEFFICIENTS_COUNT_TOTAL_; i++){"  PREFIX_SCAL(fprintf) "(file, fmt,  MY_JET_DATA(s,i) );\n\
- }\n\
+  " I " n, k, m;\n\
+  " PREFIX_MYJET(t) " x1, xk, tmp1, tmp2;\n\
+  \n\
+  n = h->nsymb;\n\
+  k = h->deg;\n\
+  x1 = v[n-1];\n\
+  \n\
+  if (k == 0) {\n\
+    tmp1 = " PREFIX_MYJET(pool) "[" PREFIX_MYJET(ipool) "]; ++" PREFIX_MYJET(ipool) ";\n\
+    " PREFIX_MYJET(set_coef) "(tmp1, *(h->coef));\n\
+  } else if (n==1) {\n\
+    tmp1 = " PREFIX_MYJET(pool) "[" PREFIX_MYJET(ipool) "]; ++" PREFIX_MYJET(ipool) ";\n\
+    xk = " PREFIX_MYJET(pool) "[" PREFIX_MYJET(ipool) "]; ++" PREFIX_MYJET(ipool) ";\n\
+    " PREFIX_MYJET(set) "(xk, x1);\n\
+    for (m = 1; m < k; ++m)\n\
+      {\n\
+        /* xk = xk * x1 */\n\
+        " PREFIX_MYJET(mul2) "(tmp1, xk, x1);\n\
+//        aprods(tmp1, xk, x1);\n\
+        \n\
+        tmp2 = xk;\n\
+        xk = tmp1;\n\
+        tmp1 = tmp2;\n\
+      }\n\
+    " PREFIX_MYJET(mul2_coef) "(xk, xk, *(h->coef));\n\
+    " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = tmp1;\n\
+    return xk;\n\
+  } else {\n\
+      xk = " PREFIX_MYJET(pool) "[" PREFIX_MYJET(ipool) "]; ++" PREFIX_MYJET(ipool) ";\n\
+      tmp1 = " PREFIX_TREE(compoh) "((h->term)+k, v);\n\
+      for (m = k; m > 0; --m)\n\
+        {\n\
+          " PREFIX_MYJET(mul2) "(xk, tmp1, x1);\n\
+//          aprods(xk, tmp1, x1);\n\
+          " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = tmp1;\n\
+          tmp1 = " PREFIX_TREE(compoh) "((h->term) + m-1, v);\n\
+          " PREFIX_MYJET(add2) "(tmp1, tmp1, xk);\n\
+        }\n\
+      " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = xk;\n\
+    }\n\
+  return tmp1;\n\
+//  fprintf(stderr, \"\%s:\%d to implement\\n\", __FILE__, __LINE__); fflush(stderr); exit(1);\n\
 }\n\
-#undef my_jet_tmp\n\
-#undef my_scal_tmp\n\
+\n\
+/* Given u(s1,...,sd) and v=(v1,...,vd)\n\
+ * series vector of d variables.\n\
+ * It outputs w = u(v1,...,vd) serie of d variables.\n\
+ * \n\
+ * Note: It allocates a pool of d+1 series possibly\n\
+ *  given auxiliary parameter\n\
+ */\n\
+\n\
+void " PREFIX_MYJET(compo) "(" PREFIX_MYJET(t) " w, " PREFIX_MYJET(t) " u, " PREFIX_MYJET(t) " *v)\n\
+{\n\
+  " I " m, k;\n\
+  " PREFIX_MYJET(t) " tmp=NULL;\n\
+  \n\
+  k = " PREFIX_MYJET(get_deg) "();\n\
+  " PREFIX_MYJET(set_zero) "(w);\n\
+  for (m = k; m > 0; --m)\n\
+    {\n\
+      tmp = " PREFIX_TREE(compoh) "(u+m, v);\n\
+      " PREFIX_MYJET(add2) "(w, w, tmp);\n\
+      " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = tmp;\n\
+    }\n\
+  " PREFIX_MYCOEF(add2) "(*" PREFIX_TREE(get_zero_coef) "(w),*" PREFIX_TREE(get_zero_coef) "(w),*" PREFIX_TREE(get_zero_coef) "(u));\n\
+}\n\
+void " PREFIX_MYJET(reverse) "(" PREFIX_MYJET(t) " *u, " PREFIX_MYJET(t) " *v)\n\
+{\n\
+  " I " m, n, k, i, ns = " MAX_NUM_SYMBOLS_NAME ";\n\
+  " PREFIX_MYJET(t) " tmp=NULL, *tmp2=&" PREFIX_MYJET(pool) "[ns+1];\n\
+  \n\
+  for (i = 0; i < ns; ++i)\n\
+    {\n\
+      " PREFIX_MYJET(set_zero) "(u[i]);\n\
+      " PREFIX_TREE(set) "(&u[i][0], &v[i][0]);\n\
+      " PREFIX_TREE(set) "(&u[i][1], &v[i][1]);\n\
+      \n\
+      " PREFIX_MYJET(set_zero) "(tmp2[i]);\n\
+    }\n\
+  \n\
+  " PREFIX_MYJET(ipool) " = 0;\n\
+  k = " PREFIX_MYJET(get_deg) "();\n\
+  for (m = 2; m <= k; ++m)\n\
+    {\n\
+      for (n = m; n > 0; --n) for (i = 0; i < ns; ++i)\n\
+        {\n\
+          tmp = " PREFIX_TREE(compoh) "(&v[i][n], u);\n\
+          " PREFIX_MYJET(add2) "(tmp2[i], tmp2[i], tmp); /* it could just be homog */\n\
+          " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = tmp;\n\
+        }\n\
+      for (i = 0; i < ns; ++i)\n\
+        {\n\
+          " PREFIX_TREE(set) "(&u[i][m], &tmp2[i][m]);\n\
+          " PREFIX_TREE(neg) "(&u[i][m], &u[i][m]);\n\
+          " PREFIX_MYJET(set_zero) "(tmp2[i]);\n\
+        }\n\
+    }\n\
+}\n\
+void " PREFIX_MYJET(algT) "(" PREFIX_MYJET(t) " *w, " PREFIX_MYJET(t) " *u, " PREFIX_MYJET(t) " *v)\n\
+{\n\
+  " I " m, n, k, i, ns = " MAX_NUM_SYMBOLS_NAME ";\n\
+  " PREFIX_MYJET(t) " tmp=NULL, *tmp2=&" PREFIX_MYJET(pool) "[ns+1];\n\
+  \n\
+  for (i = 0; i < ns; ++i)\n\
+    {\n\
+      " PREFIX_MYJET(set_zero) "(w[i]);\n\
+//      " PREFIX_TREE(set_zero) "(&w[i][0]);\n\
+      " PREFIX_TREE(set) "(&w[i][1], &u[i][1]);\n\
+      \n\
+      " PREFIX_MYJET(set_zero) "(tmp2[i]);\n\
+    }\n\
+  \n\
+  " PREFIX_MYJET(ipool) " = 0;\n\
+  k = " PREFIX_MYJET(get_deg) "();\n\
+  for (m = 2; m <= k; ++m)\n\
+    {\n\
+      for (n = m; n > 0; --n) for (i = 0; i < ns; ++i)\n\
+        {\n\
+          tmp = " PREFIX_TREE(compoh) "(&v[i][n], w);\n\
+          " PREFIX_MYJET(add2) "(tmp2[i], tmp2[i], tmp); /* it could just be homog */\n\
+          " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = tmp;\n\
+        }\n\
+      for (i = 0; i < ns; ++i)\n\
+        {\n\
+          " PREFIX_TREE(set) "(&w[i][m], &u[i][m]);\n\
+          " PREFIX_TREE(sub2) "(&w[i][m], &w[i][m], &tmp2[i][m]);\n\
+          " PREFIX_MYJET(set_zero) "(tmp2[i]);\n\
+        }\n\
+    }\n\
+}\n\
+\n\
+void " PREFIX_MYJET(fprintf) "(FILE *file, const char *fmt, " PREFIX_MYJET(t) " s)\n\
+{\n\
+  " I " i;\n\
+  for (i=0;i <" MAX_COEFFS_COUNT_NAME "; i++){" PREFIX_MYCOEF(fprintf) "(file, fmt, " MYDATA_ACCESS "(s,i));}\n\
+}\n\
+\n\
+void " PREFIX_MYJET(fscanf) "(FILE *file, const char *fmt, " PREFIX_MYJET(t) " s)\n\
+{\n\
+  " I " i;\n\
+  for (i=0;i <" MAX_COEFFS_COUNT_NAME "; i++){" PREFIX_MYCOEF(fscanf) "(file, fmt, " MYDATA_ACCESS "(s,i));}\n\
+}\n\
+void " PREFIX_MYJET(genidx) "(" I " c[], " I " n)\n\
+{\n\
+  " I " deg, i, in;\n\
+  for (in = 0; in < n; ++in) if (c[in] != 0) break;\n\
+  if (in == n) return;\n\
+  if (in == n-1) { c[0] = c[n-1]; c[n-1] = 0; return; }\n\
+  deg = c[in]+c[in+1];\n\
+  c[in+1]++;\n\
+  for (i = 1; i <= in; ++i) c[i] = 0;\n\
+  c[0] = deg-c[in+1];\n\
+}\n\
+\n\
+static char *" PREFIX_MYJET(sscanf4) "(char *ptr, const char *myfmt, " PREFIX_MYJET(t) " s, int *l)\n\
+{\n\
+  " I " i;\n\
+  for (i = 0; i <" MAX_COEFFS_COUNT_NAME " && *ptr!=\'\\0\'; i++){\n\
+    ptr = " PREFIX_MYCOEF(sscanf4) "(ptr, myfmt, " MYDATA_ACCESS "(s,i), l);\n\
+  }\n\
+  for ( ; i <" MAX_COEFFS_COUNT_NAME "; i++) {" PREFIX_MYCOEF(set_zero) "(" MYDATA_ACCESS "(s,i));}\n\
+  return ptr;\n\
+}\n\
+void " PREFIX_MYJET(sscanf) "(const char *str, const char *fmt, " PREFIX_MYJET(t) " s)\n\
+{\n\
+  int l;\n\
+  const int len=fmt?strnlen(fmt,128):0; /* NOTE: safety string length of 128 */\n\
+  char myfmt[len+3], *mystr = strdup(str);\n\
+  sprintf(myfmt, \"\%s%%n\",fmt);\n\
+  " PREFIX_MYJET(sscanf4) "(mystr, myfmt, s, &l);\n\
+  free(mystr);\n\
+}\n\
 \n" \
 
-#define MY_JET_TREE_POSTCODE(PREFIX_JET_TREE,PREFIX_TREE,PREFIX_SCAL,I) "\
-/* END CODE " PREFIX_JET_TREE(t) " */\n" \
+#define MY_JET_TREE_POSTCODE(PREFIX_MYJET,PREFIX_TREE,PREFIX_MYCOEF,I,\
+  MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+/* END CODE " PREFIX_MYJET(t) " */\n\
+" \
 
 
 #endif /* MY_JET_TREE_H */

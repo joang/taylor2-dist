@@ -42,7 +42,7 @@ extern char yytext[];
 %start program
 %union { Node ntype; enum node_code code; }
 
-%token IF ELSE ID INTCON FLOATCON EXTRN SUM DIFF INT REAL SHORT CHAR JET VARS DEG INCLUDE ALLVARS
+%token IF ELSE ID INTCON FLOATCON EXTRN SUM DIFF INT REAL SHORT CHAR JET VARS DEG INCLUDE ALLVARS EXPR
 %token INITIALV JINITIALV QSTRING
 
 %nonassoc IF
@@ -60,8 +60,8 @@ extern char yytext[];
 %type <ntype> ID INTCON FLOATCON
 %type <ntype> idexpr id term  arrayref one_idx 
 %type <ntype> expr bexpr
-%type <ntype> EXTRN SUM JET
-%type <ntype> decl_id decl_array declare_one declrs jet_id jet_one jets
+%type <ntype> EXTRN SUM JET EXPR
+%type <ntype> decl_id decl_array declare_one declrs jet_id jet_one jets expr_one expr_list 
 %type <ntype> jparameters jparm1 jparm_id 
 
 %%
@@ -85,6 +85,7 @@ stmt:
                     | jet
                     | control
 		    | jetinit
+		    | expr_var
                     ;
 
 control:            INITIALV '=' initials
@@ -141,7 +142,7 @@ jparm_id:
 
 var:
 		    INTCON
-                    { num_symbols = atoi(yytext);}
+                    { num_jet_symbols = atoi(yytext);}
                     ;
 
 deg:
@@ -170,6 +171,19 @@ jet_id:
 		      ID
                      { $$ = markJet(current_id); num_jet_vars++; }
                       ;
+
+expr_var:
+                     EXPR id '=' expr_list
+		     { build_expression_list($2);}
+                     ;
+expr_list:          
+                     expr_one
+		     | expr_list ',' expr_one
+		     ;
+
+expr_one:            expr
+                     { define_expression($1); }
+	   	      ;
 
 
 declare:          
@@ -276,8 +290,7 @@ term:
                        {insum++;}
                       '(' expr ','  idexpr  '=' expr ',' expr ')'
                           { $$ = build_sum( $4, $6, $8, $10); insum--;}
-                      ;
-
+                      ;		    
 idexpr:
                     ID
                      { $$ = current_id;}

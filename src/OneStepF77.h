@@ -121,7 +121,7 @@ void taylor_f77__ODE_NAME____(MY_FLOAT *ti,\n\
 */\n\
 {\n\
   *flag=taylor_step__ODE_NAME__(ti,x,*dir,*step_ctl,*log10abserr,*log10relerr,\n\
-                             endtime,ht,order);\n\
+                             endtime,ht,order,NULL);\n\
   return;\n\
 }\n\
 \n\

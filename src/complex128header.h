@@ -50,24 +50,27 @@ static char f128_out_buf[128];\n\
 #define   MakeMyFloatC(r,s,a)       (r=strtoflt128(s,NULL))\n\
 /* addition r=a+b   */\n\
 #define   AddMyFloatA(r,a,b)        (r=(a)+(b))\n\
-#define   AddMyFloatD(r,a,b)        AddMyFloatA\n\
-#define   AddMyFloatSI(r,a,b)       AddMyFloatA\n\
+#define   AddMyFloatD(r,a,b)        AddMyFloatA(r,a,b)\n\
+#define   AddMyFloatSI(r,a,b)       AddMyFloatA(r,a,b)\n\
 \n\
 /* substraction r=a-b */\n\
 #define   SubtractMyFloatA(r,a,b)   (r=(a)-(b))\n\
-#define   SubtractMyFloatD(r,a,b)   SubtractMyFloatA\n\
-#define   SubtractMyFloatSI(r,a,b)  SubtractMyFloatA\n\
-#define   SubtractSIMyFloat(r,a,b)  SubtractMyFloatA\n\
+#define   SubtractMyFloatD(r,a,b)   SubtractMyFloatA(r,a,b)\n\
+#define   SubtractMyFloatSI(r,a,b)  SubtractMyFloatA(r,a,b)\n\
+#define   SubtractDMyFloat(r,a,b)   SubtractMyFloatA(r,a,b)\n\
+#define   SubtractSIMyFloat(r,a,b)  SubtractMyFloatA(r,a,b)\n\
 \n\
 /* multiplication r=a*b */\n\
 #define   MultiplyMyFloatA(r,a,b)   (r=(a)*(b))\n\
-#define   MultiplyMyFloatD(r,a,b)   MultiplyMyFloatA\n\
-#define   MultiplyMyFloatSI(r,a,b)  MultiplyMyFloatA\n\
+#define   MultiplyMyFloatD(r,a,b)   MultiplyMyFloatA(r,a,b)\n\
+#define   MultiplyMyFloatSI(r,a,b)  MultiplyMyFloatA(r,a,b)\n\
 \n\
 /* division r=a/b */\n\
 #define   DivideMyFloatA(r,a,b)     (r=(a)/(b))\n\
 #define   DivideMyFloatD(r,a,b)     (r=(a)/(__float128)(b))\n\
-#define   DivideMyFloatSI(r,a,b)    DivideMyFloatD\n\
+#define   DivideMyFloatSI(r,a,b)    DivideMyFloatD(r,a,b)\n\
+#define   DivideDMyFloat(r,a,b)     (r=(__float128)(a)/(b))\n\
+#define   DivideSIMyFloat(r,a,b)    DivideDMyFloat(r,a,b)\n\
 \n\
 /* division by an integer r=a/i */\n\
 #define   DivideMyFloatByInt(r,a,i) (r=(a)/(__float128)(i))\n\
@@ -120,18 +123,29 @@ static char f128_out_buf[128];\n\
 #define   MyFloatA_LT_B(a,b)        (crealq(a)< crealq(b))\n\
 #define   MyFloatA_EQ_B(a,b)        (crealq(a)==crealq(b))\n\
 #define   MyFloatA_NEQ_B(a,b)       (crealq(a)!=crealq(b))\n\
+#define   MyFloatA_CMP_B(a,b)       (crealq(a)-crealq(b))\n\
+#define   MyFloatA_CMPABS_B(a,b)    (fabsq(crealq(a))-fabs(crealq(b)))\n\
 \n\
 \n\
 \n\
-#define   OutputMyFloat(a)          quadmath_snprintf(f128_out_buf, 128, \"%.33Qe\", crealq(a)),\\\n\
-                                    fprintf(stdout,\"%s \",f128_out_buf),\\\n\
-                                    quadmath_snprintf(f128_out_buf, 128, \"%.33Qe\", cimagq(a)),\\\n\
-                                    fprintf(stdout,\"%s\",f128_out_buf)\n\
-#define   OutputMyFloat3(file,format,a)  \\\n\
-                                    quadmath_snprintf(f128_out_buf, 128, format, crealq(a)),\\\n\
-                                    fprintf(stdout,\"%s \",f128_out_buf),\\\n\
-                                    quadmath_snprintf(f128_out_buf, 128, format, cimagq(a)),\\\n\
-                                    fprintf(stdout,\"%s\",f128_out_buf)\n\
+#define   OutputMyFloat3(file,fmt,a) (quadmath_snprintf(f128_out_buf, 128, fmt, crealq(a)),\\\n\
+                                     fprintf(file,\"\%s,\",f128_out_buf),\\\n\
+                                     quadmath_snprintf(f128_out_buf, 128, fmt, cimagq(a)),\\\n\
+                                     fprintf(file,\"\%s \",f128_out_buf))\n\
+#define   OutputMyFloat(a)           OutputMyFloat3(stdout,\"\% .33Qe\",a)\n\
+\n\
+#define   InputMyFloat3(file,fmt,a)   (fscanf(file,\"\%[^,]128s\",f128_out_buf),\\\n\
+                                      a=strtoflt128(f128_out_buf,NULL),\\\n\
+                                      fscanf(file,\",\%128s\",f128_out_buf),\\\n\
+                                      a+=_Complex_I*strtoflt128(f128_out_buf,NULL))\n\
+#define   InputMyFloat(a)             InputMyFloat3(stdin,NULL,a)\n\
+\n\
+#define   StringToMyFloat4(s,fmt,a,n) (a=strtoflt128(s,&(s)),a+=_Complex_I*(*(s)==\',\'?strtoflt128(s+1,&(s)):0),s)\n\
+#define   StringToMyFloat3(s,fmt,a)   {char *__buf__=s;\\\n\
+                                      a=strtoflt128(__buf__,&__buf__);\\\n\
+                                      a+=_Complex_I*(*__buf__==\',\' ? strtoflt128(__buf__+1,&__buf__):0);}\n\
+#define   StringToMyFloat(s,a)        StringToMyFloat3(s,NULL,a)\n\
+\n\
 /************************************************************************/\n\
 ";
 

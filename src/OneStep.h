@@ -106,8 +106,9 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
  *           on output: new value of the jet variable, corresponding to the new time\n\
  *\n\
  * return value:\n\
- * 0: ok.\n\
- * 1: ok, and ti=endtime.  */\n\
+ *  0: ok.\n\
+ *  1: ok, and ti=endtime.  \n\
+ * -1: not ok, unable to compute step size.  double_log  underflow/overflow  */\n\
 {\n\
   MY_FLOAT **taylor_coefficients__ODE_NAME__(MY_FLOAT, MY_FLOAT*, int);\n\
   MY_FLOAT **taylor_coefficients__ODE_NAME__A(MY_FLOAT, MY_FLOAT*, int, int);\n\
@@ -202,6 +203,7 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
   step_ctl=3 has been reserved for the user, in case she/he wants to\n\
   code a different method.\n\
 */\n\
+  dh=1.0;\n\
   switch(step_ctl)\n\
     {\n\
     case 0: /* no step size control (fixed step size, given by the user) */\n\
@@ -230,6 +232,7 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
       fprintf(stderr, \"method or supply a step size control procedure.\\n\");\n\
       exit(0);\n\
     }\n\
+  if(dh == 0.0) return -1; //changeme\n\
 /*\n\
   if step_ctl != 0, we adjust the sign of the computed stepsize.\n\
 */\n\
@@ -415,6 +418,7 @@ double compute_stepsize_1__ODE_NAME__(MY_FLOAT **s, MY_JET **jet, int nt, double
     {\n\
       lnv2=double_log_MyFloat__ODE_NAME__(v2);\n\
     }\n\
+  if(lnv1 == 65536.0 || lnv2 == 65536.0 ) return 0.0; //changeme\n\
 /*\n\
   if flag_err == 2, this means that we are using a relative error control.\n\
 */\n\
@@ -460,6 +464,7 @@ double compute_stepsize_2__ODE_NAME__(MY_FLOAT **s, MY_JET **jet, int nt, double
   we compute the step size according to the first algorithm\n\
 */\n\
   dh=compute_stepsize_1__ODE_NAME__(s,jet,nt,xnorm,flag_err);\n\
+  if(dh == 0.0) return  0.0; // changeme\n\
   MakeMyFloatA(h,dh);\n\
 /*\n\
   next lines select a value (z), that will be used to control the size\n\
@@ -556,7 +561,8 @@ double double_log_MyFloat__ODE_NAME__(MY_FLOAT x)\n\
       puts(\"double_log_MyFloat error: zero argument\");\n\
       puts(\"(this is because one of the last two terms of your taylor\");\n\
       puts(\" expansion is exactly zero)\");\n\
-      exit(1);\n\
+      /*exit(1);*/\n\
+      return 65536.0;\n\
     }\n\
 \n\
   AssignMyFloat(a,x);\n\
@@ -565,14 +571,14 @@ double double_log_MyFloat__ODE_NAME__(MY_FLOAT x)\n\
   while(MyFloatA_LT_B(a,uf))\n\
   {\n\
     ++k;\n\
-    if(k>3000){fprintf(stderr,\"double_log_MyFloat overflow: %d\\n\", k); exit(1);}\n\
+    if(k>3000){fprintf(stderr,\"double_log_MyFloat overflow: %d\\n\", k); /*exit(1);*/ return 65536.0;}\n \
     MultiplyMyFloatA(tmp,a,of);\n\
     AssignMyFloat(a,tmp);\n\
   }\n\
   while(MyFloatA_GT_B(a,of))\n\
   {\n\
     --k;\n\
-    if(k<-3000){fprintf(stderr,\"double_log_MyFloat underflow: %d\\n\", k); exit(1);}\n\
+    if(k<-3000){fprintf(stderr,\"double_log_MyFloat underflow: %d\\n\", k); /*exit(1);*/ return 65536.0;}\n \
     MultiplyMyFloatA(tmp,a,uf);\n\
     AssignMyFloat(a,tmp);\n\
   }\n\

@@ -32,56 +32,79 @@
 #define MY_JET_2_FIXES MY_JET_SPACE
 #define MY_JET_2_TYPE MY_JET_TYPE1
 
-#define MY_JET_2_API(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_SCAL,SCAL,I) \
-    MY_JET_APIS(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_SCAL,SCAL,I) \
+#define MY_JET_2_API(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                     MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) \
+    MY_JET_APIS(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) \
 
-#define MY_JET_2_PREHEADER(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_SCAL,SCAL,I) "\
+#define MY_JET_2_PREHEADER(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+                           MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
 /* HEADER " PREFIX_JET_2(t) " */\n" \
 
-#define MY_JET_2_HEADER(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_SCAL,SCAL,I) "\
-" MY_JET_2_API(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_SCAL,SCAL,I) \
+#define MY_JET_2_HEADER(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+" MY_JET_2_API(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,\
+               MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) \
 
-#define MY_JET_2_POSTHEADER(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_SCAL,SCAL,I) "\
+#define MY_JET_2_POSTHEADER(PREFIX_JET_2,MY_JET_2_TYPE,PREFIX_MYCOEF,MYCOEF,MYFLOAT,I,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
 /* END HEADER " PREFIX_JET_2(t) " */\n" \
 
 /* *******  *************  ******* */
 /* *******  MY_JET_2_CODE  ******* */
 /* *******  *************  ******* */
-#define MY_JET_2_PRECODE(PREFIX_JET_2,PREFIX_SCAL,I) "\
-" MY_SCAL_MACROS(PREFIX_SCAL) "\n\
+#define MY_JET_2_PRECODE(PREFIX_JET_2,PREFIX_MYCOEF,I,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
+" MY_COEF_MACROS(PREFIX_MYCOEF,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME) "\n\
 /* CODE FOR " PREFIX_JET_2(t) " */\n\
-int * " PREFIX_JET_2(monomial_counts) "(void) {return _monomial_counts_;}\n\
-int * " PREFIX_JET_2(monomial_offsets) "(void) {return _monomial_offsets_;}\n\
-\n"\
-
-#define MY_JET_2_CODE(PREFIX_JET_2,PREFIX_SCAL,I) "\
+int * " PREFIX_JET_2(monomial_counts) "(void) {return _" PREFIX_JET_2(monomial_counts) "_;}\n\
+int * " PREFIX_JET_2(monomial_offsets) "(void) {return _" PREFIX_JET_2(monomial_offsets) "_;}\n\
 #include <stdlib.h>\n\
 #include <stdio.h>\n\
 #include <math.h>\n\
+#include <string.h>\n\
+\n"\
+
+#define MY_JET_2_CODE(PREFIX_JET_2,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,\
+                      MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME,\
+                      MYDATA_ACCESS) "\
+static int " PREFIX_JET_2(flag_init_jet_library) "=0;\n\
+static " I " " PREFIX_JET_2(nsymb) "=_NUMBER_OF_JET_VARS_;\n\
+static " PREFIX_MYFLOAT(t) " " PREFIX_JET_2(faux) ";\n\
+static " PREFIX_MYCOEF(t) " " PREFIX_JET_2(caux) ";\n\
+static " PREFIX_JET_2(t) " " PREFIX_JET_2(jaux) ";\n\
+#pragma omp threadprivate(" PREFIX_JET_2(flag_init_jet_library) "," PREFIX_JET_2(faux) "," PREFIX_JET_2(caux) "," PREFIX_JET_2(jaux) ")\n\
 \n\
-#ifndef _NUMBER_OF_JET_VARS_\n\
-#define _NUMBER_OF_JET_VARS_ 0\n\
-#endif\n\
-#define my_scal_tmp " PREFIX_JET_2(tmp) "\n\
-static int flag_init_jet_library=0;\n\
-static " I " num_symbs=_NUMBER_OF_JET_VARS_;\n\
-static " PREFIX_SCAL(t) " my_scal_tmp;\n\
-#pragma omp threadprivate(my_scal_tmp)\n\
-\n \
-  void " PREFIX_JET_2(initup) "(" I " nsymbs, " I " deg)\n\
+size_t " PREFIX_JET_2(init) "(" PREFIX_JET_2(ptr) " x) {\n\
+\tsize_t mem=0;\n\
+\t" I " k;\n\
+\t*x=(" PREFIX_JET_2(t) ")malloc((" MAX_COEFFS_COUNT_NAME ") * sizeof(" PREFIX_MYCOEF(t) "));\n\
+\tif (*x == NULL) {\n\
+\t\tfprintf(stderr, \"not enough memory to allocate \%d\\n\"," MAX_COEFFS_COUNT_NAME ");\n\
+\t\texit(1);\n\
+\t}\n\
+\tfor(k = 0;k < " MAX_COEFFS_COUNT_NAME "; k++){" PREFIX_MYCOEF(init) "((*x)[k]);}\n\
+\tmem+= (" MAX_COEFFS_COUNT_NAME ")*sizeof(" PREFIX_MYCOEF(t) ");\n\
+\treturn mem;\n\
+}\n\
+void " PREFIX_JET_2(initup2) "(" I " nsymbs, " I " deg)\n\
 {\n\
-\tif (flag_init_jet_library==1) return;\n\
+\tif (" PREFIX_JET_2(flag_init_jet_library) "==1) return;\n\
 \tif (deg != 2) {\n\
 \t\tfprintf(stderr, \"%d: Not allowed deg value: \%d!=2\\n\",__LINE__,deg);\n\
 \t\texit(1);\n\
 \t}\n\
-\t" PREFIX_SCAL(init) "(my_scal_tmp);\n\
-\tflag_init_jet_library=1;\n\
+\tif (" MAX_NUM_SYMBOLS_NAME " < nsymbs) {\n\
+\t\tfprintf(stderr, \"%d: Not allowed nsymbs value \%d<\%d\\n\",__LINE__," MAX_NUM_SYMBOLS_NAME ",nsymbs);\n\
+\t\texit(1);\n\
+\t}\n\
+\t" PREFIX_JET_2(nsymb) " = nsymbs;\n\
+\t" PREFIX_MYCOEF(initup) "();\n\
+\t" PREFIX_MYCOEF(init) "(" PREFIX_JET_2(caux) ");\n\
+\t" PREFIX_MYFLOAT(init) "(" PREFIX_JET_2(faux) ");\n\
+\t" PREFIX_JET_2(init) "(&" PREFIX_JET_2(jaux) ");\n\
+\t" PREFIX_JET_2(flag_init_jet_library) "=1;\n\
 }\n" \
-  "\n" \
   I " " PREFIX_JET_2(get_num_symbs) "(void)\
 {\
-return num_symbs;\
+return " PREFIX_JET_2(nsymb) ";\
 }\n" \
   "\n" \
   I " " PREFIX_JET_2(get_deg) "(void)\
@@ -92,13 +115,14 @@ return 2;\
   I " " PREFIX_JET_2(set_num_symbs) "(" I " nsymbs)\n\
 {\n\
 \t" I " k;\n\
-\t\tfprintf(stderr, \"%d: Change number of symbols is not implemented.\\n\",__LINE__);\n\
-\tif (nsymbs > num_symbs) {\n\
-\t\tfprintf(stderr, \"%d: Invalid num. variables \%d > \%d\\n\",__LINE__,nsymbs, num_symbs);\n\
+\t\tfprintf(stderr, \"%d: Change number of symbols is not implemented.\\n\",__LINE__); return 0;\n\
+\tif (nsymbs > " MAX_NUM_SYMBOLS_NAME ") {\n\
+\t\tfprintf(stderr, \"%d: Invalid num. variables \%d > \%d\\n\",__LINE__,nsymbs, " MAX_NUM_SYMBOLS_NAME ");\n\
 \t\texit(1);\n\
 \t}\n\
-\tk = num_symbs;\n\
-\tnum_symbs = nsymbs+1;\n\
+\t/* WARNING: in case of parallel region required out of the scope */\n\
+\tk = " PREFIX_JET_2(nsymb) ";\n\
+\t" PREFIX_JET_2(nsymb) " = nsymbs;\n\
 \treturn k;\n\
 }\n" \
   "\n" \
@@ -110,510 +134,471 @@ return 2;\
 }\n" \
   "\n" \
   "\n" \
-  "void " PREFIX_JET_2(cleanup) "(void)\n\
+  "void " PREFIX_JET_2(clean) "(" PREFIX_JET_2(ptr) " x) {\n\
+\t" I " k;\n\
+\tif (*x == NULL) return;\n\
+\tfor (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(clean) "((*x)[k]);}\n\
+\tfree(*x); *x=NULL;\n\
+}\n\
+void " PREFIX_JET_2(cleanup) "(void)\n\
 {\n\
-\tif ( num_symbs == 0) return;\n\
-\t" PREFIX_SCAL(clean) "(my_scal_tmp);\n\
-\tnum_symbs = 0;\n\
+\tif (" PREFIX_JET_2(flag_init_jet_library) "==0) return;\n\
+\t" PREFIX_JET_2(clean) "(&" PREFIX_JET_2(jaux) ");\n\
+\t" PREFIX_MYFLOAT(clean) "(" PREFIX_JET_2(faux) ");\n\
+\t" PREFIX_MYCOEF(clean) "(" PREFIX_JET_2(caux) ");\n\
+\t" PREFIX_MYCOEF(cleanup) "();\n\
+\t" PREFIX_JET_2(nsymb) " = 0;\n\
+\t" PREFIX_JET_2(flag_init_jet_library) "=0;\n\
 }\n" \
   "\n" \
-  "\n" \
-  "void " PREFIX_JET_2(set_scal_array) "(" PREFIX_JET_2(t) " b, " PREFIX_SCAL(t) " *a)\n\
+  "void " PREFIX_JET_2(set_coef_array) "(" PREFIX_JET_2(t) " b, " PREFIX_MYCOEF(t) " *a)\n\
 {\n\
 \t" I " k;\n\
-\tfor (k = 0; k < _MAX_SIZE_OF_JET_VAR_; k++) {" PREFIX_SCAL(set) "(b[k],a[k]);}\n\
+\tfor (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(set) "(b[k],a[k]);}\n\
 }\n" \
   "\n" \
-  "void " PREFIX_JET_2(set_jet_2_scal_array) "(" PREFIX_SCAL(t) " *b, " PREFIX_JET_2(t) " a)\n\
+  "void " PREFIX_JET_2(set_jet_2_coef_array) "(" PREFIX_MYCOEF(t) " *b, " PREFIX_JET_2(t) " a)\n\
 {\n\
 \t" I " k;\n\
-\tfor (k = 0; k < _MAX_SIZE_OF_JET_VAR_; k++) {" PREFIX_SCAL(set) "(b[k],a[k]);}\n\
+\tfor (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(set) "(b[k],a[k]);}\n\
 }\n" \
   "\n" \
+  "void " PREFIX_JET_2(set) "(" PREFIX_JET_2(t) " t, " PREFIX_JET_2(t) " s)\n\
+{\n\
+  " I " i;\n\
+  if (t != s) for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i],s[i]);}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(set_coef) "(" PREFIX_JET_2(t) " b, " PREFIX_MYCOEF(t) " a)\n\
+{\n\
+\t" I " k;\n\
+\t" PREFIX_MYCOEF(set) "(b[0],a);\n\
+\tfor (k = 1; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(set_zero) "(b[k]);}\n\
+}\n" \
+  "void " PREFIX_JET_2(set_myfloat) "(" PREFIX_JET_2(t) " b, " PREFIX_MYFLOAT(t) " a)\n\
+{\n\
+\t" I " k;\n\
+\t" PREFIX_MYCOEF(set_myfloat) "(b[0],a);\n\
+\tfor (k = 1; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(set_zero) "(b[k]);}\n\
+}\n" \
   "void " PREFIX_JET_2(set_d) "(" PREFIX_JET_2(t) " b, double a)\n\
 {\n\
 \t" I " k;\n\
-\t" PREFIX_SCAL(set_d) "(b[0],a);\n\
-\tfor (k = 1; k < _MAX_SIZE_OF_JET_VAR_; k++) {" PREFIX_SCAL(set_zero) "(b[k]);}\n\
+\t" PREFIX_MYCOEF(set_d) "(b[0],a);\n\
+\tfor (k = 1; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(set_zero) "(b[k]);}\n\
 }\n" \
   "void " PREFIX_JET_2(set_si) "(" PREFIX_JET_2(t) " b, int a)\n\
 {\n\
 \t" I " k;\n\
-\t" PREFIX_SCAL(set_si) "(b[0],a);\n\
-\tfor (k = 1; k < _MAX_SIZE_OF_JET_VAR_; k++) {" PREFIX_SCAL(set_zero) "(b[k]);}\n\
+\t" PREFIX_MYCOEF(set_si) "(b[0],a);\n\
+\tfor (k = 1; k < " MAX_COEFFS_COUNT_NAME "; k++) {" PREFIX_MYCOEF(set_zero) "(b[k]);}\n\
 }\n" \
-  "void " PREFIX_JET_2(to_scal) "(" PREFIX_SCAL(t) " t[1]," PREFIX_JET_2(t) " a) {" PREFIX_SCAL(set) "(*t,a[0]);}\n" \
-  "\n \
-\n\
-\n\
-size_t " PREFIX_JET_2(init) "(" PREFIX_JET_2(ptr) " t) {\n\
-  int i;\n\
-  " PREFIX_JET_2(t) " a=(" PREFIX_JET_2(t) ")malloc( _MAX_SIZE_OF_JET_VAR_ * sizeof(" PREFIX_SCAL(t) ") );\n\
-  memset( (char *)a,0, _MAX_SIZE_OF_JET_VAR_ * sizeof(" PREFIX_SCAL(t) "));\n\
-  *t = a;\n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){  \n\
-    " PREFIX_SCAL(init) "(a[i]);\n\
-    " PREFIX_SCAL(set_d) "(a[i],0.0);\n\
-  }\n\
-  return 0;\n\
+  PREFIX_MYFLOAT(t) "* " PREFIX_JET_2(to_myfloat) "(" PREFIX_JET_2(t) " a) \
+{return " PREFIX_MYCOEF(to_myfloat) "(a[0]);}\n" \
+  "\n\
+void " PREFIX_JET_2(eval) "(" PREFIX_MYCOEF(t) " t[1], " PREFIX_JET_2(t) " a, " PREFIX_MYFLOAT(t) " s[]) \n\
+{\n\
+\t" I " i,j,k,n1,n2,s2;\n\
+\t/* scaler */\n\
+\t" PREFIX_MYCOEF(set) "(*t,a[0]);\n\
+\t/* degree 1 */\n\
+\tn1 = _" PREFIX_JET_2(monomial_counts) "_[1];\n\
+\tfor (k = 1; k <= n1; k++) {\n\
+\t\t" PREFIX_MYCOEF(mul2_myfloat) "(" PREFIX_JET_2(caux) ",a[k],s[k-1]);\n\
+\t\t" PREFIX_MYCOEF(add2) "(*t,*t," PREFIX_JET_2(caux) ");\n\
+\t}\n\
+\t/* quadratic */\n\
+\ts2 = _" PREFIX_JET_2(monomial_offsets) "_[2];\n\
+\tfor(k=0, i=0; i< " MAX_NUM_SYMBOLS_NAME "; i++) {\n\
+\t\tfor(j=i; j< " MAX_NUM_SYMBOLS_NAME "; j++) {\n\
+\t\t\t" PREFIX_MYFLOAT(mul2) "(" PREFIX_JET_2(faux) ", s[i],s[j]);\n\
+\t\t\t" PREFIX_MYCOEF(mul2_myfloat) "(" PREFIX_JET_2(caux) ",a[s2+k]," PREFIX_JET_2(faux) ");\n\
+\t\t\t" PREFIX_MYCOEF(add2) "(*t,*t," PREFIX_JET_2(caux) ");\n\
+\t\t\tk++;\n\
+\t\t}\n\
+\t}\n\
 }\n\
 \n\
-void " PREFIX_JET_2(clean) "(" PREFIX_JET_2(t) " *a) {\n\
-  (void) free(*a);\n\
+void " PREFIX_JET_2(nrminf) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_JET_2(t) " a)\n\
+{\n\
+\t" I " k;\n\
+\t/* WARNING initial value for nrm GIVEN!! */\n\
+\tfor (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {\n\
+\t\t" PREFIX_MYCOEF(nrminf) "(&" PREFIX_JET_2(faux) ",a[k]);\n\
+\t\tif (" PREFIX_MYFLOAT(lt) "(*nrm," PREFIX_JET_2(faux) ")) {" PREFIX_MYFLOAT(set) "(*nrm," PREFIX_JET_2(faux) ");}\n\
+\t}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(nrm2) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_JET_2(t) " a)\n\
+{\n\
+\t" I " k;\n\
+\t/* WARNING initial value for nrm GIVEN!! */\n\
+\tfor (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {\n\
+\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_2(faux) ",a[k]);\n\
+\t\t" PREFIX_MYFLOAT(add2) "(*nrm,*nrm," PREFIX_JET_2(faux) ");\n\
+\t}\n\
+\t" PREFIX_MYFLOAT(set_sqrt) "(*nrm,*nrm);\n\
 }\n\
 \n\
 void " PREFIX_JET_2(neg) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " s) \n\
 {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(neg) "(t[i], s[i]);\n\
-  }\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(neg) "(t[i], s[i]);}\n\
 }\n\
 \n\
-void " PREFIX_JET_2(set_jet_2_scal) "(" PREFIX_SCAL(t) " *t, " PREFIX_JET_2(t) " f) {\n\
-  " PREFIX_SCAL(set) "(*t, f[0]);\n\
-}\n\
-\n\
-void " PREFIX_JET_2(set_scal) "(" PREFIX_JET_2(t) " t, " PREFIX_SCAL(t) " f) {\n\
-  int i;\n\
-  for(i=1; i<_MAX_SIZE_OF_JET_VAR_; i++) {\n\
-    " PREFIX_SCAL(set_d) "(t[i],0.0);\n\
-  }\n\
-  " PREFIX_SCAL(set) "(t[0],f);\n\
-}\n\
-\n\
-\n\
-void " PREFIX_JET_2(set) "(" PREFIX_JET_2(t) " t, " PREFIX_JET_2(t) " s) {\n\
-  int i;\n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(set) "(t[i],s[i]);\n\
-  }\n\
+void " PREFIX_JET_2(set_jet_2_scal) "(" PREFIX_MYCOEF(t) " *t, " PREFIX_JET_2(t) " f) {\n\
+  " PREFIX_MYCOEF(set) "(*t, f[0]);\n\
 }\n\
 \n\
 void " PREFIX_JET_2(add2) "(" PREFIX_JET_2(t) " t, " PREFIX_JET_2(t) " a, " PREFIX_JET_2(t) " b) {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(add2) "(t[i],a[i],b[i]);\n\
-  }\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(add2) "(t[i],a[i],b[i]);}\n\
 }\n\
 \n\
-void add_float_jet_a_test(" PREFIX_JET_2(t) " t, " PREFIX_SCAL(t) " a, " PREFIX_JET_2(t) " b) {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(set) "(t[i],b[i]);\n\
-  }\n\
-  " PREFIX_SCAL(add2) "(t[0],a,b[0]);\n\
+void " PREFIX_JET_2(add2_coef) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYCOEF(t) " b) {\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(add2) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i],a[i]);}\n\
 }\n\
 \n\
-void " PREFIX_JET_2(add2_scal) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_SCAL(t) " b) {\n\
-  int i;\n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(set) "(t[i],a[i]);\n\
-  }\n\
-  " PREFIX_SCAL(add2) "(t[0],a[0],b);\n\
+void " PREFIX_JET_2(add2_myfloat) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYFLOAT(t) " b) {\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(add2_myfloat) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i],a[i]);}\n\
 }\n\
-\n\
 \n\
 void " PREFIX_JET_2(add2_d) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, double b) {\n\
-  int i;\n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(set) "(t[i],a[i]);\n\
-  }\n\
-  AddMyFloatD(t[0],a[0],b);\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(add2_d) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i],a[i]);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(add2_si) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, int b) {\n\
-  " PREFIX_JET_2(add2_d) "(t,a, (double)b);\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(add2_si) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i],a[i]);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(sub2) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a," PREFIX_JET_2(t) " b) {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(sub2) "(t[i],a[i],b[i]);\n\
-  }\n\
-}\n\
-\n\
-void " PREFIX_JET_2(scal_sub2) "(" PREFIX_JET_2(t) " t, " PREFIX_SCAL(t) " a," PREFIX_JET_2(t) " b) {\n\
-  int i; \n\
-  for(i=1;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(neg) "(t[i],b[i]);\n\
-  }\n\
-  " PREFIX_SCAL(sub2) "(t[0],a,b[0]);\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(sub2) "(t[i],a[i],b[i]);}\n\
 }\n\
 \n\
 \n\
+void " PREFIX_JET_2(coef_sub2) "(" PREFIX_JET_2(t) " t, " PREFIX_MYCOEF(t) " a," PREFIX_JET_2(t) " b) {\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(sub2) "(t[0],a,b[0]);\n\
+  for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(neg) "(t[i],b[i]);}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(myfloat_sub2) "(" PREFIX_JET_2(t) " t, " PREFIX_MYFLOAT(t) " a," PREFIX_JET_2(t) " b) {\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(myfloat_sub2) "(t[0],a,b[0]);\n\
+  for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(neg) "(t[i],b[i]);}\n\
+}\n\
 void " PREFIX_JET_2(d_sub2) "(" PREFIX_JET_2(t) " t, double a," PREFIX_JET_2(t) " b) {\n\
-  int i; \n\
-  for(i=1;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(neg) "(t[i],b[i]);\n\
-  }\n\
-  SubtractMyFloatD(t[0],b[0],a);\n\
-  " PREFIX_SCAL(neg) "(t[0],t[0]);  \n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(d_sub2) "(t[0],a,b[0]);\n\
+  for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(neg) "(t[i],b[i]);}\n\
 }\n\
 void " PREFIX_JET_2(si_sub2) "(" PREFIX_JET_2(t) " t, int a," PREFIX_JET_2(t) " b) {\n\
-  " PREFIX_JET_2(d_sub2) "(t, (double)a, b);\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(si_sub2) "(t[0],a,b[0]);\n\
+  for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(neg) "(t[i],b[i]);}\n\
 }\n\
 \n\
-void " PREFIX_JET_2(sub2_scal) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_SCAL(t) " b) {\n\
-  int i; \n\
-  for(i=1;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(set) "(t[i], a[i]);\n\
-  }\n\
-  " PREFIX_SCAL(sub2) "(t[0],a[0],b);\n\
+void " PREFIX_JET_2(sub2_coef) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYCOEF(t) " b) {\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(sub2) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i], a[i]);}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(sub2_myfloat) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYFLOAT(t) " b) {\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(sub2_myfloat) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i], a[i]);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(sub2_d) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, double b) {\n\
-  int i; \n\
-  for(i=1;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(set) "(t[i], a[i]);\n\
-  }\n\
-  SubtractMyFloatD(t[0],a[0],b);\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(sub2_d) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i], a[i]);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(sub2_si) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, int b) {\n\
-  " PREFIX_JET_2(sub2_si) "(t,a, (double)b);\n\
+  " I " i;\n\
+  " PREFIX_MYCOEF(sub2_si) "(t[0],a[0],b);\n\
+  if (t != a) for(i=1;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set) "(t[i], a[i]);}\n\
 }\n\
 \n\
-void " PREFIX_JET_2(mul2_scal) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_SCAL(t) " b) {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(mul2) "(t[i],(a[i]), b);\n\
-  }\n\
+void " PREFIX_JET_2(mul2_coef) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYCOEF(t) " b) {\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(mul2) "(t[i],(a[i]), b);}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(mul2_myfloat) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYFLOAT(t) " b) {\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(mul2_myfloat) "(t[i],(a[i]), b);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(mul2_d) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, double b) {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    MultiplyMyFloatD(t[i],(a[i]), b);\n\
-  }\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(mul2_d) "(t[i],(a[i]), b);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(mul2_si) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, int b) {\n\
-  " PREFIX_JET_2(mul2_d) "(t,a,(double)b);\n\
-}\n\
-\n\
-void " PREFIX_JET_2(scal_mul2) "(" PREFIX_JET_2(t) " t, " PREFIX_SCAL(t) " a, " PREFIX_JET_2(t) " b) {\n\
-  int i; \n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(mul2) "(t[i],(b[i]),a);\n\
-  }\n\
-}\n\
-\n\
-\n\
-void " PREFIX_JET_2(nrminf) "(" PREFIX_SCAL(t) " nrm[1], " PREFIX_JET_2(t) " a)\n\
-{\n\
-  int  k;\n\
-  fabsMyFloatA(*nrm,a[0]);\n\
-  for (k = 1; k < _MAX_SIZE_OF_JET_VAR_; k++) {\n\
-    fabsMyFloatA(my_scal_tmp,a[k]);\n\
-    if(" PREFIX_SCAL(lt) "(*nrm,my_scal_tmp))\n\
-      " PREFIX_SCAL(set) "(*nrm,my_scal_tmp);\n\
-  }\n\
-}\n\
-\n\
-void euclid_nrm(" PREFIX_SCAL(t) " nrm[1], " PREFIX_JET_2(t) " a)\n\
-{\n\
-	int k;\n\
-	" PREFIX_SCAL(mul2) "(*nrm,a[0],a[0]);\n\
-	for (k = 1; k < _MAX_SIZE_OF_JET_VAR_; k++) {\n\
-	  " PREFIX_SCAL(mul2) "(my_scal_tmp,a[k],a[k]);\n\
-	  " PREFIX_SCAL(add2) "(*nrm,*nrm,my_scal_tmp);\n\
-	}\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(mul2_si) "(t[i],(a[i]), b);}\n\
 }\n\
 \n\
 /* t=a*b */\n\
 void " PREFIX_JET_2(mul2) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a," PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_SCAL(t) " temp1, temp2, temp3, temp4, a0, b0;\n\
+  static " PREFIX_MYCOEF(t) " temp1, temp2, temp3, temp4, a0, b0;\n\
   static int inited = 0;\n\
 #pragma omp threadprivate(temp1, temp2, temp3, temp4, a0, b0, inited)\n\
   int i,j,k,l,n1,n2,s1,s2,nv; \n\
 \n\
   if(inited == 0) {\n\
-    " PREFIX_SCAL(init) "(temp1); " PREFIX_SCAL(init) "(temp2);\n\
-    " PREFIX_SCAL(init) "(temp3); " PREFIX_SCAL(init) "(temp4);\n\
-    " PREFIX_SCAL(init) "(a0); " PREFIX_SCAL(init) "(b0);\n\
+    " PREFIX_MYCOEF(init) "(temp1); " PREFIX_MYCOEF(init) "(temp2);\n\
+    " PREFIX_MYCOEF(init) "(temp3); " PREFIX_MYCOEF(init) "(temp4);\n\
+    " PREFIX_MYCOEF(init) "(a0); " PREFIX_MYCOEF(init) "(b0);\n\
     inited = 1;\n\
   }\n\
   /* scaler */\n\
-  " PREFIX_SCAL(mul2) "(t[0],a[0],b[0]); \n\
+  " PREFIX_MYCOEF(mul2) "(t[0],a[0],b[0]); \n\
   /* degree 1 */\n\
-  s1 = _monomial_offsets_[1];\n\
-  n1 = _monomial_counts_[1];\n\
+  s1 = _" PREFIX_JET_2(monomial_offsets) "_[1];\n\
+  n1 = _" PREFIX_JET_2(monomial_counts) "_[1];\n\
   for(i=1;i<=n1;i++){\n\
-    " PREFIX_SCAL(mul2) "(temp1,(b[i]), a[0]);\n\
-    " PREFIX_SCAL(mul2) "(temp2,(a[i]), b[0]);\n\
-    " PREFIX_SCAL(add2) "(t[i],temp1,temp2);\n\
+    " PREFIX_MYCOEF(mul2) "(temp1,(b[i]), a[0]);\n\
+    " PREFIX_MYCOEF(mul2) "(temp2,(a[i]), b[0]);\n\
+    " PREFIX_MYCOEF(add2) "(t[i],temp1,temp2);\n\
   }\n\
   if(_MAX_DEGREE_OF_JET_VARS_ > 1) {\n\
     /* quadratic */\n\
-    s2 = _monomial_offsets_[2];\n\
-    nv = _NUMBER_OF_MAX_SYMBOLS_;\n\
+    s2 = _" PREFIX_JET_2(monomial_offsets) "_[2];\n\
+    nv = " MAX_NUM_SYMBOLS_NAME ";\n\
 \n\
 \n\
-    " PREFIX_SCAL(set) "(a0,a[0]);\n\
-    " PREFIX_SCAL(set) "(b0,b[0]);\n\
+    " PREFIX_MYCOEF(set) "(a0,a[0]);\n\
+    " PREFIX_MYCOEF(set) "(b0,b[0]);\n\
     for(k=0, i=1; i<= nv; i++) {\n\
-      for(j=i; j<=nv; j++) {    \n\
-	" PREFIX_SCAL(mul2) "(temp1, a0 ,  b[s2+k]);\n\
-	" PREFIX_SCAL(mul2) "(temp2, b0 ,  a[s2+k]);\n\
-	" PREFIX_SCAL(mul2) "(temp3, a[i],b[j]);\n\
-	" PREFIX_SCAL(add2) "(temp4,temp1,temp2);\n\
+      for(j=i; j<=nv; j++, k++) {    \n\
+        " PREFIX_MYCOEF(mul2) "(temp1, a0 ,  b[s2+k]);\n\
+        " PREFIX_MYCOEF(mul2) "(temp2, b0 ,  a[s2+k]);\n\
+        " PREFIX_MYCOEF(mul2) "(temp3, a[i],b[j]);\n\
+        " PREFIX_MYCOEF(add2) "(temp4,temp1,temp2);\n\
 \n\
-	if(i != j) {\n\
-	  " PREFIX_SCAL(mul2) "(temp1, a[j],  b[i]);\n\
-	  " PREFIX_SCAL(add2) "(temp2,temp3,temp4);	  \n\
-	  " PREFIX_SCAL(add2) "(t[s2+k],temp1,temp2);	  	  \n\
-	} else {\n\
-	  " PREFIX_SCAL(add2) "(t[s2+k],temp3,temp4);	  \n\
-	}\n\
-	k++;\n\
+        if(i != j) {\n\
+          " PREFIX_MYCOEF(mul2) "(temp1, a[j],  b[i]);\n\
+          " PREFIX_MYCOEF(add2) "(temp2,temp3,temp4);\n\
+          " PREFIX_MYCOEF(add2) "(t[s2+k],temp1,temp2);\n\
+        } else {\n\
+          " PREFIX_MYCOEF(add2) "(t[s2+k],temp3,temp4);\n\
+        }\n\
       }\n\
     }\n\
   }\n\
 }\n\
 \n\
 /* t=a/b, b float   */\n\
-void " PREFIX_JET_2(div2_scal) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_SCAL(t) " b) {\n\
-  int i;\n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    " PREFIX_SCAL(div2) "(t[i],(a[i]),b);\n\
-  }\n\
+void " PREFIX_JET_2(div2_coef) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYCOEF(t) " b) {\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(div2) "(t[i],(a[i]),b);}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(div2_myfloat) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, " PREFIX_MYFLOAT(t) " b) {\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(div2_myfloat) "(t[i],(a[i]),b);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(div2_d)  "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, double b) {\n\
-  int i;\n\
-  for(i=0;i<_MAX_SIZE_OF_JET_VAR_;i++){\n\
-    DivideMyFloatD(t[i],(a[i]),b);\n\
-  }\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(div2_d) "(t[i],(a[i]),b);}\n\
+}\n\
+\n\
+void " PREFIX_JET_2(div2_si)  "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a, int b) {\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(div2_si) "(t[i],(a[i]),b);}\n\
 }\n\
 \n\
 \n\
 /* t= a/b, a float, b jet */\n\
-void " PREFIX_JET_2(scal_div2)  "(" PREFIX_JET_2(t) " t, " PREFIX_SCAL(t) " a, " PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_JET_2(t) " tmp1, tmp2, tmp3;\n\
-  static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, temp;\n\
-#pragma omp threadprivate(tmp1,tmp2,tmp3,initialized, b0, temp)\n\
-  if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(temp);\n\
-    " PREFIX_JET_2(init) "(&tmp1);\n\
-    " PREFIX_JET_2(init) "(&tmp2);\n\
-    " PREFIX_JET_2(init) "(&tmp3);\n\
-    initialized=1;\n\
-  }\n\
-  " PREFIX_SCAL(set) "(b0, b[0]);\n\
-  " PREFIX_JET_2(set) "(tmp1, b);\n\
-  " PREFIX_JET_2(div2_scal) "(tmp2, tmp1, b0);\n\
-  " PREFIX_SCAL(set_d) "(tmp2[0],0.0);\n\
-  " PREFIX_JET_2(mul2) "(tmp1,tmp2,tmp2);\n\
-  " PREFIX_JET_2(sub2) "(tmp3,tmp1,tmp2);\n\
-  " PREFIX_SCAL(set_d) "(tmp3[0], 1.0);\n\
-  " PREFIX_SCAL(div2) "(temp,a,b0);\n\
-  " PREFIX_JET_2(mul2_scal) "(t, tmp3, temp);\n\
+void " PREFIX_JET_2(coef_div2)  "(" PREFIX_JET_2(t) " t, " PREFIX_MYCOEF(t) " a, " PREFIX_JET_2(t) " b) {\n\
+  //fprintf(stderr, \"to test\\n\");exit(2);\n\
+  " PREFIX_JET_2(div2_coef) "(t, b, b[0]);\n\
+  " PREFIX_MYCOEF(set_si) "(t[0],0);\n\
+  " PREFIX_JET_2(mul2) "(" PREFIX_JET_2(jaux) ",t,t);\n\
+  " PREFIX_JET_2(sub2) "(" PREFIX_JET_2(jaux) "," PREFIX_JET_2(jaux) ",t);\n\
+  " PREFIX_MYCOEF(set_si) "(" PREFIX_JET_2(jaux) "[0], 1);\n\
+  " PREFIX_MYCOEF(div2) "(" PREFIX_JET_2(caux) ",a,b[0]);\n\
+  " PREFIX_JET_2(mul2_coef) "(t, " PREFIX_JET_2(jaux) ", " PREFIX_JET_2(caux) ");\n\
+}\n\
+\n\
+void " PREFIX_JET_2(myfloat_div2)  "(" PREFIX_JET_2(t) " t, " PREFIX_MYFLOAT(t) " a, " PREFIX_JET_2(t) " b) {\n\
+      //fprintf(stderr, \"to test\\n\");exit(2);\n\
+  " PREFIX_JET_2(div2_coef) "(t, b, b[0]);\n\
+  " PREFIX_MYCOEF(set_si) "(t[0],0);\n\
+  " PREFIX_JET_2(mul2) "(" PREFIX_JET_2(jaux) ",t,t);\n\
+  " PREFIX_JET_2(sub2) "(" PREFIX_JET_2(jaux) "," PREFIX_JET_2(jaux) ",t);\n\
+  " PREFIX_MYCOEF(set_d) "(" PREFIX_JET_2(jaux) "[0], 1.0);\n\
+  " PREFIX_MYCOEF(myfloat_div2) "(" PREFIX_JET_2(caux) ",a,b[0]);\n\
+  " PREFIX_JET_2(mul2_coef) "(t, " PREFIX_JET_2(jaux) ", " PREFIX_JET_2(caux) ");\n\
 }\n\
 \n\
 void " PREFIX_JET_2(d_div2)  "(" PREFIX_JET_2(t) " t, double a, " PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_JET_2(t) " tmp1, tmp2, tmp3;\n\
-  static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " a0, b0, temp;\n\
-#pragma omp threadprivate(tmp1,tmp2,tmp3,initialized, a0, b0, temp)\n\
-  if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(b0);    \n\
-    " PREFIX_SCAL(init) "(temp);\n\
-    " PREFIX_JET_2(init) "(&tmp1);\n\
-    " PREFIX_JET_2(init) "(&tmp2);\n\
-    " PREFIX_JET_2(init) "(&tmp3);\n\
-    initialized=1;\n\
-  }\n\
-  " PREFIX_SCAL(set_d) "(a0, a);\n\
-  " PREFIX_SCAL(set) "(b0, b[0]);\n\
-  " PREFIX_JET_2(set) "(tmp1, b);\n\
-  " PREFIX_JET_2(div2_scal) "(tmp2, tmp1, b0);\n\
-  " PREFIX_SCAL(set_d) "(tmp2[0],0.0);\n\
-  " PREFIX_JET_2(mul2) "(tmp1,tmp2,tmp2);\n\
-  " PREFIX_JET_2(sub2) "(tmp3,tmp1,tmp2);\n\
-  " PREFIX_SCAL(set_d) "(tmp3[0], 1.0);\n\
-  " PREFIX_SCAL(div2) "(temp,a0,b0);\n\
-  " PREFIX_JET_2(mul2_scal) "(t, tmp3, temp);\n\
+      //fprintf(stderr, \"to test\\n\");exit(2);\n\
+  " PREFIX_JET_2(div2_coef) "(t, b, b[0]);\n\
+  " PREFIX_MYCOEF(set_si) "(t[0],0);\n\
+  " PREFIX_JET_2(mul2) "(" PREFIX_JET_2(jaux) ",t,t);\n\
+  " PREFIX_JET_2(sub2) "(" PREFIX_JET_2(jaux) "," PREFIX_JET_2(jaux) ",t);\n\
+  " PREFIX_MYCOEF(set_d) "(" PREFIX_JET_2(jaux) "[0], 1.0);\n\
+  " PREFIX_MYCOEF(d_div2) "(" PREFIX_JET_2(caux) ",a,b[0]);\n\
+  " PREFIX_JET_2(mul2_coef) "(t, " PREFIX_JET_2(jaux) ", " PREFIX_JET_2(caux) ");\n\
 }\n\
 \n\
 void " PREFIX_JET_2(si_div2)  "(" PREFIX_JET_2(t) " t, int a, " PREFIX_JET_2(t) " b) {\n\
-  " PREFIX_JET_2(si_div2)  "(t, (double) a, b);  \n\
+  " PREFIX_JET_2(div2_coef) "(t, b, b[0]);\n\
+  " PREFIX_MYCOEF(set_si) "(t[0],0);\n\
+  " PREFIX_JET_2(mul2) "(" PREFIX_JET_2(jaux) ",t,t);\n\
+  " PREFIX_JET_2(sub2) "(" PREFIX_JET_2(jaux) "," PREFIX_JET_2(jaux) ",t);\n\
+  " PREFIX_MYCOEF(set_d) "(" PREFIX_JET_2(jaux) "[0], 1.0);\n\
+  " PREFIX_MYCOEF(si_div2) "(" PREFIX_JET_2(caux) ",a,b[0]);\n\
+  " PREFIX_JET_2(mul2_coef) "(t, " PREFIX_JET_2(jaux) ", " PREFIX_JET_2(caux) ");\n\
 }\n\
-\n\
 \n\
 \n\
 /* t = a/b,  a,b jets */\n\
 void " PREFIX_JET_2(div2) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a," PREFIX_JET_2(t) " b)  {\n\
-  static " PREFIX_JET_2(t) " tmp1;\n\
-  static " PREFIX_SCAL(t) " one;\n\
-  static int initialized = 0;\n\
-#pragma omp threadprivate(tmp1,one, initailzed)\n\
-  \n\
-  if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(one);\n\
-    " PREFIX_JET_2(init) "(&tmp1);\n\
-    initialized=1;\n\
-  }\n\
-  " PREFIX_SCAL(set_d) "(one, 1.0);\n\
-  " PREFIX_JET_2(scal_div2)  "(tmp1, one, b);\n\
-  " PREFIX_JET_2(mul2) "(t,a,tmp1);\n\
+  " PREFIX_JET_2(si_div2) "(t, 1, b);\n\
+  " PREFIX_JET_2(set) "(" PREFIX_JET_2(jaux) ", t);\n\
+  " PREFIX_JET_2(mul2) "(t,a," PREFIX_JET_2(jaux) ");\n\
 }\n\
 \n\
 /* t=b^e, e float */\n\
-void " PREFIX_JET_2(set_pow_scal) "(" PREFIX_JET_2(t) " t, " PREFIX_JET_2(t) " b, " PREFIX_SCAL(t) " e) {\n\
-  static " PREFIX_JET_2(t) " tmp1, tmp2, tmp3;\n\
+void " PREFIX_JET_2(set_pow_myfloat) "(" PREFIX_JET_2(t) " t, " PREFIX_JET_2(t) " b, " PREFIX_MYFLOAT(t) " e) {\n\
+  static " PREFIX_JET_2(t) " tmp2, tmp3;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, s1, smp1,smp2,smp3,smp4,one;\n\
-#pragma omp threadprivate(tmp1, tmp2, tmp3,b0, s1, smp1,smp2,smp3,smp4,one, initialized)\n\
+  static " PREFIX_MYCOEF(t) " s1, smp1,smp2,smp4;\n\
+#pragma omp threadprivate(tmp2,tmp3, s1,smp1,smp2,smp4, initialized)\n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(s1);  \n\
-    " PREFIX_SCAL(init) "(smp1);" PREFIX_SCAL(init) "(smp2);\n\
-    " PREFIX_SCAL(init) "(smp3);" PREFIX_SCAL(init) "(smp4);\n\
-    " PREFIX_SCAL(init) "(one);    \n\
-    " PREFIX_JET_2(init) "(&tmp1);\n\
+    " PREFIX_MYCOEF(init) "(s1);  \n\
+    " PREFIX_MYCOEF(init) "(smp1);" PREFIX_MYCOEF(init) "(smp2);" PREFIX_MYCOEF(init) "(smp4);\n\
     " PREFIX_JET_2(init) "(&tmp2);\n\
     " PREFIX_JET_2(init) "(&tmp3);\n\
     initialized=1;\n\
   }\n\
-  " PREFIX_SCAL(set) "(b0, b[0]);\n\
-  " PREFIX_SCAL(set_pow) "(s1,b0,e);\n\
+  " PREFIX_MYCOEF(set_pow_myfloat) "(s1,b[0],e);\n\
 \n\
-  " PREFIX_SCAL(mul2) "(smp4,s1,e);\n\
+  " PREFIX_MYCOEF(mul2_myfloat) "(smp4,s1,e);\n\
 \n\
-  " PREFIX_JET_2(set) "(tmp1, b);\n\
-  " PREFIX_JET_2(div2_scal) "(tmp2, tmp1, b0);\n\
-  " PREFIX_SCAL(set_d) "(tmp2[0],0.0);\n\
+  " PREFIX_JET_2(div2_coef) "(tmp2, b, b[0]);\n\
+  " PREFIX_MYCOEF(set_si) "(tmp2[0],0);\n\
   " PREFIX_JET_2(mul2) "(tmp3,tmp2,tmp2);  \n\
-  " PREFIX_SCAL(set_d) "(one, 1.0);\n\
-  " PREFIX_SCAL(set_d) "(smp1, 0.5);\n\
-  " PREFIX_SCAL(sub2) "(smp2,e,one);\n\
-  " PREFIX_SCAL(mul2) "(smp3,smp1,smp2);\n\
-  " PREFIX_SCAL(mul2) "(smp2,smp3,smp4);\n\
-  " PREFIX_JET_2(mul2_scal) "(tmp1, tmp3, smp2);\n\
-  " PREFIX_JET_2(mul2_scal) "(tmp3, tmp2, smp4);  \n\
-  " PREFIX_JET_2(add2) "(t,tmp1,tmp3);\n\
-  " PREFIX_SCAL(set) "(t[0],s1);\n\
+  " PREFIX_MYFLOAT(sub2_si) "(" PREFIX_JET_2(faux) ",e,1);\n\
+  " PREFIX_MYFLOAT(div2_si) "(" PREFIX_JET_2(faux) "," PREFIX_JET_2(faux) ",2);\n\
+  " PREFIX_MYCOEF(mul2_myfloat) "(smp2,smp4," PREFIX_JET_2(faux) ");\n\
+  " PREFIX_JET_2(mul2_coef) "(t, tmp3, smp2);\n\
+  " PREFIX_JET_2(mul2_coef) "(tmp3, tmp2, smp4);\n\
+  " PREFIX_JET_2(add2) "(t,t,tmp3);\n\
+  " PREFIX_MYCOEF(set) "(t[0],s1);\n\
 }\n\
 \n\
 /* t=sqrt(a) */\n\
 void " PREFIX_JET_2(set_sqrt) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " a) {\n\
-  static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " half;\n\
-#pragma omp threadprivate(half, initialized)  \n\
-  if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(half);\n\
-  }\n\
-  " PREFIX_SCAL(set_d) "(half, 0.5);\n\
-  " PREFIX_JET_2(set_pow_scal) "(t, a, half);\n\
+  " PREFIX_MYFLOAT(set_d) "(" PREFIX_JET_2(faux) ",0.5e0);\n\
+  " PREFIX_JET_2(set_pow_myfloat) "(t, a, " PREFIX_JET_2(faux) ");\n\
 }\n\
 \n\
 /* t=sin(b), b = b0 + X */\n\
 // t = sin(b0) + cos(b0) X -1/2 sin(b0) X^2  \n\
 void " PREFIX_JET_2(set_sin) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_JET_2(t) " tmp1, tmp2, tmp3;\n\
+  static " PREFIX_JET_2(t) " tmp1, tmp2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, _c, _s, half,smp;\n\
-#pragma omp threadprivate(tmp1, tmp2, tmp3, b0, _c, _s, half,smp,initialized)\n\
+  static " PREFIX_MYCOEF(t) " _c, _s, smp;\n\
+#pragma omp threadprivate(tmp1, tmp2, _c, _s, smp,initialized)\n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(_c);\n\
-    " PREFIX_SCAL(init) "(_s);\n\
-    " PREFIX_SCAL(init) "(half);\n\
-    " PREFIX_SCAL(init) "(smp);\n\
+    " PREFIX_MYCOEF(init) "(_c);\n\
+    " PREFIX_MYCOEF(init) "(_s);\n\
+    " PREFIX_MYCOEF(init) "(smp);\n\
     " PREFIX_JET_2(init) "(&tmp1);\n\
     " PREFIX_JET_2(init) "(&tmp2);\n\
-    " PREFIX_JET_2(init) "(&tmp3);\n\
     initialized=1;\n\
   }\n\
-  " PREFIX_SCAL(set) "(b0,b[0]);\n\
-  " PREFIX_SCAL(set_cos) "(_c,b0);\n\
-  " PREFIX_SCAL(set_sin) "(_s,b0);\n\
+  " PREFIX_MYCOEF(set_cos) "(_c,b[0]);\n\
+  " PREFIX_MYCOEF(set_sin) "(_s,b[0]);\n\
 \n\
   " PREFIX_JET_2(set) "(tmp1, b);\n\
-  " PREFIX_SCAL(set_d) "(tmp1[0],0.0);\n\
+  " PREFIX_MYCOEF(set_d) "(tmp1[0],0.0);\n\
   // tmp1 = X\n\
   " PREFIX_JET_2(mul2) "(tmp2,tmp1,tmp1);    \n\
-  " PREFIX_SCAL(set_d) "(half, -0.5);\n\
-  " PREFIX_SCAL(mul2) "(smp, half, _s);\n\
-  " PREFIX_JET_2(mul2_scal) "(tmp3,tmp2,smp);\n\
+  " PREFIX_MYCOEF(mul2_d) "(smp, _s, -0.5);\n\
+  " PREFIX_JET_2(mul2_coef) "(t,tmp2,smp);\n\
   // tmp3 = 1/2 sin(b0)X^2\n\
-  " PREFIX_JET_2(mul2_scal) "(tmp2,tmp1,_c);\n\
+  " PREFIX_JET_2(mul2_coef) "(tmp2,tmp1,_c);\n\
   // tmp2 = cos(b0)X\n\
-  " PREFIX_JET_2(add2) "(t,tmp3,tmp2);  \n\
-  " PREFIX_SCAL(set) "(t[0], _s);\n\
+  " PREFIX_JET_2(add2) "(t,t,tmp2);  \n\
+  " PREFIX_MYCOEF(set) "(t[0], _s);\n\
 }\n\
 \n\
 /* t=cos(b) b=b0+X*/\n\
 // t= cos(b0) - sin(b0) X -1/2 cos(b0) X^2\n\
 \n\
 void " PREFIX_JET_2(set_cos) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_JET_2(t) " tmp1, tmp2, tmp3;\n\
+  static " PREFIX_JET_2(t) " tmp1, tmp2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, _c, _s, half,smp;\n\
-#pragma omp threadprivate(tmp1, tmp2, tmp3, b0, _c, _s, half,smp,initialized)\n\
+  static " PREFIX_MYCOEF(t) " _c, _s, smp;\n\
+#pragma omp threadprivate(tmp1, tmp2, _c, _s, smp,initialized)\n\
   \n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(_c);\n\
-    " PREFIX_SCAL(init) "(_s);\n\
-    " PREFIX_SCAL(init) "(half);\n\
-    " PREFIX_SCAL(init) "(smp);\n\
+    " PREFIX_MYCOEF(init) "(_c);\n\
+    " PREFIX_MYCOEF(init) "(_s);\n\
+    " PREFIX_MYCOEF(init) "(smp);\n\
     " PREFIX_JET_2(init) "(&tmp1);\n\
     " PREFIX_JET_2(init) "(&tmp2);\n\
-    " PREFIX_JET_2(init) "(&tmp3);\n\
     initialized=1;\n\
   }\n\
-  " PREFIX_SCAL(set) "(b0,b[0]);\n\
-  " PREFIX_SCAL(set_cos) "(_c,b0);\n\
-  " PREFIX_SCAL(set_sin) "(_s,b0);\n\
+  " PREFIX_MYCOEF(set_cos) "(_c,b[0]);\n\
+  " PREFIX_MYCOEF(set_sin) "(_s,b[0]);\n\
   \n\
   " PREFIX_JET_2(set) "(tmp1, b);\n\
-  " PREFIX_SCAL(set_d) "(tmp1[0],0.0);\n\
+  " PREFIX_MYCOEF(set_d) "(tmp1[0],0.0);\n\
   // X = tmp1\n\
   " PREFIX_JET_2(mul2) "(tmp2,tmp1,tmp1);    \n\
-  " PREFIX_SCAL(set_d) "(half, -0.5);\n\
-  " PREFIX_SCAL(mul2) "(smp, half, _c);\n\
-  " PREFIX_JET_2(mul2_scal) "(tmp3,tmp2,smp);\n\
+  " PREFIX_MYCOEF(mul2_d) "(smp, _c, -0.5e0);\n\
+  " PREFIX_JET_2(mul2_coef) "(t,tmp2,smp);\n\
   //  tmp3 = - 1/2 cos(b0) X^2\n\
-  " PREFIX_SCAL(neg) "(smp, _s);\n\
-  " PREFIX_JET_2(mul2_scal) "(tmp2,tmp1,smp);\n\
+  " PREFIX_MYCOEF(neg) "(smp, _s);\n\
+  " PREFIX_JET_2(mul2_coef) "(tmp2,tmp1,smp);\n\
   // tmp2 = - sin(b0) X\n\
-  " PREFIX_JET_2(add2) "(t,tmp3,tmp2);  \n\
-  " PREFIX_SCAL(set) "(t[0], _c);\n\
+  " PREFIX_JET_2(add2) "(t,t,tmp2);  \n\
+  " PREFIX_MYCOEF(set) "(t[0], _c);\n\
 }\n\
 \n\
 /* t=exp(b)*/\n\
 void " PREFIX_JET_2(set_exp) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
   static " PREFIX_JET_2(t) " t0, t1, t2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, _c,  half, one;\n\
-#pragma omp threadprivate(t0, t1, t2, b0, _c, one, half,initialized)\n\
+  static " PREFIX_MYCOEF(t) " _c;\n\
+#pragma omp threadprivate(t0, t1, t2, _c, initialized)\n\
   \n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(_c);\n\
-    " PREFIX_SCAL(init) "(half);\n\
-    " PREFIX_SCAL(init) "(one);    \n\
-    " PREFIX_JET_2(init) "(&t0);    \n\
+    " PREFIX_MYCOEF(init) "(_c);\n\
+    " PREFIX_JET_2(init) "(&t0);\n\
     " PREFIX_JET_2(init) "(&t1);\n\
     " PREFIX_JET_2(init) "(&t2);\n\
     initialized=1;\n\
   }\n\
-  " PREFIX_SCAL(set_d) "(half, 0.5);\n\
-  " PREFIX_SCAL(set_d) "(one, 1.0);    \n\
-  " PREFIX_SCAL(set) "(b0,b[0]);\n\
-  expMyFloatA(_c,b0);\n\
-  " PREFIX_JET_2(sub2_scal) "(t0, b, b0);\n\
+  " PREFIX_MYCOEF(set_exp) "(_c,b[0]);\n\
+  " PREFIX_JET_2(sub2_coef) "(t0, b, b[0]);\n\
   " PREFIX_JET_2(mul2) "(t1,t0,t0);\n\
-  " PREFIX_JET_2(mul2_scal) "(t2,t1,half);\n\
+  " PREFIX_JET_2(mul2_d) "(t2,t1,0.5e0);\n\
   " PREFIX_JET_2(add2) "(t1,t0,t2);\n\
-  add_float_jet_a_test(t2, one, t1);  \n\
-  " PREFIX_JET_2(mul2_scal) "(t,t2,_c);\n\
-  " PREFIX_SCAL(set) "(t[0], _c);\n\
+\n\
+  " PREFIX_JET_2(add2_si) "(t2,t1,1);\n\
+\n\
+  " PREFIX_JET_2(mul2_coef) "(t,t2,_c);\n\
+  " PREFIX_MYCOEF(set) "(t[0], _c);\n\
 }\n\
 \n\
 \n\
@@ -636,28 +621,24 @@ void " PREFIX_JET_2(set_tan) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
 void " PREFIX_JET_2(set_log) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
   static " PREFIX_JET_2(t) " t0, t1, t2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, lna,  half;\n\
-#pragma omp threadprivate(t0, t1, t2, b0, lna, half,initialized)\n\
+  static " PREFIX_MYCOEF(t) " lna;\n\
+#pragma omp threadprivate(t0, t1, t2, lna, initialized)\n\
   \n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(lna);\n\
-    " PREFIX_SCAL(init) "(half);\n\
+    " PREFIX_MYCOEF(init) "(lna);\n\
     " PREFIX_JET_2(init) "(&t0);    \n\
     " PREFIX_JET_2(init) "(&t1);\n\
     " PREFIX_JET_2(init) "(&t2);\n\
     initialized=1;\n\
   }\n\
-  " PREFIX_SCAL(set_d) "(half, 0.5);\n\
-  " PREFIX_SCAL(set) "(b0,b[0]);\n\
-  logMyFloatA(lna,b0);\n\
+  " PREFIX_MYCOEF(set_log) "(lna,b[0]);\n\
   \n\
-  " PREFIX_JET_2(div2_scal) "(t0, b, b0);\n\
-  " PREFIX_SCAL(set_d) "(t0[0],0.0);\n\
+  " PREFIX_JET_2(div2_coef) "(t0, b, b[0]);\n\
+  " PREFIX_MYCOEF(set_d) "(t0[0],0.0);\n\
   " PREFIX_JET_2(mul2) "(t1,t0,t0);\n\
-  " PREFIX_JET_2(scal_mul2) "(t2, half, t1);\n\
+  " PREFIX_JET_2(div2_si) "(t2, t1, 2);\n\
   " PREFIX_JET_2(sub2) "(t,t0,t2);\n\
-  " PREFIX_SCAL(set) "(t[0], lna);\n\
+  " PREFIX_MYCOEF(set) "(t[0], lna);\n\
 }\n\
 \n\
 /* t= atan(b) */\n\
@@ -670,73 +651,63 @@ void " PREFIX_JET_2(set_log) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
 void " PREFIX_JET_2(set_atan) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
   static " PREFIX_JET_2(t) " t0, t1, t2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " b0, b02, b02p1, one ;\n\
-#pragma omp threadprivate(t0, t1, t2, b0, one, b02, b02p1, initialized)\n\
+  static " PREFIX_MYCOEF(t) " b0, b02, b02p1;\n\
+#pragma omp threadprivate(t0, t1, t2, b0, b02, b02p1, initialized)\n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(b0);\n\
-    " PREFIX_SCAL(init) "(b02);\n\
-    " PREFIX_SCAL(init) "(b02p1);        \n\
-    " PREFIX_SCAL(init) "(one);\n\
+    " PREFIX_MYCOEF(init) "(b0);\n\
+    " PREFIX_MYCOEF(init) "(b02);\n\
+    " PREFIX_MYCOEF(init) "(b02p1);        \n\
     " PREFIX_JET_2(init) "(&t0);    \n\
     " PREFIX_JET_2(init) "(&t1);\n\
     " PREFIX_JET_2(init) "(&t2);\n\
-    " PREFIX_SCAL(set_d) "(one, 1.0);\n\
     initialized=1;\n\
   }\n\
-  " PREFIX_SCAL(set) "(b0,b[0]);\n\
-  " PREFIX_SCAL(mul2) "(b02,b0, b0);\n\
-  " PREFIX_SCAL(add2) "(b02p1, b02,  one);\n\
-  " PREFIX_JET_2(sub2_scal) "(t0, b, b0);\n\
-  " PREFIX_JET_2(scal_mul2) "(t1, b0, t0);\n\
-  " PREFIX_JET_2(add2_scal) "(t2,t1,b02p1);\n\
+  " PREFIX_MYCOEF(set) "(b0,b[0]);\n\
+  " PREFIX_MYCOEF(mul2) "(b02,b0, b0);\n\
+  " PREFIX_MYCOEF(add2_si) "(b02p1, b02,  1);\n\
+  " PREFIX_JET_2(sub2_coef) "(t0, b, b0);\n\
+  " PREFIX_JET_2(mul2_coef) "(t1, t0, b0);\n\
+  " PREFIX_JET_2(add2_coef) "(t2,t1,b02p1);\n\
   " PREFIX_JET_2(div2) "(t1, t0, t2);\n\
   // b0+t1/(1-b0 t1) = b0+t0 = b\n\
-  atanMyFloatA(b02, b0);\n\
-  " PREFIX_JET_2(add2_scal) "(t,t1,b02);  \n\
+  " PREFIX_MYCOEF(set_atan) "(b02, b0);\n\
+  " PREFIX_JET_2(add2_coef) "(t,t1,b02);  \n\
 }\n\
   \n\
 /* t=sinh(b) */\n\
 void " PREFIX_JET_2(set_sinh) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_JET_2(t) " t0, t1, t2;\n\
+  static " PREFIX_JET_2(t) " t1, t2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " half;\n\
-#pragma omp threadprivate(t0, t1, t2, half,initialized)\n\
+#pragma omp threadprivate(t1, t2, initialized)\n\
   \n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(half);\n\
-    " PREFIX_JET_2(init) "(&t0);    \n\
     " PREFIX_JET_2(init) "(&t1);\n\
     " PREFIX_JET_2(init) "(&t2);\n\
-    " PREFIX_SCAL(set_d) "(half, 0.5);    \n\
     initialized=1;\n\
   }\n\
-  " PREFIX_JET_2(neg) "(t0, b);\n\
+  " PREFIX_JET_2(neg) "(t1, b);\n\
+  " PREFIX_JET_2(set_exp) "(t2,t1);\n\
   " PREFIX_JET_2(set_exp) "(t1,b);\n\
-  " PREFIX_JET_2(set_exp) "(t2,t0);\n\
-  " PREFIX_JET_2(sub2) "(t0,t1,t2);\n\
-  " PREFIX_JET_2(scal_mul2) "(t, half, t0);\n\
+  " PREFIX_JET_2(sub2) "(t1,t1,t2);\n\
+  " PREFIX_JET_2(div2_si) "(t,t1,2);\n\
 }\n\
 \n\
 /* t=cosh(b) */\n\
 void " PREFIX_JET_2(set_cosh) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
-  static " PREFIX_JET_2(t) " t0, t1, t2;\n\
+  static " PREFIX_JET_2(t) " t1, t2;\n\
   static int initialized = 0;\n\
-  static " PREFIX_SCAL(t) " half;\n\
-#pragma omp threadprivate(t0, t1, t2, half,initialized)\n\
+#pragma omp threadprivate(t1, t2, initialized)\n\
   \n\
   if(!initialized) {\n\
-    " PREFIX_SCAL(init) "(half);\n\
-    " PREFIX_JET_2(init) "(&t0);    \n\
     " PREFIX_JET_2(init) "(&t1);\n\
     " PREFIX_JET_2(init) "(&t2);\n\
-    " PREFIX_SCAL(set_d) "(half, 0.5);    \n\
     initialized=1;\n\
   }\n\
-  " PREFIX_JET_2(neg) "(t0, b);\n\
+  " PREFIX_JET_2(neg) "(t1, b);\n\
+  " PREFIX_JET_2(set_exp) "(t2,t1);\n\
   " PREFIX_JET_2(set_exp) "(t1,b);\n\
-  " PREFIX_JET_2(set_exp) "(t2,t0);\n\
-  " PREFIX_JET_2(add2) "(t0,t1,t2);\n\
-  " PREFIX_JET_2(scal_mul2) "(t, half, t0);\n\
+  " PREFIX_JET_2(add2) "(t1,t1,t2);\n\
+  " PREFIX_JET_2(div2_si) "(t, t1, 2);\n\
 }\n\
 /* t=tanh(b) */\n\
 void " PREFIX_JET_2(set_tanh) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n\
@@ -754,20 +725,23 @@ void " PREFIX_JET_2(set_tanh) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n
   " PREFIX_JET_2(div2) "(t, t1, t2);  \n\
 }\n\
 \n\
-\n\
-\n\
-\n\
-\n\
 void " PREFIX_JET_2(fprintf) "(FILE *file, const char *fmt, " PREFIX_JET_2(t) " a)\n\
 {\n\
-  int k;\n\
-  for (k = 0; k < _MAX_SIZE_OF_JET_VAR_; k++) {\n\
-    OutputMyFloat3(file, fmt, a[k]);\n\
+  " I " k;\n\
+  for (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {\n\
+    " PREFIX_MYCOEF(fprintf) "(file,fmt,a[k]);\n\
+  }\n\
+}\n\
+void " PREFIX_JET_2(fscanf) "(FILE *file, const char *fmt, " PREFIX_JET_2(t) " a)\n\
+{\n\
+  " I " k;\n\
+  for (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {\n\
+    " PREFIX_MYCOEF(fscanf) "(file,fmt," MYDATA_ACCESS "(a,k));\n\
   }\n\
 }\n\
 " \
 
-#define MY_JET_2_POSTCODE(PREFIX_JET_2,PREFIX_SCAL,I) "\
+#define MY_JET_2_POSTCODE(PREFIX_JET_2,PREFIX_MYCOEF,I,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME) "\
 /* END CODE " PREFIX_JET_2(t) " */\n" \
 
 #endif /* MY_JET_2_H */

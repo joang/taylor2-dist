@@ -897,6 +897,7 @@ void checkJetVars() {
 }
 // 20220609 end
 
+
 /***********************************************************************
  *
  * Generate all variables.
@@ -904,7 +905,6 @@ void checkJetVars() {
 void genVariables(void)
 {
   int i, jcnt=state_jet_vars,varcount = nvars,pcnt=0, qjcnt=0;
-
 
   /* verify that all declared jet variables are defined */
   pcnt = 0;
@@ -935,6 +935,7 @@ void genVariables(void)
 	}
       makeDependencyGraph(def,findVarDef(def));
     }
+
 
   if (debug) showDepend();
   
@@ -1020,6 +1021,7 @@ void genVariables(void)
   {
     int found=0;
     int limit=(1<<10);
+    
     do {
       found=0;
       limit--;
@@ -1123,6 +1125,7 @@ void genVariables(void)
       ID_VINDEX(name) = i;
       SET_ID_COUNTED(name);
       SET_VAR_GLOBAL_VAR(name);       /* mark state variables global */
+      SET_VAR_IS_STATE_VAR(name);
     }
   varcountFinal = neqns;
 
@@ -1132,6 +1135,7 @@ void genVariables(void)
       Node def = equations[i].def;
       outputVarDependcyGraph(def);
     }
+
   /* output constant variables (don't need derivatives) */ 
   cgoffset = 0;
   constcountFinal = 0;
@@ -1141,6 +1145,7 @@ void genVariables(void)
       Node def = equations[i].def;
       outputConstDependcyGraph(def);
     }
+
   
   /* list boolean variables used in IF_ELSE_EXPR */
   ivarcountFinal = 0;  
@@ -1151,6 +1156,7 @@ void genVariables(void)
       outputIntDependcyGraph(def);
     }
 
+ 
   /* all variables are listed here, state vars first. The rest
    * are build up based on dependency relations.
    */
@@ -1231,7 +1237,21 @@ void showVariables(FILE *fp)
   fprintf(fp,   "=======                         Final Variable List                          ======\n");
   fprintf(fp, "\t    (%d + %d - %d) vars, (%d + %d) cvars and (%d + %d) ivars \n", varcountFinal, goffset,
 	  total_jet_vars, constcountFinal, cgoffset, ivarcountFinal, igoffset);
+  if(num_expr_vars) {
+    fprintf(fp, "\t    Expression(s):\n");
+    Expression expr = expression_list;
+    while(expr) {
+      Node name = EXPRESSION_NAME(expr);
+      Node *vlist = EXPRESSION_LIST(expr);
+      int  vcount = EXPRESSION_COUNT(expr);
+      expr =  EXPRESSION_NEXT(expr);
+      fprintf(fp, "\t\t  %s: ", NODE_NAME(name));
+      for(i = 0; i < vcount; i++) { fprintf(fp,"%s,", NODE_NAME(vlist[i]));}
+      fprintf(fp, "\n");
+    }
+  }
   fprintf(fp, "\t    (%d) JET vars\n", total_jet_vars);
+  fprintf(fp, "\t    (%d) declared expressions\n", num_expr_vars);
   fprintf(fp,   "=======                                                                      ======\n");
   fprintf(fp,   "===================================================================================\n");
 
@@ -1582,7 +1602,7 @@ void genCode(void)
 	}
       } else {
 	/*fprintf(outfile, "\t\t MultiplyMyFloatA(_jz_jet[%d][_jz_m], _jz_jet[%d][_jz_k], _jz_oneOverN[_jz_m]);\n",j, jidx);*/
-        if (1|gmp|mpfr) {
+        if (my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 	  fprintf(outfile, "\t\t DivideMyFloatByInt(_jz_jet[%d][_jz_m], _jz_jet[%d][_jz_k], _jz_m);\n",j, jidx);
 	} else {
 	  fprintf(outfile, "\t\t DivideMyFloatA(_jz_jet[%d][_jz_m], _jz_jet[%d][_jz_k], _jz_theNs[_jz_m]);\n",j, jidx);

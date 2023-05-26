@@ -173,14 +173,45 @@ can then be compiled directly into executable.
 .br
 Generate only the main driving function.
 .TP
+.BR \-long_double 
+.TP
+.BR
+Generate code use long double as MY_FLOAT.
+.TP
+.BR \-float128
+.TP
+.BR
+Generate code use float128 (IEEE 754 quadruple precision
+floating point format) as MY_FLOAT. 
+.TP
 .BR \-gmp_precision " PRECISION_IN_BITS"
 .TP
 .BR \-gmp 
 .BR
-
 Generate code to use the Gnu Multiple Precision library.
 See "http://www.swox.com/gmp/" for more info about this
 library.
+.TP
+.TP
+.BR \-complex
+.TP
+.BR \-long_complex
+.TP
+.BR \-complex128 
+.BR
+Generate code to use the specified complex type as MY_FLOAT.
+.TP
+.BR \-mpc 
+.TP
+.BR \-mpc_precision " REAL_PART_PRECISION_IN_BITS "
+.TP
+.BR \-mpc_precision " REAL_PART_PRECISION_IN_BITS  IMAG_PART_PRECISION_IN_BITS"  
+.TP
+.BR
+Generate code to use GNU MPC Library, an
+arbitarily high precision C library for complex
+numbers. See "https://www.multiprecision.org/mpc/" for
+details. 
 .TP
 .TP
 .BR \-header
@@ -191,7 +222,6 @@ Generate the header file using the input.
 .br
 Print a sample help message.
 .TP
-
 .BR \-step " STEP_SIZE_CONTROL_METHOD"
 .br
 Generate only the code for the step size control using the

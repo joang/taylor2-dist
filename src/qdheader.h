@@ -119,6 +119,8 @@ static char *qd_header="\
 #define   MyFloatA_LT_B(a,b)        ((a)< (b))\n\
 #define   MyFloatA_EQ_B(a,b)        ((a)==(b))\n\
 #define   MyFloatA_NEQ_B(a,b)       ((a)!=(b))\n\
+#define   MyFloatA_CMP_B(a,b)       ((a)-(b))\n\
+#define   MyFloatA_CMPABS_B(a,b)    (fabs(a)-fabs(b))\n\
 \n\
 \n\
 #define   OutputMyFloat(a)           cout<<a \n\

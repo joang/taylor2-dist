@@ -1096,7 +1096,7 @@ void  outputInitialVar(Node var)
                       if(spp == -1)
 			{
 			  if(VAR_IS_JET(NODE_LEFT(def))) {
-			    fprintf(outfile, "\t\t DivideFloateJetA(_sjz_svar5,_jz_oneOverN[0],%s);\n", leftStr);                      
+			    fprintf(outfile, "\t\t DivideFloatJetA(_sjz_svar5,_jz_oneOverN[0],%s);\n", leftStr);                      
 			  } else {
 			    fprintf(outfile, "\t\t DivideMyFloatA(_jz_svar5,_jz_oneOverN[0],%s);\n", leftStr);                      
 			  }
@@ -1946,8 +1946,8 @@ void computeKthDeri(Node var, Node def)
 	    fprintf(outfile, "\t\t\t for(_jz_l=1; _jz_l<=_jz_k; _jz_l++) {\n");
 	  lstr = genNodeKthDerivative(var,  "_jz_k-_jz_l");
 	  rstr = genNodeKthDerivative(right, "_jz_l");	      
-	  if(VAR_IS_JET(var)) { 	  	  
-	    fprintf(outfile, "\t\t\t     MultiplyJetFloatA(stmp1, %s,%s);\n", rstr, lstr);
+	  if(VAR_IS_JET(var)) {
+	    fprintf(outfile, "\t\t\t     MultiplyJetJetA(stmp1, %s,%s);\n", rstr, lstr);
 	    fprintf(outfile, "\t\t\t     AssignJetToJet(stmp2, stmp);\n");
 	    fprintf(outfile, "\t\t\t     SubtractJetJetA(stmp, stmp2, stmp1);\n");
 	  } else {
@@ -2441,14 +2441,14 @@ void computeKthDeri(Node var, Node def)
 			bstr = genNodeKthDerivative(budy, "_jz_k-1");	    
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	    
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n", name1, bstr);*/
-			if(1|gmp|mpfr) {			
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n", name1, bstr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, %s, _jz_theNs[_jz_k]);\n", name1, bstr);
 			}
 			  
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n", astr);*/
-			if(1|gmp|mpfr) {			
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n", astr);			  
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n", astr);
@@ -2466,7 +2466,7 @@ void computeKthDeri(Node var, Node def)
 			bstr = genNodeKthDerivative(budy, "_jz_k-1");	    
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	    
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n", bstr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n", bstr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n", bstr);
@@ -2474,7 +2474,7 @@ void computeKthDeri(Node var, Node def)
 			fprintf(outfile, "\t\t\t NegateMyFloatA(tmp2, tmp1);\n");
 			fprintf(outfile, "\t\t\t AssignMyFloat(%s, tmp2);\n", name1);
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n",*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n",
 				  genVarLvalueKth(budy, "_jz_k"), astr);
 			} else {
@@ -2497,7 +2497,7 @@ void computeKthDeri(Node var, Node def)
 			astr = genNodeKthDerivative(var,  "_jz_k-1"); 
 			if(dflag == 0) {
 			  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp, %s, _jz_oneOverN[_jz_k]);\n", tstr);*/
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, %s, _jz_k);\n", tstr);
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, %s, _jz_theNs[_jz_k]);\n", tstr);
@@ -2509,7 +2509,7 @@ void computeKthDeri(Node var, Node def)
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, _jz_theNs[1], tmp3);\n");
 			  */
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp3, _jz_theNs[1], %s);\n",tstr);
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, tmp3, _jz_k);\n");
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, tmp3, _jz_theNs[_jz_k]);\n");
@@ -2531,7 +2531,7 @@ void computeKthDeri(Node var, Node def)
 			astr = genNodeKthDerivative(var,  "_jz_k-1"); 
 			if(dflag == 0) {
 			  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp,  %s, _jz_oneOverN[_jz_k]);\n", tstr);*/
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp,  %s, _jz_k);\n", tstr);
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp,  %s, _jz_theNs[_jz_k]);\n", tstr);
@@ -2542,7 +2542,7 @@ void computeKthDeri(Node var, Node def)
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, _jz_theNs[1], tmp3);\n");
 			  */
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp3, _jz_theNs[1], %s);\n",tstr);
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, tmp3, _jz_k);\n");
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, tmp3, _jz_theNs[_jz_k]);\n");
@@ -2637,14 +2637,14 @@ void computeKthDeri(Node var, Node def)
 		  fprintf(outfile, "\t\t\t     AssignMyFloat(smp, smp3);\n");
 		  fprintf(outfile, "\t\t\t }\n");
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, tmp, _jz_oneOverN[_jz_k]);\n", name1);*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, tmp, _jz_k);\n", name1);
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, tmp, _jz_theNs[_jz_k]);\n", name1);
 		  }
 		  fprintf(outfile, "\t\t\t NegateMyFloatA(tmp, smp);\n");
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, tmp, _jz_oneOverN[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"));*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, tmp, _jz_k);\n", genVarLvalueKth(budy, "_jz_k"));
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, tmp, _jz_theNs[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"));
@@ -2675,7 +2675,7 @@ void computeKthDeri(Node var, Node def)
 			bstr = genNodeKthDerivative(budy, "_jz_k-1");	    
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	    
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n", bstr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n", bstr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n", bstr);
@@ -2683,7 +2683,7 @@ void computeKthDeri(Node var, Node def)
 			fprintf(outfile, "\t\t\t NegateMyFloatA(tmp2, tmp1);\n");
 			fprintf(outfile, "\t\t\t AssignMyFloat(%s, tmp2);\n", name1);
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n", */
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n", genVarLvalueKth(budy, "_jz_k"), astr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, %s, _jz_theNs[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"), astr);
@@ -2699,14 +2699,14 @@ void computeKthDeri(Node var, Node def)
 			bstr = genNodeKthDerivative(budy, "_jz_k-1");	    
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	    
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n", name1, bstr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n", name1, bstr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, %s, _jz_theNs[_jz_k]);\n", name1, bstr);
 			}
 			fprintf(outfile, "\t\t\t AssignMyFloat(%s, tmp2);\n", name1);
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n", astr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n", astr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n", astr);
@@ -2729,7 +2729,7 @@ void computeKthDeri(Node var, Node def)
 			astr = genNodeKthDerivative(var,  "_jz_k-1"); 
 			if(dflag == 0) {
 			  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp, %s, _jz_oneOverN[_jz_k]);\n", tstr);*/
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, %s, _jz_k);\n", tstr);
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, %s, _jz_theNs[_jz_k]);\n", tstr);
@@ -2740,7 +2740,7 @@ void computeKthDeri(Node var, Node def)
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, _jz_theNs[1], tmp3);\n");
 			  */
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp3, _jz_theNs[1], %s);\n",tstr);
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, tmp3, _jz_k);\n");
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, tmp3, _jz_theNs[_jz_k]);\n");
@@ -2763,7 +2763,7 @@ void computeKthDeri(Node var, Node def)
 			astr = genNodeKthDerivative(var,  "_jz_k-1"); 
 			if(dflag == 0) {
 			  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp, %s, _jz_oneOverN[_jz_k]);\n", tstr);*/
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, %s, _jz_k);\n", tstr);
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, %s, _jz_theNs[_jz_k]);\n", tstr);
@@ -2774,7 +2774,7 @@ void computeKthDeri(Node var, Node def)
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, _jz_theNs[1], tmp3);\n");
 			  */
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp3, _jz_theNs[1], %s);\n",tstr);
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, tmp3, _jz_k);\n");
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, tmp3, _jz_theNs[_jz_k]);\n");
@@ -2868,14 +2868,14 @@ void computeKthDeri(Node var, Node def)
 		  fprintf(outfile, "\t\t\t     AssignMyFloat(smp, smp3);\n");
 		  fprintf(outfile, "\t\t\t }\n");
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, smp, _jz_oneOverN[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"));*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, smp, _jz_k);\n", genVarLvalueKth(budy, "_jz_k"));
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, smp, _jz_theNs[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"));
 		  }
 		  fprintf(outfile, "\t\t\t NegateMyFloatA(smp,  tmp);\n");
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, smp, _jz_oneOverN[_jz_k]);\n", name1);*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, smp, _jz_k);\n", name1);
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, smp, _jz_theNs[_jz_k]);\n", name1);
@@ -2897,7 +2897,7 @@ void computeKthDeri(Node var, Node def)
 		      {
 			str = genNodeKthDerivative(var, "_jz_k-1");
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n", name1, str);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n", name1, str);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, %s, _jz_theNs[_jz_k]);\n", name1, str);
@@ -2913,7 +2913,7 @@ void computeKthDeri(Node var, Node def)
 
 			str = genNodeKthDerivative(var, "_jz_k-1");
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n", str);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n", str);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n", str);
@@ -2936,7 +2936,7 @@ void computeKthDeri(Node var, Node def)
 			if(dflag == 0)fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, %s);\n", str, tstr);
 			else fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, %s);\n", str, tstr);
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, tmp1, _jz_oneOverN[_jz_k]);\n", name1);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, tmp1, _jz_k);\n", name1);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, tmp1, _jz_theNs[_jz_k]);\n", name1);
@@ -2954,7 +2954,7 @@ void computeKthDeri(Node var, Node def)
 			else fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, %s);\n", str, tstr);
 			fprintf(outfile, "\t\t\t NegateMyFloatA(tmp2,  tmp1);\n");			
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, tmp2, _jz_oneOverN[_jz_k]);\n", name1);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, tmp2, _jz_k);\n", name1);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, tmp2, _jz_theNs[_jz_k]);\n", name1);
@@ -3017,7 +3017,7 @@ void computeKthDeri(Node var, Node def)
 		  fprintf(outfile, "\t\t\t     AddMyFloatA(tmp, tmp, tmp2);\n");
 		  fprintf(outfile, "\t\t\t }\n");
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, tmp, _jz_oneOverN[_jz_k]);\n", name1);*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, tmp, _jz_k);\n", name1);
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, tmp, _jz_theNs[_jz_k]);\n", name1);
@@ -3193,13 +3193,13 @@ void computeKthDeri(Node var, Node def)
 			bstr = genNodeKthDerivative(budy, "_jz_k-1");	    
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	    
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n", name1, bstr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n", name1, bstr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, %s, _jz_theNs[_jz_k]);\n", name1, bstr);
 			}
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, %s, _jz_oneOverN[_jz_k]);\n",*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, %s, _jz_k);\n",genVarLvalueKth(budy, "_jz_k"), astr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(%s, %s, _jz_theNs[_jz_k]);\n",genVarLvalueKth(budy, "_jz_k"), astr);
@@ -3216,7 +3216,7 @@ void computeKthDeri(Node var, Node def)
 			bstr = genNodeKthDerivative(budy, "_jz_k-1");	    
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	    
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n", bstr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n", bstr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n", bstr);
@@ -3224,7 +3224,7 @@ void computeKthDeri(Node var, Node def)
 			fprintf(outfile, "\t\t\t NegateMyFloatA(tmp2,  tmp1);\n");   
 			fprintf(outfile, "\t\t\t AssignMyFloat(%s, tmp2);\n",name1);
 			/*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp1, %s, _jz_oneOverN[_jz_k]);\n",astr);*/
-			if(1|gmp|mpfr) {
+                        if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			  fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp1, %s, _jz_k);\n",astr);
 			} else {
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp1, %s, _jz_theNs[_jz_k]);\n",astr);
@@ -3248,7 +3248,7 @@ void computeKthDeri(Node var, Node def)
 			astr = genNodeKthDerivative(var,  "_jz_k-1");	
 			if(dflag == 0) {
 			  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(tmp, %s, _jz_oneOverN[_jz_k]);\n", tstr);*/
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, %s, _jz_k);\n", tstr);
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, %s, _jz_theNs[_jz_k]);\n", tstr);
@@ -3259,7 +3259,7 @@ void computeKthDeri(Node var, Node def)
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, _jz_theNs[1],tmp3);\n");
 			  */
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp3, _jz_theNs[1], %s);\n",tstr);
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, tmp3, _jz_k);\n");
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, tmp3, _jz_theNs[_jz_k]);\n");
@@ -3287,7 +3287,7 @@ void computeKthDeri(Node var, Node def)
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, _jz_theNs[1], tmp3);\n", tstr);
 			  */
 			  fprintf(outfile, "\t\t\t DivideMyFloatA(tmp3, _jz_theNs[1], %s);\n",tstr);
-			  if(1|gmp|mpfr) {
+                          if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 			    fprintf(outfile, "\t\t\t DivideMyFloatByInt(tmp, tmp3, _jz_k);\n");
 			  } else {
 			    fprintf(outfile, "\t\t\t DivideMyFloatA(tmp, tmp3, _jz_theNs[_jz_k]);\n");
@@ -3381,13 +3381,13 @@ void computeKthDeri(Node var, Node def)
 		  fprintf(outfile, "\t\t\t     AssignMyFloat(smp, smp3);\n");
 		  fprintf(outfile, "\t\t\t }\n");
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, tmp, _jz_oneOverN[_jz_k]);\n", name1);*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, tmp, _jz_k);\n", name1);
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, tmp, _jz_theNs[_jz_k]);\n", name1);
 		  }
 		  /*fprintf(outfile, "\t\t\t MultiplyMyFloatA(%s, smp, _jz_oneOverN[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"));*/
-		  if(1|gmp|mpfr) {
+                  if(my_float_arith == ARITH_MPFR || my_float_arith == ARITH_GMP) {
 		    fprintf(outfile, "\t\t\t DivideMyFloatByInt(%s, smp, _jz_k);\n", genVarLvalueKth(budy, "_jz_k"));
 		  } else {
 		    fprintf(outfile, "\t\t\t DivideMyFloatA(%s, smp, _jz_theNs[_jz_k]);\n", genVarLvalueKth(budy, "_jz_k"));

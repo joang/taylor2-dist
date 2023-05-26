@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
   MakeMyFloatC(te,"1",1);
 
   /* jets with identity matrix at first order */
-  for (j = 0; j < np; j++) {taylor_make_identity_jets(xjets+NJ*j,x+NS*j,NULL);}
+  for (j = 0; j < np; j++) {taylor_make_identity_jets(xjets+NJ*j,x+NS*j,NULL,NULL);}
 #pragma omp parallel private(ord,k)
   {
     MY_FLOAT t,ht;

@@ -56,6 +56,7 @@ static char *longcomplex_header="\
 #define   SubtractMyFloatA(r,a,b)   (r=(a)-(b))\n\
 #define   SubtractMyFloatD          SubtractMyFloatA\n\
 #define   SubtractMyFloatSI         SubtractMyFloatA\n\
+#define   SubtractDMyFloat         SubtractMyFloatA\n\
 #define   SubtractSIMyFloat         SubtractMyFloatA\n\
 \n\
 /* multiplication r=a*b */\n\
@@ -67,6 +68,8 @@ static char *longcomplex_header="\
 #define   DivideMyFloatA(r,a,b)     (r=(a)/(b))\n\
 #define   DivideMyFloatD(r,a,b)     (r=(a)/(long double)(b))\n\
 #define   DivideMyFloatSI           DivideMyFloatD\n\
+#define   DivideDMyFloat(r,a,b)     (r=(long double)(a)/(b))\n\
+#define   DivideSIMyFloat           DivideDMyFloat\n\
 \n\
 /* division by an integer r=a/i */\n\
 #define   DivideMyFloatByInt(r,a,i)    (r=(a)/(long double)(i))\n\
@@ -108,6 +111,8 @@ static char *longcomplex_header="\
 #define   MyFloatToInt(ir,fa)          (ir=(int)(fa))\n\
 /* convert to double */\n\
 #define   MyFloatToDouble(ir,fa)       (ir=(double)(fa))\n\
+/* convert to string */\n\
+#define   MyFloatToString(s,a)         sprintf(s,\"\% .19e \% .19e\",creall(a),cimagl(a))\n\
 \n\
 \n\
 /* boolean operation  */\n\
@@ -117,10 +122,19 @@ static char *longcomplex_header="\
 #define   MyFloatA_LT_B(a,b)        (creall(a)< creall(b))\n\
 #define   MyFloatA_EQ_B(a,b)        (creall(a)==creall(b))\n\
 #define   MyFloatA_NEQ_B(a,b)       (creall(a)!=creall(b))\n\
+#define   MyFloatA_CMP_B(a,b)       (creall(a)-creall(b))\n\
+#define   MyFloatA_CMPABS_B(a,b)    (fabsl(creall(a))-fabsl(creall(b)))\n\
 \n\
 \n\
-#define   OutputMyFloat(a)          fprintf(stdout,\"%Lg %Lg \",(long double) creall(a), (long double) cimagl(a))\n\
-#define   OutputMyFloat3(file,format,a)     fprintf(file,format,(long double) creall(a), (long double) cimagl(a))\n\
+#define   OutputMyFloat3(file,fmt,a) fprintf(file,fmt,(long double) creall(a), (long double) cimagl(a))\n\
+#define   OutputMyFloat(a)           OutputMyFloat3(stdout,\"\%Lg,\%Lg \",(long double) creall(a), (long double) cimagl(a))\n\
+\n\
+#define   InputMyFloat3(file,fmt,a)  fscanf(file,fmt,(long double*)&(a),((long double*)&(a))+1)\n\
+#define   InputMyFloat(a)            InputMyFloat3(stdin,\"\%Lf,\%Lf \",a)\n\
+\n\
+#define   StringToMyFloat4(s,fmt,a,n) (sscanf(s,fmt,(long double*)&(a),((long double*)&(a))+1,n),(s)+*(n))\n\
+#define   StringToMyFloat3(s,fmt,a)   sscanf(s,fmt,(long double*)&(a),((long double*)&(a))+1)\n\
+#define   StringToMyFloat(s,a)        StringToMyFloat3(s,\"\%Lf,\%Lf \",a)\n\
 \n\
 /************************************************************************/\n\
 ";

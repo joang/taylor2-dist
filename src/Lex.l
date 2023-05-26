@@ -95,6 +95,9 @@ include                         { return(INCLUDE); }
 includes                        { return(INCLUDE); }
 including                       { return(INCLUDE); }
 
+expression                      { return(EXPR);}
+expr                            { return(EXPR);}
+
 sum                             { return(SUM); }
 
 int                             { return(INT); }
@@ -214,6 +217,7 @@ Initial_Values                  { return(INITIALV);}
 "'"           { return('\'');        }
 .             {
                 (void)fprintf(stderr,"Error: line %d, near '%s': illegal character\n",yylineno, yytext);
+		if(0)yyunput(' ', NULL);
                 return(yytext[0]);   
               }
 %%

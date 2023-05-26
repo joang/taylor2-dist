@@ -57,6 +57,7 @@ static char *sample_header="\
 #define   SubtractMyFloatD          SubtractMyFloatA\n\
 #define   SubtractMyFloatSI         SubtractMyFloatA\n\
 #define   SubtractSIMyFloat         SubtractMyFloatA\n\
+#define   SubtractDMyFloat          SubtractMyFloatA\n\
 \n\
 /* multiplication r=a*b */\n\
 #define   MultiplyMyFloatA(r,a,b)   (r=(a)*(b))\n\
@@ -67,6 +68,8 @@ static char *sample_header="\
 #define   DivideMyFloatA(r,a,b)     (r=(a)/(b))\n\
 #define   DivideMyFloatD(r,a,b)     (r=(a)/(double)(b))\n\
 #define   DivideMyFloatSI           DivideMyFloatD\n\
+#define   DivideDMyFloat(r,a,b)     (r=(double)(a)/(b))\n\
+#define   DivideSIMyFloat           DivideDMyFloat\n\
 \n\
 /* division by an integer r=a/i */\n\
 #define   DivideMyFloatByInt(r,a,i)    (r=(a)/(double)(i))\n\
@@ -108,6 +111,9 @@ static char *sample_header="\
 #define   MyFloatToInt(ir,fa)          (ir=(int)(fa))\n\
 /* convert to double */\n\
 #define   MyFloatToDouble(ir,fa)       (ir=(double)(fa))\n\
+/* convert to string */\n\
+#define   MyFloatToString3(s,fmt,a)    sprintf(s,fmt,(double)(a))\n\
+#define   MyFloatToString(s,a)         MyFloatToString3(s,\"\% .15e\",a)\n\
 \n\
 \n\
 /* boolean operation  */\n\
@@ -117,10 +123,19 @@ static char *sample_header="\
 #define   MyFloatA_LT_B(a,b)        ((a)< (b))\n\
 #define   MyFloatA_EQ_B(a,b)        ((a)==(b))\n\
 #define   MyFloatA_NEQ_B(a,b)       ((a)!=(b))\n\
+#define   MyFloatA_CMP_B(a,b)       ((a)-(b))\n\
+#define   MyFloatA_CMPABS_B(a,b)    (fabs(a)-fabs(b))\n\
 \n\
 \n\
-#define   OutputMyFloat(a)          fprintf(stdout,\"%g \",(double)a)\n\
-#define   OutputMyFloat3(file,format,a)     fprintf(file,format,(double)a)\n\
+#define   OutputMyFloat3(file,fmt,a) fprintf(file,fmt,(double)(a))\n\
+#define   OutputMyFloat(a)           OutputMyFloat3(stdout,\"\%g \",a)\n\
+\n\
+#define   InputMyFloat3(file,fmt,a)  fscanf(file,fmt,&(a))\n\
+#define   InputMyFloat(a)            InputMyFloat3(stdin,\"\%lf \",a)\n\
+\n\
+#define   StringToMyFloat4(s,fmt,a,n) (sscanf(s,fmt,&(a),n),(s)+*(n))\n\
+#define   StringToMyFloat3(s,fmt,a)  sscanf(s,fmt,&(a))\n\
+#define   StringToMyFloat(s,a)       StringToMyFloat3(s,\"\%lf \",a)\n\
 \n\
 /************************************************************************/\n\
 ";

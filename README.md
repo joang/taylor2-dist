@@ -24,13 +24,27 @@ We recommend reviewing the manual for further details.
 
 ## Changelog
 
+### May 26, 2023 -- v2.1
+
+* New macro MY_JET_FUN and MY_COEF_FUN
+* MY_SCAL has been changed by MY_COEF
+* New arithmetics for MY_COEF: tree < nsym > < deg >, and myfloat
+* New fprintf, fscanf, and sscanf of MY_JET 
+* New flag expression that allows use of expressions in input file 
+* New -1 flag in taylor_step to cover double log under/overflows.
+* Macros GetNumSymbols and SetNumSymbols are now GetJetNumSymbols and SetJetNumSymbols respectively.
+* Macros GetJetCoefficient and SetJetCoefficient merged into JetCoefficient
+* Internal changes such as the use of enum for different arithmetic
+* taylor1 compatibility with fortran77
+* Manual updates
+
 ### Nov 28, 2022 -- v2.0.2
 
-1. Complex types for double, long double, quadruple, and arbitrary precision.
-2. Option to provide NULL input in order or step size for step controls different than 0.
-3. Macros GetNumSymbols and GetJetVarDegree to know the working degrees and symbols.
-4. Minor bugs/typos corrected and corrected example 9.4.
-5. Manual updated.
+* Complex types for double, long double, quadruple, and arbitrary precision.
+* Option to provide NULL input in order or step size for step controls different than 0.
+* Macros GetNumSymbols and GetJetVarDegree to know the working degrees and symbols.
+* Minor bugs/typos corrected and corrected example 9.4.
+* Manual updated.
 
 ### Nov 07, 2022 -- v2.0.1
 

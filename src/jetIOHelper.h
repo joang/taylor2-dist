@@ -1,5 +1,51 @@
-static char *JetVarIOHelpers =
-"#if _MAX_SIZE_OF_JET_VAR_ > 1\n\
+#ifndef JET_IO_HELPER_H
+#define JET_IO_HELPER_H
+
+#define JET_IO_HELPER_API(MYJET,MYCOEF,MYFLOAT,I) "\
+\n\
+/* Set Jet values  */\n\
+\
+int taylor_make_jet(" MYJET " a, " MYCOEF " *mycoefs, " MYFLOAT " *myfloats, double *values);\n\
+int taylor_make_identity_jets(" MYJET " *inOut, " MYCOEF " *mycoefs, " MYFLOAT " *myfloats, double *values);\n\
+int taylor_make_unit_jet(" MYJET " a, int idx, " MYCOEF " *mycoef, " MYFLOAT " *myfloat, double *value);\n\
+int taylor_set_jet(" MYJET " a, " MYCOEF " *mycoefs, " MYFLOAT " *myfloats, double *values, int include_state);\n\
+\n\
+/* Convert Jet to array */\n\
+\
+" MYCOEF " *taylor_convert_jet_to_array(" MYJET " a, int include_state);\n\
+\n\
+/* Input/Output Jet */\n\
+\
+int taylor_input_jet_from_stdin(" MYJET " a, int idx) ;\n\
+int taylor_input_jet_from_string(" MYJET " a, const char *str);\n\
+int taylor_output_jet(FILE *file, const char *fmt, " MYJET " a);\n\
+\n\
+/* Init/Cleanup Library/Jet */\n\
+\
+void taylor_initialize_jet_library();\n\
+void taylor_initialize_jet_library2(int nsymbs, int degree);\n\
+void taylor_initialize_jet_variable(" MYJET " *jet);\n\
+void taylor_clear_jet_variable(" MYJET " *jet);\n\
+void taylor_clear_up_jet_library();\n\
+int taylor_set_jet_variable_number_of_symbols(int);\n\
+int taylor_set_jet_variable_degree(int);\n\
+\n\
+void taylor_jet_reduce(" MYJET ", double *);\n\
+" MYFLOAT " *taylor_get_jet_data_array(" MYJET ");\n\
+const char **taylor_get_variable_names();\n\
+const char **taylor_get_jet_monomials();\n\
+" \
+
+
+#define JET_IO_HELPER_HEADER(MYJET,MYCOEF,MYFLOAT,I) "\
+/* JET IO Helpers */\n\
+" JET_IO_HELPER_API(MYJET,MYCOEF,MYFLOAT,I) "\n\
+/* END... JET IO Helpers */\n\
+" \
+
+#define JET_IO_HELPER_CODE(MYJET,MYJET_FUN,MYCOEF,MYCOEF_FUN,MYFLOAT,MYFLOAT_FUN,I, \
+  MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,MAX_COEFFS_COUNT_NAME,MY_SIZE_JET_VAR,MY_JET_DATA) "\
+#if " MY_SIZE_JET_VAR " > 1\n\
 \n\
 #include <stdio.h>\n\
 #include <ctype.h>\n\
@@ -46,7 +92,7 @@ static int taylor_gen_jetvar_prompt(int i, char *buf) {\n\
     j++;\n\
   }\n\
   return j+1;\n\
-}  \n\
+}\n\
 \n\
 /* \n\
  *  create jet var from an array of doubles\n\
@@ -56,27 +102,35 @@ static int taylor_gen_jetvar_prompt(int i, char *buf) {\n\
  *                  enough number in values\n\
  */\n\
 \n\
-int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values) {\n\
+int taylor_make_jet(" MYJET " a, " MYCOEF " *mycoefs, " MYFLOAT " *myfloats, double *values) {\n\
   int i;\n\
-  MY_FLOAT *dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
-  if(dtmp == NULL) {\n\
-    fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
-    exit(9);\n\
-  }  \n\
-  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-    InitMyFloat(dtmp[i]);\n\
-    if(myfloats != NULL) {\n\
-      AssignMyFloat( dtmp[i],myfloats[i]);\n\
-    } else if(values != NULL) {\n\
-      MakeMyFloatA(dtmp[i],values[i]);\n\
+  " MYCOEF " *dtmp = (" MYCOEF " *) malloc((" MY_SIZE_JET_VAR ") * sizeof(" MYCOEF "));\n\
+  if (dtmp == NULL) {\n\
+    fprintf(stderr, \"Unable to allocate \%d bytes.\", (int) ( (" MY_SIZE_JET_VAR ") * sizeof(" MYCOEF ")));\n\
+    fflush(stderr); exit(9);\n\
+  }\n\
+  if (mycoefs != NULL) {\n\
+    for (i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
+      " MYCOEF_FUN(init) "(dtmp[i]);\n\
+      " MYCOEF_FUN(set) "(dtmp[i],mycoefs[i]);\n\
+    }\n\
+  } else if (myfloats != NULL) {\n\
+    for (i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
+      " MYCOEF_FUN(init) "(dtmp[i]);\n\
+      " MYCOEF_FUN(set_myfloat) "(dtmp[i],myfloats[i]);\n\
+    }\n\
+  } else if(values != NULL) {\n\
+    for (i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
+      " MYCOEF_FUN(init) "(dtmp[i]);\n\
+      " MYCOEF_FUN(set_d) "(dtmp[i],values[i]);\n\
     }\n\
   }\n\
   // The monomials solicited here are in lexical order. We need to\n\
   // make sure our assigment macro/function are using the matching\n\
   // order\n\
-  AssignFloatArrayToJet(a,dtmp);\n\
-  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-    ClearMyFloat(dtmp[i]);\n\
+  " MYJET_FUN(set_coef_array) "(a,dtmp);\n\
+  for(i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
+    " MYCOEF_FUN(clean) "(dtmp[i]);\n\
   }\n\
   (void)free(dtmp);\n\
   return 0;\n\
@@ -87,41 +141,47 @@ int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values) {\n\
  *  state variables. Otherwise, leave the state variable alone.\n\
  */\n\
 \n\
-int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values) {\n\
+int taylor_make_identity_jets(" MYJET " *inOut, " MYCOEF " *mycoefs, " MYFLOAT " *myfloats, double *values) {\n\
   int i,j, k;\n\
 \n\
-  k = _NUMBER_OF_JET_VARS_ > _NUMBER_OF_MAX_SYMBOLS_ ? _NUMBER_OF_MAX_SYMBOLS_  : _NUMBER_OF_JET_VARS_;\n\
+  k = _NUMBER_OF_JET_VARS_ > " MAX_NUM_SYMBOLS_NAME " ? " MAX_NUM_SYMBOLS_NAME " : _NUMBER_OF_JET_VARS_;\n\
   \n\
-  for(i = 0; i < k ; i++) {\n\
-    for(j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
-      if(j == 0 ) {\n\
-	if(myfloats != NULL) {\n\
-	  AssignMyFloat( MY_JET_DATA((inOut[i]),0),myfloats[i]);    	\n\
+  for(i = 0; i < k; i++) {\n\
+    for (j = 0; j < " MY_SIZE_JET_VAR "; j++) {\n\
+      if (j == 0 ) {\n\
+        if (mycoefs != NULL) {\n\
+          " MYCOEF_FUN(set) "(" MY_JET_DATA "((inOut[i]),0),mycoefs[i]);\n\
+        } else if(myfloats != NULL) {\n\
+          " MYCOEF_FUN(set_myfloat) "(" MY_JET_DATA "((inOut[i]),0),myfloats[i]);\n\
 	} else if( values != NULL) {\n\
-	    MakeMyFloatA( MY_JET_DATA((inOut[i]),0),values[i]);    	\n\
+          " MYCOEF_FUN(set_d) "(" MY_JET_DATA "((inOut[i]),0),values[i]);\n\
 	}\n\
       } else {\n\
 	if(i == j-1) { // offset by 1.\n\
-	  MakeMyFloatA( MY_JET_DATA((inOut[i]),j),1.0);    		  \n\
+          " MYCOEF_FUN(set_si) "( " MY_JET_DATA "((inOut[i]),j),1);\n\
 	} else {\n\
-	  MakeMyFloatA( MY_JET_DATA((inOut[i]),j),0.0);    		  \n\
+          " MYCOEF_FUN(set_si) "( " MY_JET_DATA "((inOut[i]),j),0);\n\
 	}\n\
       }\n\
     }\n\
   }\n\
-  for(i = k; i < _NUMBER_OF_STATE_VARS_; i++) {\n\
-    for(j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
-      if(j == 0 ) {\n\
-	if(myfloats != NULL) {\n\
-	  AssignMyFloat( MY_JET_DATA((inOut[i]),0),myfloats[i]);    	\n\
-	} else if( values != NULL) {	\n\
-	  MakeMyFloatA( MY_JET_DATA((inOut[i]),0),values[i]);    	\n\
-	}\n\
+  for (i = k; i < _NUMBER_OF_STATE_VARS_; i++) {\n\
+    for (j = 0; j < " MY_SIZE_JET_VAR "; j++) {\n\
+      if (j == 0) {\n\
+        if (mycoefs != NULL) {\n\
+           " MYCOEF_FUN(set) "(" MY_JET_DATA "((inOut[i]),0),mycoefs[i]);\n\
+        } else if (myfloats != NULL) {\n\
+          " MYCOEF_FUN(set_myfloat) "(" MY_JET_DATA "((inOut[i]),0),myfloats[i]);\n\
+        } else if (values != NULL) {	\n\
+          " MYCOEF_FUN(set_d) "(" MY_JET_DATA "((inOut[i]),0),values[i]);\n\
+        } else {\n\
+          " MYCOEF_FUN(set_si) "(" MY_JET_DATA "((inOut[i]),0),0);\n\
+        }\n\
       } else {\n\
-	MakeMyFloatA( MY_JET_DATA((inOut[i]),j),0.0);    		  \n\
+        " MYCOEF_FUN(set_si) "( " MY_JET_DATA "((inOut[i]),j),0);\n\
       }\n\
     }\n\
-  }  \n\
+  }\n\
   return 0;\n\
 }\n\
 \n\
@@ -130,19 +190,21 @@ int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values)
  *     jet = v + s_idx\n\
  *   idx is 0 based, s0, s1, s2 etc. \n\
  */\n\
-int taylor_make_unit_jet(MY_JET a, int idx, MY_FLOAT *myfloat, double *value) {\n\
-  for(int j = 0; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
-    if(j == 0) {\n\
-      if(myfloat != NULL) {\n\
-	AssignMyFloat( MY_JET_DATA((a),0),*myfloat);    		\n\
+int taylor_make_unit_jet(" MYJET " a, int idx, " MYCOEF " *mycoef, " MYFLOAT " *myfloat, double *value) {\n\
+  for (int j = 0; j < " MY_SIZE_JET_VAR "; j++) {\n\
+    if (j == 0) {\n\
+      if (mycoef != NULL) {\n\
+        " MYCOEF_FUN(set) "(" MY_JET_DATA "((a),0),*mycoef);\n\
+      } if (myfloat != NULL) {\n\
+        " MYCOEF_FUN(set_myfloat) "(" MY_JET_DATA "((a),0),*myfloat);\n\
       } else if(value != NULL) {\n\
-	MakeMyFloatA( MY_JET_DATA((a),0),*value);    		\n\
+        " MYCOEF_FUN(set_d) "(" MY_JET_DATA "((a),0),*value);\n\
       }\n\
     } else {\n\
-      if(j == idx+1) {\n\
-	MakeMyFloatA( MY_JET_DATA((a),j),1.0);    		  	\n\
+      if (j == idx+1) {\n\
+        " MYCOEF_FUN(set_si) "(" MY_JET_DATA "((a),j),1);\n\
       } else {\n\
-	MakeMyFloatA( MY_JET_DATA((a),j),0.0);\n\
+        " MYCOEF_FUN(set_si) "(" MY_JET_DATA "((a),j),0);\n\
       }\n\
     }\n\
   }\n\
@@ -154,17 +216,23 @@ int taylor_make_unit_jet(MY_JET a, int idx, MY_FLOAT *myfloat, double *value) {\
  *  Set the value of jet using an array of MY_FLOATs.\n\
  *  optionally set the state variable. \n\
  */\n\
-int taylor_set_jet(MY_JET a, MY_FLOAT *myfloats, double *values, int include_state) {\n\
+int taylor_set_jet(" MYJET " a, " MYCOEF " *mycoefs, " MYFLOAT " *myfloats, double *values, int include_state) {\n\
   int j, offset = 1;\n\
-  if(include_state) offset = 0;\n\
-  else {MakeMyFloatA( MY_JET_DATA((a),0),0.0);}\n\
+  if (include_state) offset = 0;\n\
+  else {" MYCOEF_FUN(set_si) "( " MY_JET_DATA "((a),0),0);}\n\
   \n\
-  for(j = offset; j < _MAX_SIZE_OF_JET_VAR_; j++) {\n\
-    if(myfloats != NULL) {\n\
-      AssignMyFloat( MY_JET_DATA((a),j),myfloats[j-offset]);\n\
-    } else if(values != NULL) {\n\
-      MakeMyFloatA( MY_JET_DATA((a),j),values[j-offset]);    		          \n\
-    } \n\
+  if (mycoefs != NULL) {\n\
+    for(j = offset; j < " MY_SIZE_JET_VAR "; j++) {\n\
+      " MYCOEF_FUN(set) "( " MY_JET_DATA "((a),j),mycoefs[j-offset]);\n\
+    }\n\
+  } else if (myfloats != NULL) {\n\
+    for(j = offset; j < " MY_SIZE_JET_VAR "; j++) {\n\
+      " MYCOEF_FUN(set_myfloat) "( " MY_JET_DATA "((a),j),myfloats[j-offset]);\n\
+    }\n\
+  } else if (values != NULL) {\n\
+    for(j = offset; j < " MY_SIZE_JET_VAR "; j++) {\n\
+      " MYCOEF_FUN(set_d) "( " MY_JET_DATA "((a),j),values[j-offset]);\n\
+    }\n\
   }\n\
   return 0;\n\
 }\n\
@@ -173,33 +241,33 @@ int taylor_set_jet(MY_JET a, MY_FLOAT *myfloats, double *values, int include_sta
  *  Output a jet to an array of MY_FLOATs, optionally include\n\
  *  the state variable.\n\
  */\n\
-MY_FLOAT *taylor_convert_jet_to_array(MY_JET a, int include_state) {\n\
+" MYCOEF " *taylor_convert_jet_to_array(" MYJET " a, int include_state) {\n\
   int i,offset = 1;\n\
-  if(include_state) offset = 0;\n\
+  if (include_state) offset = 0;\n\
   \n\
-  static MY_FLOAT *dtmp = NULL;\n\
+  static " MYCOEF " *dtmp = NULL;\n\
 #pragma omp threadprivate(dtmp)\n\
-\n\
+  \n\
   if(dtmp == NULL) {\n\
-    dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
+    dtmp = (" MYCOEF " *) malloc((" MY_SIZE_JET_VAR ") * sizeof(" MYCOEF "));\n\
     if(dtmp == NULL) {\n\
-      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
-      exit(9);\n\
-    }  \n\
-    for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-      InitMyFloat(dtmp[i]);\n\
-      MakeMyFloatA(dtmp[i], 0.0);\n\
+      fprintf(stderr, \"Unable to allocate \%d bytes.\", (int) ( (" MY_SIZE_JET_VAR ") * sizeof(" MYCOEF ")));\n\
+      fflush(stderr); exit(9);\n\
+    }\n\
+    for(i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
+      " MYCOEF_FUN(init) "(dtmp[i]);\n\
+      " MYCOEF_FUN(set_si) "(dtmp[i], 0);\n\
     }\n\
   }\n\
-  for(i = offset; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-    AssignMyFloat(dtmp[i-offset],  MY_JET_DATA((a),i));    \n\
+  for(i = offset; i < " MY_SIZE_JET_VAR "; i++) {\n\
+    " MYCOEF_FUN(set) "(dtmp[i-offset],  " MY_JET_DATA "((a),i));\n\
   }\n\
   return dtmp;\n\
 }\n\
 \n\
 \n\
 /*\n\
- *  taylor_input_jet: input jet from stdin,  prompt with list of monomials in jet var \n\
+ *  taylor_input_jet: input jet from stdin,  prompt with list of monomials in jet var\n\
  *\n\
  *  Parms:  a, JET var\n\
  *          idx, index of a in Jet Array. The order\n\
@@ -210,110 +278,83 @@ MY_FLOAT *taylor_convert_jet_to_array(MY_JET a, int include_state) {\n\
  *                  enough number in values\n\
  */\n\
 \n\
-int taylor_input_jet_from_stdin(MY_JET a, int idx) {\n\
+int taylor_input_jet_from_stdin(" MYJET " a, int idx) {\n\
   /* extern char *ode_variable_names[]; */\n\
   char buf[2048];\n\
   int i, count, nbytes;\n\
 \n\
-  MY_FLOAT *dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
+  " MYFLOAT " *dtmp = (" MYFLOAT " *)malloc((" MY_SIZE_JET_VAR ") * sizeof(" MYFLOAT "));\n\
   if(dtmp == NULL) {\n\
-    fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
+    fprintf(stderr, \"Unable to allocate \%d bytes.\", (int) ( (" MY_SIZE_JET_VAR ") * sizeof(" MYFLOAT ")));\n\
     exit(9);\n\
-  }  \n\
-  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
+  }\n\
+  for(i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
     InitMyFloat(dtmp[i]);\n\
   }\n\
   \n\
   bzero(buf, 2048);\n\
   count = taylor_gen_jetvar_prompt(idx, buf);\n\
 \n\
-  fprintf(stderr, \"Enter values for JET Var %s: %s \\n\", ode_variable_names[idx], buf);\n\
+  fprintf(stderr, \"Enter values for JET Var \%s: \%s \\n\", ode_variable_names[idx], buf);\n\
   buf[0] =0;\n\
-  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
+  for(i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
     char *q = get_next_number_stdin(buf);\n\
     double f = atof(q);\n\
     MakeMyFloatC(dtmp[i], buf, f);    \n\
   }\n\
   \n\
-  taylor_make_jet(a,dtmp, NULL);\n\
+  taylor_make_jet(a, NULL, dtmp, NULL);\n\
   \n\
-  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
+  for(i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
     ClearMyFloat(dtmp[i]);\n\
-  }  \n\
+  }\n\
   (void) free(dtmp);\n\
 \n\
   return 0;\n\
 }\n\
 \n\
-int taylor_input_jet_from_string(MY_JET a, const char *str) {\n\
+int taylor_input_jet_from_string(" MYJET " a, const char *str) {\n\
   static char buf[256];\n\
-  static MY_FLOAT *dtmp = NULL;  \n\
+  static " MYFLOAT " *dtmp = NULL;  \n\
 #pragma omp threadprivate(buf,dtmp)\n\
   int i, j=0;\n\
   if(dtmp == NULL) {\n\
-    dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
+    dtmp = (" MYFLOAT " *)malloc((" MY_SIZE_JET_VAR ") * sizeof(" MYFLOAT "));\n\
     if(dtmp == NULL) {\n\
-      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
+      fprintf(stderr, \"Unable to allocate \%d bytes.\", (int) ( (" MY_SIZE_JET_VAR ") * sizeof(" MYFLOAT ")));\n\
       exit(9);\n\
-    }  \n\
-    for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
+    }\n\
+    for(i = 0; i < " MY_SIZE_JET_VAR "; i++) {\n\
       InitMyFloat(dtmp[i]);\n\
       MakeMyFloatA(dtmp[i], 0.0);\n\
     }\n\
   }\n\
-  for(i=0; i< _MAX_SIZE_OF_JET_VAR_; i++) {\n\
+  for(i=0; i< " MY_SIZE_JET_VAR "; i++) {\n\
     get_next_number(str, &j, buf);\n\
     double f=atof(buf);\n\
     MakeMyFloatC(dtmp[i], buf, f);\n\
   }\n\
 \n\
-  taylor_make_jet(a, dtmp, NULL);\n\
+  taylor_make_jet(a, NULL, dtmp, NULL);\n\
   return 0;\n\
 }\n\
 \n\
-int taylor_output_jet(FILE *file, char *fmt, MY_JET a) {\n\
-  static MY_FLOAT *dtmp = NULL;\n\
-#pragma omp threadprivate(dtmp)\n\
-  int i;\n\
-\n\
-  if(dtmp == NULL) {\n\
-    dtmp = (MY_FLOAT *)malloc((_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT));\n\
-    if(dtmp == NULL) {\n\
-      fprintf(stderr, \"Unable to allocate %d bytes.\", (int) ( (_MAX_SIZE_OF_JET_VAR_) * sizeof(MY_FLOAT)));\n\
-      exit(9);\n\
-    }  \n\
-    for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-      InitMyFloat(dtmp[i]);\n\
-      MakeMyFloatA(dtmp[i], 0.0);\n\
-    }\n\
-  }\n\
-  //  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-  //    MakeMyFloatA(dtmp[i], 0.0);    \n\
-  //  }\n\
-\n\
-  AssignJetToFloatArray(dtmp,a);  \n\
-  \n\
-  for(i = 0; i < _MAX_SIZE_OF_JET_VAR_; i++) {\n\
-    OutputMyFloat3(file, fmt, dtmp[i]);\n\
-    //#if defined _USE_MPFR_ || defined  _USE_GMP_\n\
-    //    fprintf(file, \" \");\n\
-    //#endif\n\
-  }\n\
-  return 0;  \n\
+int taylor_output_jet(FILE *file, const char *fmt, " MYJET " a) {\n\
+  OutputJet2File(file,fmt,a);\n\
 }\n\
 \n\
-void taylor_initialize_jet_library2(int nvars, int degree) {\n\
-  InitUpJet2(nvars, degree);\n\
+void taylor_initialize_jet_library2(int nsymbs, int degree) {\n\
+  InitUpJet2(nsymbs, degree);\n\
 }\n\
 void taylor_initialize_jet_library(void) {\n\
   InitUpJet();\n\
 }\n\
 \n\
-void taylor_initialize_jet_variable(MY_JET *jet) {\n\
+void taylor_initialize_jet_variable(" MYJET " *jet) {\n\
   InitJet(*jet);\n\
 }\n\
 \n\
-void taylor_clear_jet_variable(MY_JET *jet) {\n\
+void taylor_clear_jet_variable(" MYJET " *jet) {\n\
   ClearJet(*jet);\n\
 }\n\
 void taylor_clear_up_jet_library(void) {\n\
@@ -324,7 +365,7 @@ int taylor_set_jet_variable_degree(int deg) {\n\
   return SetJetVarDegree(deg);\n\
 }\n\
 int taylor_set_jet_variable_number_of_symbols(int nsyms) {\n\
-  return SetNumSymbols(nsyms);\n\
+  return SetJetNumSymbols(nsyms);\n\
 }\n\
 \n\
 const char **taylor_get_variable_names() {\n\
@@ -337,5 +378,14 @@ const char **taylor_get_jet_monomials() {\n\
 #endif\n\
 \n\
 \n\
-\n\
-";
+" \
+
+ static char *JetIOHelperHeader = \
+       JET_IO_HELPER_HEADER("MY_JET","MY_COEF","MY_FLOAT","int");
+
+static char *JetIOHelperCode = \
+      JET_IO_HELPER_CODE("MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FIXES,"MY_FLOAT",MY_FLOAT_FIXES, "int", \
+                         MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME,\
+                         MAX_SIZE_JET_VAR_MACRO_NAME, MY_JET_DATA_ACCESS);
+
+#endif /* JET_IO_HELPER_H */

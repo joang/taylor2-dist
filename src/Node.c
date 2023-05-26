@@ -41,7 +41,37 @@ Node current_id     = NULL;
 Node id_list        = NULL;
 Node timeVar        = NULL;
 char *current_qstring = NULL;
+Expression current_expression = NULL;
+Expression expression_list    = NULL;
+
+Hash_Entry  node_hash_table[NODE_HASH_TABLE_SIZE];
 /****************************************************************/
+Expression new_expression()
+{
+  Expression tmp = (Expression)malloc(sizeof(struct expression_));
+  bzero(tmp,sizeof(struct expression_));
+  EXPRESSION_LIST(tmp) = (Node *)malloc(10*sizeof(Node));
+  bzero(EXPRESSION_LIST(tmp),10*sizeof(Node));  
+  EXPRESSION_SPACE(tmp) = 10;
+
+  EXPRESSION_NEXT(tmp) = expression_list;
+  expression_list = tmp;  
+  return(tmp);
+}
+
+void destroy_all_expressions() {
+  if(expression_list){
+    Expression b,a =expression_list;
+    while(a) {
+      b = EXPRESSION_NEXT(a);
+      my_free(EXPRESSION_LIST(a));     
+      my_free(a);
+      a=b;
+    }
+  }
+}
+/****************************************************************/
+
 void initialize_nodes(void)
 {
   error_node    = make_node(ERROR_NODE);
@@ -49,7 +79,68 @@ void initialize_nodes(void)
   int_one_node  = build_int("1");
 }
 /*************************************************************/
+void insert_node_to_hash_table(Node node) {
+  if(! node) return;
   
+  int hash_v = (long) node  % NODE_HASH_TABLE_SIZE;
+  Hash_Entry *tmp = (Hash_Entry *)my_malloc(sizeof(Hash_Entry));
+  bzero(tmp, sizeof(Hash_Entry));
+  tmp->node = node;
+  tmp->next = node_hash_table[hash_v].next;
+  node_hash_table[hash_v].next = tmp;
+}
+
+void delete_node(Node node) {
+  if(! node) return;
+  
+  int hash_v = (long) node  % NODE_HASH_TABLE_SIZE;
+  Hash_Entry *p = &node_hash_table[hash_v], *q=p->next;
+  while(p && q) {
+    if(q->node == node) {
+      p->next = q->next;
+      my_free(NODE_NAME(node));
+      my_free(NODE_GIVEN_NAME(node));      
+      my_free(NODE_INFO(node));
+      my_free(NODE_JINITV(node));            
+      my_free((void *)node);
+      my_free(q);
+      break;
+    }
+    p = q;
+    q = p->next;
+  }
+}
+
+void destroy_all_nodes() {
+  int i;
+  for(i = 0; i < NODE_HASH_TABLE_SIZE; i++) {
+    Hash_Entry *p,  *q=node_hash_table[i].next;
+    node_hash_table[i].next = NULL;
+    while(q) {
+      p = q;
+      q = p->next;
+      my_free(p);
+    }    
+  }
+}
+
+void display_all_nodes() {
+  int i;
+  if(debug) {
+    for(i = 0; i < NODE_HASH_TABLE_SIZE; i++) {
+      Hash_Entry *p,  *q=node_hash_table[i].next;
+      fprintf(stderr, "In Bucked %d:\n", i);
+      while(q) {
+	Node node = q->node;
+	if(node)
+	  fprintf(stderr, " %s %s %s\n", node_names[NODE_CODE(node)], NODE_NAME(node), NODE_GIVEN_NAME(node));
+	p = q;
+	q = p->next;
+      }    
+    }
+  }
+}
+/*************************************************************/
 Node make_node(enum node_code code)
 {
   register Node   n;
@@ -58,17 +149,10 @@ Node make_node(enum node_code code)
   n = (Node) my_malloc(length);
   memset((char *)n,0,length);
   NODE_CODE(n) = code;
+  insert_node_to_hash_table(n);   
   return (n);
 }
-void delete_node(Node node)
-{
-  if(node)
-    {
-      my_free(NODE_NAME(node));
-      my_free(NODE_INFO(node));
-      my_free((void *)node);
-    }
-}
+
 /**************************************************************/
 
 Node copy_node(Node n)
@@ -134,7 +218,6 @@ Node install_id(char *lex)
   return(id);
 }
 /********************************************************************/
-
 Node build_op(enum node_code code, Node op1, Node op2)
 {
   register Node expr = make_node(code);

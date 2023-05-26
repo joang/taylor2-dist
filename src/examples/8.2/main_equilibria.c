@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
   MakeMyFloatC(RR,"28",28);
   for (k = 0; k < NS; k++) {MakeMyFloatC(x[k],"0",0);}
   /* jets with identity matrix at first order */
-  taylor_make_identity_jets(jetIn,x,NULL);
+  taylor_make_identity_jets(jetIn,x,NULL,NULL);
   /* vector field evaluation */
   taylor_coefficients_lorenz5_eq_A(t, x, 1, 0, jetIn, &jetOut);
   for (k = 0; k < NS; k++)

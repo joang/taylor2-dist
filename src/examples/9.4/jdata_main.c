@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 	 log10tolerance  = log10(tolerance);
 	 log10rtolerance = log10(rtolerance);
 
-	 taylor_make_identity_jets(jetIn, NULL, NULL);
+	 taylor_make_identity_jets(jetIn, NULL, NULL,NULL);
 
 	 MakeMyFloatA(stopT, T1);
 	 MakeMyFloatA(startT, T0);	 

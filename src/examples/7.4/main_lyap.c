@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     lyap += log(norm);
   }
 	 
-  lyap /= 10000;	 
+  lyap /= 100000;	 
   fprintf(stdout, "The estimated Lyapunov exponent is: %f\n", lyap);
 	 
   exit(0); 

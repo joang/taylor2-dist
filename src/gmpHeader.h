@@ -59,6 +59,7 @@ static  int gmp_j_aux_init=0;\n\
 #define   SubtractMyFloatA(r,a,b)  mpf_sub(r,(a),(b))\n\
 #define   SubtractMyFloatD(r,a,b)  {if(gmp_j_aux_init==0){gmp_j_aux_init=1;mpf_init(gmp_j_aux);}mpf_set_d(gmp_j_aux,(double)(b));mpf_sub(r,(a),gmp_j_aux);}\n\
 #define   SubtractMyFloatSI(r,a,b)  mpf_sub_ui(r,(a),(unsigned long)(b))\n\
+#define   SubtractMyFloatD(r,b,a)  {if(gmp_j_aux_init==0){gmp_j_aux_init=1;mpf_init(gmp_j_aux);}mpf_set_d(gmp_j_aux,(double)(b));mpf_sub(r,(a),gmp_j_aux);}\n\
 #define   SubtractSIMyFloat(r,a,b)  mpf_ui_sub(r,(unsigned long)(a),(b))\n\
 \n\
 /* multiplication r=a*b */\n\
@@ -70,8 +71,10 @@ static  int gmp_j_aux_init=0;\n\
 #define   DivideMyFloatA(r,a,b)     mpf_div(r,(a),(b))\n\
 #define   DivideMyFloatD(r,a,b)      {if(gmp_j_aux_init==0){gmp_j_aux_init=1;mpf_init(gmp_j_aux);}mpf_set_d(gmp_j_aux,(double)(b));mpf_div(r,(a),gmp_j_aux);}\n\
 /* division by an integer r=a/i */\n\
-#define   DivideMyFloatSI(r,a,i) mpf_div_ui(r,(a),(unsigned long)(i))\n\
-#define   DivideMyFloatByInt(r,a,i) mpf_div_ui(r,(a),(unsigned long)(i))\n\
+#define   DivideMyFloatSI(r,a,i)    mpf_div_si(r,(a),(long)(i))\n\
+#define   DivideDMyFloat(r,a,b)     undefined\n\
+#define   DivideSIMyFloat(r,a,i)    undefined\n\
+#define   DivideMyFloatByInt(r,a,i) mpf_div_si(r,(a),(long)(i))\n\
 \n\
 /* negation r=-a*/\n\
 #define   NegateMyFloatA(r,a)       mpf_neg(r, (a))\n\
@@ -113,7 +116,9 @@ static  int gmp_j_aux_init=0;\n\
 #define   MyFloatToInt(ir,fa)       (ir=(int)mpf_get_d(fa))\n\
 /* convert to double */\n\
 #define   MyFloatToDouble(dr,fa)    dr=mpf_get_d(fa)\n\
-\n\
+/* convert to string */\n\
+#define   MyFloatToString3(s,fmt,a) undefined\n\
+#define   MyFloatToString(s,a)      undefined\n\
 \n\
 \n\
 /* boolean operation  */\n\
@@ -125,8 +130,15 @@ static  int gmp_j_aux_init=0;\n\
 #define   MyFloatA_NEQ_B(a,b)       (mpf_cmp((a),(b))!=0)\n\
 \n\
 \n\
-#define   OutputMyFloat(a)          mpf_out_str(stdout,10,20,a),fprintf(stdout,\" \")\n\
-#define   OutputMyFloat3(file,fmt,a)          gmp_fprintf(file,fmt,a)\n\
+#define   OutputMyFloat3(file,fmt,a) gmp_fprintf(file,fmt,a)\n\
+#define   OutputMyFloat(a)           mpf_out_str(stdout,10,20,a),fprintf(stdout,\" \")\n\
+\n\
+#define   InputMyFloat3(file,fmt,a)  mpf_inp_str(a,file,10)\n\
+#define   InputMyFloat(a)            InputMyFloat3(stdin,NULL,a)\n\
+\n\
+#define   StringToMyFloat4(s,fmt,a,n) (gmp_sscanf(s,fmt,&(a),n),(s)+*(n))\n\
+#define   StringToMyFloat3(s,fmt,a)  gmp_sscanf(s,fmt,&(a))\n\
+#define   StringToMyFloat(s,a)       StringToMyFloat3(s,\"\%Ff \",a)\n\
 \n\
 /************************************************************************/\n\
 ";

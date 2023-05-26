@@ -33,7 +33,7 @@
  * location of the match.
  */
 int matchWord(buf, word, buflen, pos_ret) 
-     char *buf; char *word; int *pos_ret, buflen;
+     const char *buf; char *word; int *pos_ret, buflen;
 {
   int blen, wlen;
   int pfxS[256], *pfx = pfxS;
@@ -122,23 +122,23 @@ void genMainCode()
   if(qd2 | qd4 ) {
     fprintf(outfile,"\t unsigned int old_cw;;\n");    
     fprintf(outfile,"\t fpu_fix_start(&old_cw);\n");    
-  } else if(gmp) {
+  } else if(my_float_arith == ARITH_GMP) {
     if( gmp_precision ) {
       fprintf(outfile, "\t mpf_set_default_prec(%d);\n", gmp_precision);
     } else {
       fprintf(outfile, "{ int gmppre;\n");
       fprintf(outfile, "  fprintf(stderr, \"Enter gmp precision in number of bits: \");\n");
-      fprintf(outfile, "  scanf(\"%%d\", &gmppre);\n");      
+      fprintf(outfile, "  itmp=scanf(\"%%d\", &gmppre);\n");      
       fprintf(outfile, "\t mpf_set_default_prec(gmppre);\n"); 
       fprintf(outfile, "};\n"); 
     }
-  } else if(mpfr) {
+  } else if(my_float_arith == ARITH_MPFR) {
     if( mpfr_precision ) {
       fprintf(outfile, "\t mpfr_set_default_prec(%d);\n", mpfr_precision);
     } else {
       fprintf(outfile, "{ int gmppre;\n");
       fprintf(outfile, "  fprintf(stderr, \"Enter mpfr precision in number of bits: \");\n");
-      fprintf(outfile, "  scanf(\"%%d\", &gmppre);\n");      
+      fprintf(outfile, "  itmp=scanf(\"%%d\", &gmppre);\n");      
       fprintf(outfile, "\t mpfr_set_default_prec(gmppre);\n"); 
       fprintf(outfile, "};\n"); 
     }
@@ -154,8 +154,8 @@ void genMainCode()
   fprintf(outfile,"\n\t MakeMyFloatA(myFloatZero, 0);\n");
 
   if(state_jet_vars > 0) {
-//     fprintf(outfile, "\t InitUpJet(%d, %d);\n", num_symbols, deg_jet_vars);
-    fprintf(outfile, "\t InitUpJet2(%d, %d);\n", num_symbols, deg_jet_vars);
+//     fprintf(outfile, "\t InitUpJet(%d, %d);\n", num_jet_symbols, deg_jet_vars);
+    fprintf(outfile, "\t InitUpJet2(%d, %d);\n", num_jet_symbols, deg_jet_vars);
     fprintf(outfile, "\t for(i=0; i<%d; i++) {InitJet(jetIn[i]);}\n",state_jet_vars+param_jet_vars);
   }
 
@@ -282,7 +282,7 @@ if(1 || state_jet_vars==0) {
   else 
     {
       fprintf(outfile,"\t fprintf(stderr,\"Enter absolute error tolerance: \"); \n");
-      fprintf(outfile,"\t scanf(\"%%le\", &tolerance);");
+      fprintf(outfile,"\t itmp=scanf(\"%%le\", &tolerance);");
     }
   if(getControlParameterValue("relativeErrorTolerance",&dtmp, &pnode) || getControlParameterValue("relative_error_tolerance",&dtmp, &pnode)||
      getControlParameterValue("RelativeErrorTolerance",&dtmp, &pnode) || getControlParameterValue("Relative_Error_Tolerance",&dtmp, &pnode))
@@ -292,7 +292,7 @@ if(1 || state_jet_vars==0) {
   else 
     {
       fprintf(outfile,"\n\t fprintf(stderr,\"Enter relative error tolerance: \"); \n");
-      fprintf(outfile,"\t scanf(\"%%le\", &rtolerance);");
+      fprintf(outfile,"\t itmp=scanf(\"%%le\", &rtolerance);");
     }
 
   fprintf(outfile, "\n");  
@@ -303,22 +303,22 @@ if(1 || state_jet_vars==0) {
   fprintf(outfile, "\n\t if(dstep < (double)0.0) { direction = -1;}\n");
 
 
-  if(gmp) {
+  if(my_float_arith == ARITH_GMP) {
     fprintf(outfile, "\t int prec = (int) mpf_get_prec(myFloatZero);\n");
     fprintf(outfile, "\t int digits = (8 * prec / 32 );\n");
     fprintf(outfile, "\t sprintf(format_string, \"%%%%.%%dFg \",digits);\n");    
-  } else if( mpfr) {
+  } else if(my_float_arith == ARITH_MPFR) {
     fprintf(outfile, "\t int prec = (int) mpfr_get_prec(myFloatZero);\n");
     fprintf(outfile, "\t int digits = (8 * prec / 32 );\n");
     fprintf(outfile, "\t sprintf(format_string, \"%%%%.%%dRg \",digits);\n");
-  } else if(ldouble) {
+  } else if(my_float_arith == ARITH_LONG_DOUBLE) {
     fprintf(outfile, "\t (void)strcpy(format_string, \"%%.20Lg \");\n");
-  } else if(float128) {
+  } else if(my_float_arith == ARITH_FLOAT128) {
     fprintf(outfile, "\t (void)strcpy(format_string, \"%%.33Qe\");\n");    
   } else {
     fprintf(outfile, "\t (void)strcpy(format_string, \"%%.16g \");\n");    
   }  
-
+  fprintf(outfile, "\t itmp = 0; \n");      
   fprintf(outfile, "\t while(1)  {\n");
   /* output current value first */
   
@@ -342,6 +342,10 @@ if(1 || state_jet_vars==0) {
 
   /* integrate one step */
   fprintf(outfile, "\n\t\t itmp = taylor_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
+          suffix, step_ctrl);
+  fprintf(outfile, "\n\t\t //itmp = RK4_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
+          suffix, step_ctrl);
+  fprintf(outfile, "\n\t\t //itmp = RK4QC_step_%s( &startT, xx, direction, %d, 6+log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
           suffix, step_ctrl);
 
 

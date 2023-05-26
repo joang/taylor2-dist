@@ -39,7 +39,6 @@
 #include "jetIOHelper.h"
 #include "VERSION"
 int    debug = 0;
-int    ddouble = 0;
 int    expandpower = 1;
 int    expandsum = 10;
 int    havesum = 0;
@@ -47,27 +46,22 @@ int    genHeader = 0;
 int    genMain = 0;
 int    genStep = 0;
 int    genMyJet = 0;
+int    genMyCoef = 0;
 int    genTestJet = 0;
 int    genJet = 0;
+int    genExpressions = 0;
+int    genPoincare = 0;
 int    ignoreJetInconsistency=0;
 int    genJetHelper = 0;
 int    jetStorageType = 0;
-int    cdouble = 0;
-int    complexx = 0;
-int    lcomplex = 0;
-int    complexx128 = 0;
-int    mpc = 0;
+int    coefStorageType = 0;
+my_arith_t my_float_arith=ARITH_NONE;
 int    mpc_rounding = 0;
 int    mpc_precision[2]={0,0};
-int    gmp = 0;
 int    gmp_precision=0;
-int    mpfr = 0;
 int    mfr_rounding = 0;
 int    mpfr_precision=0;
-int    ldouble=0;
-int    float128=0;
-int    qd2 = 0;
-int    qd4 = 0;
+int    ddouble=0,cdouble = 0,qd2 = 0,qd4 = 0; /* DEPRECATED */
 int    f77hook = 0;
 int    step_ctrl = 1;
 int    use_rational_exponent=0;
@@ -77,19 +71,28 @@ int    num_names = 0;
 char   *outName = NULL;
 char   *suffix = NULL;
 char   *my_jet_prefix=NULL;
-index_my_jet_header_t index_my_jet_header=0;
-index_my_jet_code_t index_my_jet_code=0;
+my_arith_t my_jet_arith=ARITH_JET_NONE;
+index_my_jet_prefix_t index_my_jet_prefix=PREFIX_NONE;
+index_my_jet_header_t index_my_jet_header=HEADER_NONE;
+index_my_jet_code_t index_my_jet_code=CODE_NONE;
+char   *my_coef_prefix=NULL;
+my_arith_t my_coef_arith=ARITH_MY_FLOAT;
+index_my_coef_prefix_t index_my_coef_prefix=PREFIX_MY_FLOAT;
+index_my_coef_header_t index_my_coef_header=HEADER_MY_FLOAT;
+index_my_coef_code_t index_my_coef_code=CODE_MY_FLOAT;
+my_coef_flags_t my_coef_flags=EMPTY;
 char   *header_name = NULL;
 char   *uss_name = NULL;
 char   *uso_name = NULL;
 FILE   *outfile = NULL;
 FILE   *infile = NULL;
+char   *saved_input_file=NULL;
 
 // static int n_jets=0, d_jets=0;
 
 extern FILE *yyin;
 
-void help(char *);
+void help(const char *);
 void genSampleHeader();
 void genJetHelpers(int flag); 
 int num_monomials(int nvars,int deg);
@@ -99,14 +102,14 @@ int list_monomials2(int d, FILE *file);
 int output_taylor_jet_reducer(FILE *outfile); 
 void mn_multiply_jets( int m, int n, int flag );
 int *mn_rearrange_indicies(int m, int n) ;
-int *tree_monomial_order_map();
+int *tree_monomial_order_map(int dim, int kmax);
 
 extern int yyparse();
 
 int main(int ac, char **av)
 {
   int i, header=0, nariths=0, header_only = 0, jhelper=0, jhelper_only=0;
-  int num_symbols_tmp_copy, deg_jet_vars_tmp_copy;
+  int num_jet_symbols_tmp_copy, deg_jet_vars_tmp_copy;
   char *arith=NULL;
   char *overwriteJetLibrary=NULL;
 
@@ -117,6 +120,189 @@ int main(int ac, char **av)
 	{
 	  switch(arg[1])
 	    {
+            case 'c':
+              if (!strcmp(arg,"-constantsafe") || !strcmp(arg,"-const"))
+                { cdouble = 1;}
+              else if (!strcmp(arg,"-complex") || !strcmp(arg,"-cmplx"))
+              { if (nariths==0) {my_float_arith=ARITH_COMPLEX_DOUBLE; nariths++; arith="cmplx";} }
+              else if (!strcmp(arg,"-complex128") || !strcmp(arg,"-cmplx128"))
+              { if (nariths==0) {my_float_arith=ARITH_COMPLEX128; nariths++; arith="cmplx128";} }
+
+
+              if (!strcmp(arg,"-coeflibrary") || !strcmp(arg,"-coef_library") || !strcmp(arg,"-coeflib")
+                  || !strcmp(arg,"-coef_lib") || !strcmp(arg,"-clib"))
+                {
+                  if (ac > i+1)
+                    {
+                      if (!strcmp(av[i+1],"myfloat") || !strcmp(av[i+1],"my_float") || !strcmp(av[i+1],"MY_FLOAT"))
+                        {
+                          my_coef_arith = ARITH_MY_FLOAT;
+                          i++;
+                        }
+                      else
+                        {
+                          if (!strcmp(av[i+1],"tree")||!strcmp(av[i+1],"jet_tree"))
+                            {
+                              my_coef_arith = ARITH_JET_TREE;
+                              my_coef_flags = NON_EMPTY;
+                              i++;
+                            }
+                          else
+                            {
+                              fprintf(stderr, "error: coef library unknown\n"); exit(10);
+                            }
+
+                          if (my_coef_flags & NON_EMPTY)
+                            {
+                              if (ac > i+1 && isdigit(av[i+1][0]))
+                                {
+                                  my_coef_num_symbols = atoi(av[i+1]); i++;
+                                  my_coef_flags|=SYMBOLS;
+                                  if (my_coef_num_symbols <= 0)
+                                    {
+                                      fprintf(stderr, "error: " MY_COEF_MAX_NUM_SYMB_MACRO_NAME " %d invalid value.\n",
+                                              my_coef_num_symbols); fflush(stderr);
+                                      exit(40);
+                                    }
+                                  if (ac > i+1 && isdigit(av[i+1][0]))
+                                    {
+                                      my_coef_deg = atoi(av[i+1]); i++;
+                                      my_coef_flags|=DEGREE;
+                                      if (my_coef_deg < 0)
+                                        {
+                                          fprintf(stderr, "error: " MY_COEF_MAX_DEGREE_MACRO_NAME " %d invalid value\n",
+                                                  my_coef_num_symbols); fflush(stderr);
+                                          exit(40);
+                                        }
+                                    }
+                                  else
+                                    {
+                                      fprintf(stderr, "warning: " MY_COEF_MAX_DEGREE_MACRO_NAME " not provided. Default " MY_JET_MAX_DEGREE_MACRO_NAME "\n");
+                                    }
+                                }
+                              else
+                                {
+                                  fprintf(stderr, "warning: " MY_COEF_MAX_NUM_SYMB_MACRO_NAME " not provided. Default " MY_JET_MAX_NUM_SYMB_MACRO_NAME "\n");
+                                }
+                            }
+                        }
+                    }
+                  else
+                    {
+                      fprintf(stderr, "error: coef library type required\n"); exit(10);
+                    }
+                }
+              break;
+            case 'd':
+              if (!strcmp(arg,"-debug") || !strcmp(arg,"-d"))
+                debug = 1;
+              break;
+            case 'e':
+              if (!strncmp(arg,"-expandsum",8))
+                {
+                  if (++i < ac) expandsum = atoi(av[i]);
+                  else --i;
+                }
+              else if (!strncmp(arg,"-expandpower",8))
+                {
+                  if (++i < ac) expandpower = atoi(av[i]);
+                  else --i;
+                }
+              if (!strncmp(arg,"-expression",10)) { genExpressions = 1;}
+              break;
+            case 'f':
+              if (!strcmp(arg,"-f77")) { f77hook=1;}
+              if (!strcmp(arg,"-float128") || !strcmp(arg,"-f128")) {
+                if (nariths==0) {my_float_arith=ARITH_FLOAT128; nariths++; arith="float128";}
+              }
+              break;
+            case 'g':
+              if (!strcmp(arg,"-gmp_precision")) {
+                if (ac > i+1 && atoi(av[i+1]) > 0)
+                  {
+                    if (nariths==0)
+                      {
+                        my_float_arith=ARITH_GMP; nariths++; arith="gmp";
+                        gmp_precision = atoi(av[i+1]);
+                        i++;
+                      }
+                  } else {
+                    fprintf(stderr,"\t The -gmp_precision flag must be followed by PRECISION in number of bits\n");
+                    exit(1);
+                  }
+              } else if (!strcmp(arg,"-gmp")) {
+                if (nariths==0) {my_float_arith=ARITH_GMP; nariths++; arith="gmp";}
+              }
+              break;
+            case 'h':
+              if (!strcmp(arg,"-header_name") || !strcmp(arg,"-headername")  ) { if (++i < ac) { header_name = av[i];} }
+              else if (!strcmp(arg,"-header")) { header = 1;}
+              else { help(av[0]);}
+              break;
+            case 'i':
+              if (!strcmp(arg,"-ignore_jet_inconsistency") || !strcmp(arg,"-ignoreJI") || !strcmp(arg,"-ignoreji"))
+                ignoreJetInconsistency=1;
+              break;
+            case 'j':
+              if (!strcmp(arg,"-jet")) { genJet = 1;genMyJet=1; }
+              else if (!strcmp(arg,"-jhelper") || !strcmp(arg,"-jethelper") || !strcmp(arg,"-jet_helper")) { jhelper = 1;}
+              else if (!strcmp(arg,"-jetlibrary") || !strcmp(arg,"-jet_library") || !strcmp(arg,"-jetlib")
+                       || !strcmp(arg,"-jet_lib") || !strcmp(arg,"-jlib")) {
+                if ( ac > i+1) {
+                  overwriteJetLibrary=av[i+1];
+                  i++;
+                }
+              }
+              break;
+            case 'l':
+              if (!strcmp(arg,"-long_double") || !strcmp(arg,"-longdouble")) {
+                if (nariths==0) {my_float_arith=ARITH_LONG_DOUBLE; nariths++; arith="longdouble";}
+              }
+              if (!strcmp(arg,"-long_complex") || !strcmp(arg,"-longcomplex")) {
+                if (nariths==0) {my_float_arith=ARITH_COMPLEX_LONG_DOUBLE; nariths++; arith="longcomplex";}
+              }
+              break;
+            case 'm':
+              if (!strcmp(arg,"-main_only") || !strcmp(arg,"-mainonly")) { genMain = 1; }
+              else if (!strcmp(arg,"-main")) { genMain = 2; }
+              else if (!strcmp(arg,"-mpfr"))
+              { if (nariths==0) {my_float_arith=ARITH_MPFR; nariths++; arith="mpfr";} }
+              else if (!strcmp(arg,"-mpfr_precision")) {
+                if ( ac > i+1 && atoi(av[i+1]) > 0)
+                  {
+                    if (nariths==0)
+                      {
+                        my_float_arith=ARITH_MPFR; nariths++; arith="mpfr";
+                        mpfr_precision = atoi(av[i+1]);
+                        i++;
+                      }
+                  } else {
+                    fprintf(stderr,"\t The -mpfr_precision flag must be followed by PRECISION in number of bits\n");
+                    exit(1);
+                  }
+              }
+              else if (!strcmp(arg,"-mpc"))
+              { if (nariths==0) {my_float_arith=ARITH_MPC; nariths++; arith="mpc";} }
+              else if (!strcmp(arg,"-mpc_precision")) {
+                if ( ac > i+1 && atoi(av[i+1]) > 0)
+                  {
+                    if (nariths==0)
+                      {
+                        my_float_arith=ARITH_MPC; nariths++; arith="mpc";
+                        mpc_precision[0] = atoi(av[i+1]); i++;
+                        if ( ac > i+1 && atoi(av[i+1]) > 0) {
+                          mpc_precision[1] = atoi(av[i+1]);
+                          i++;
+                        } else {
+                          mpc_precision[1] = mpc_precision[0];
+                        }
+                      }
+                  } else {
+                    fprintf(stderr,"\t The -mpc_precision flag must be followed by [PRECISION_REAL | PRECISION_IMAG] in number of bits\n");
+                    exit(1);
+                  }
+              }
+              break;
 	    case 'n':                   /* -name */
               if (!strcmp(arg,"-n") || !strcmp(arg,"-name"))
 		{
@@ -136,62 +322,24 @@ int main(int ac, char **av)
 		}
 	      }
 	      */
-	      break;
-	    case 'u':
-              if (!strcmp(arg,"-u") || !strcmp(arg,"-ud") || !strncmp(arg,"-userdefined", 9))
-		{
-                  if (i+2 < ac && av[i+1][0] != '-' && av[i+2][0] != '-' ) {
-		    i++; uss_name = av[i];
-                    i++;  uso_name = av[i];
-		  } else {  help(av[0]);  }
-		}
               break;
-	    case 'f':
-              if (!strcmp(arg,"-f77")) { f77hook=1;}
-              if (!strcmp(arg,"-float128") || !strcmp(arg,"-f128")) {
-		qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=0; float128=1;mpfr=0; complexx=0; lcomplex=0; complexx128=0; mpc=0; nariths++; arith="_float128";
-	      }
-	      break;	      	      
-	      break;
-            case 'm':
-              if (!strcmp(arg,"-main_only") || !strcmp(arg,"-mainonly")) { genMain = 1; }
-              else if (!strcmp(arg,"-main")) { genMain = 2; }
-              else if (!strcmp(arg,"-mpfr"))
-              { ddouble = 0; gmp=0; ldouble=0; mpfr=1; complexx=0; lcomplex=0;  complexx128=0; mpc=0; nariths++; arith="mpfr";}
-              else if (!strcmp(arg,"-mpfr_precision")) {
-                if ( ac > i+1 && atoi(av[i+1]) > 0)
-                  {
-                    ddouble=0; ldouble=0; float128=0;
-                    gmp =0; qd4 = qd2 = 0; mpfr=1; complexx=0; lcomplex=0; complexx128=0; mpc=0;
-                    mpfr_precision = atoi(av[i+1]);
-                    i++;
-                    nariths++; arith="mpfr";
-                  } else {
-                    fprintf(stderr,"\t The -mpfr_precision flag must be followed by PRECISION in number of bits\n");
-                    exit(1);
-                  }                
-              }
-              else if (!strcmp(arg,"-mpc"))
-              { ddouble = 0; gmp=0; ldouble=0; mpfr=0; complexx=0; lcomplex=0;  complexx128=0; mpc=1; nariths++; arith="mpc";}
-              else if (!strcmp(arg,"-mpc_precision")) {
-                if ( ac > i+1 && atoi(av[i+1]) > 0)
-                  {
-                    ddouble=0; ldouble=0; float128=0;
-                    gmp =0; qd4 = qd2 = 0; mpfr=0;  complexx=0; lcomplex=0; complexx128=0; mpc=1;
-                    mpc_precision[0] = atoi(av[i+1]);
-                    i++;
-                    if ( ac > i+1 && atoi(av[i+1]) > 0) {
-                      mpc_precision[1] = atoi(av[i+1]);
-                      i++;
-                    } else {
-                      mpc_precision[1] = mpc_precision[0];
+            case 'o':
+              if (!strcmp(arg,"-o") || !strcmp(arg,"-out"))
+                {
+                  if (++i < ac)
+                    {
+                      char *str = av[i];
+                      if ((outfile = fopen(str, "w")) == NULL)
+                        {
+                          fprintf(stderr, "Cannot open '%s'\n", str);
+                          exit(1);
+                        }
                     }
-                    nariths++; arith="mpc";
-                  } else {
-                    fprintf(stderr,"\t The -mpc_precision flag must be followed by [PRECISION_REAL | PRECISION_IMAG] in number of bits\n");
-                    exit(1);
-                  }                
-              }
+                  else --i;
+                }
+              break;
+            case 'p':
+              if (!strncmp(arg,"-poincare",10)) { genPoincare = 1; genExpressions = 1;}
               break;
             case 's':
               if (!strcmp(arg,"-step")) {
@@ -206,83 +354,21 @@ int main(int ac, char **av)
                 } else --i;                
               } else if ( !strcmp(arg, "-sqrt")) {
                 use_rational_exponent=1;         
-	      }     
-              break;
-            case 'j':
-              if (!strcmp(arg,"-jet")) { genJet = 1;genMyJet=1; }
-              else if (!strcmp(arg,"-jhelper") || !strcmp(arg,"-jethelper") || !strcmp(arg,"-jet_helper")) { jhelper = 1;}
-              else if (!strcmp(arg,"-jetlibrary") || !strcmp(arg,"-jet_library") || !strcmp(arg,"-jetlib") 
-		       || !strcmp(arg,"-jet_lib") || !strcmp(arg,"-jlib")) {
-                if ( ac > i+1) {
-		  overwriteJetLibrary=av[i+1];
-		  i++;		  
-		}
-	      }	      	      	      
+              }
               break;
             case 't':
 //              if (!strcmp(arg,"-testjet")) { genMyJet = 1;}
               if (!strcmp(arg,"-testjet")) { genTestJet = 1;}
               break;
-	    case 'h':
-              if (!strcmp(arg,"-header_name") || !strcmp(arg,"-headername")  ) { if (++i < ac) { header_name = av[i];} }
-              else if (!strcmp(arg,"-header")) { header = 1;}
-	      else { help(av[0]);}
-	      break;
-	    case 'd':
-              if (!strcmp(arg,"-debug") || !strcmp(arg,"-d"))
-		debug = 1;
+            case 'u':
+              if (!strcmp(arg,"-u") || !strcmp(arg,"-ud") || !strncmp(arg,"-userdefined", 9))
+                {
+                  if (i+2 < ac && av[i+1][0] != '-' && av[i+2][0] != '-' ) {
+                    i++; uss_name = av[i];
+                    i++;  uso_name = av[i];
+                  } else {  help(av[0]);  }
+                }
               break;
-	    case 'l':
-              if (!strcmp(arg,"-long_double") || !strcmp(arg,"-longdouble")) {
-                qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=1; float128=0; mpfr=0; complexx=0;  lcomplex=0; complexx128=0; mpc=0; nariths++; arith="longdouble";                
-              }
-              if (!strcmp(arg,"-long_complex") || !strcmp(arg,"-longcomplex")) {
-                float128=0; qd4 = 0; qd2 = 0; ddouble=0; gmp=0;  ldouble=0; mpfr=0; complexx=0; lcomplex=1; complexx128=0; mpc=0; nariths++; arith="longcomplex";                
-              }
-	      break;
-            case 'g':
-              if (!strcmp(arg,"-gmp_precision")) {
-                if ( ac > i+1 && atoi(av[i+1]) > 0)
-                  {
-                    ddouble=0; ldouble=0; float128=0;
-                    gmp =1; qd4 = qd2 = 0; mpfr=0; complexx=0; lcomplex=0; complexx128=0; mpc=0;
-                    gmp_precision = atoi(av[i+1]);
-                    i++;
-                    nariths++; arith="gmp";
-                  } else {
-                    fprintf(stderr,"\t The -gmp_precision flag must be followed by PRECISION in number of bits\n");
-                    exit(1);
-                  }
-              } else if (!strcmp(arg,"-gmp")) {
-                ddouble=0; ldouble=0; float128=0;
-                gmp =1; qd4 = qd2 = 0; mpfr=0; complexx=0; lcomplex=0; complexx128=0; mpc=0; 
-                nariths++; arith="gmp";
-              }
-              break;
-            case 'c':
-              if (!strcmp(arg,"-constantsafe") || !strcmp(arg,"-const"))
-                { cdouble = 1;}
-              else if (!strcmp(arg,"-complex") || !strcmp(arg,"-cmplx")) 
-              {ddouble = 0; gmp=0; ldouble=0; float128=0;mpfr=0;complexx=1;lcomplex=0;complexx128=0; mpc=0; nariths++; arith="cmplx";}
-              else if (!strcmp(arg,"-complex128") || !strcmp(arg,"-cmplx128")) 
-              {ddouble = 0; gmp=0; ldouble=0; float128=0; mpfr=0;complexx=0;lcomplex=0;complexx128=1; mpc=0; nariths++; arith="cmplx128";}
-	      break; 
-	    case 'e':
-              if (!strncmp(arg,"-expandsum",8))
-		{
-                  if (++i < ac) expandsum = atoi(av[i]);
-		  else --i;
-		}
-              else if (!strncmp(arg,"-expandpower",8))
-		{
-                  if (++i < ac) expandpower = atoi(av[i]);
-		  else --i;
-		}
-	      break;
-            case 'i':
-              if (!strcmp(arg,"-ignore_jet_inconsistency") || !strcmp(arg,"-ignoreJI") || !strcmp(arg,"-ignoreji"))
-		ignoreJetInconsistency=1;
-	      break;
 	    case 'v':
               if (!strcmp(arg,"-v") ||  !strcmp(arg,"-verbose") ) debug = 1;
               else  if (!strcmp(arg,"-version"))
@@ -290,22 +376,7 @@ int main(int ac, char **av)
                   fprintf(stderr,"%s\n", versionString);
                   exit(0);
                 }
-	      break;
-	    case 'o':
-              if (!strcmp(arg,"-o") || !strcmp(arg,"-out"))
-		{
-                  if (++i < ac)
-		    { 
-		      char *str = av[i];
-                      if ((outfile = fopen(str, "w")) == NULL)
-			{
-			  fprintf(stderr, "Cannot open '%s'\n", str);
-			  exit(1);
-			}
-		    }
-		  else --i;
-		}
-	      break;
+              break;
 	    default:
 	      break;
 	    }
@@ -316,6 +387,11 @@ int main(int ac, char **av)
             fprintf(stderr, "Cannot open '%s'\n", av[i]);
             exit(2);
           } else {
+	     if(saved_input_file == NULL) {
+	       int  len= strlen(av[i]);
+                saved_input_file = (char *)malloc( (len+len+128)*sizeof(char));
+		strcpy(saved_input_file, av[i]);
+	     }	  
             if (suffix == NULL)
               {
                 int ii, len = strlen(av[i]);
@@ -390,23 +466,27 @@ int main(int ac, char **av)
   initialize_vars();
   yyin = infile;
   yyparse();
+  if(yyin != stdin) fclose(yyin);
   showPaserInfo();
   identifyFunctions();   
   checkVars();
   checkEquations();
   decompose();
   showVars();
-  genVariables(); 
+  genVariables();
+
   if (neqns == 0) {fprintf(stderr, "\nNo ODEs present. Bye!\n\n"); exit(3);}
    
   checkJetVars();
  
   if(num_jet_vars==0) genMyJet = 0;
+
+  if (genMyJet) genMyCoef=1;
   
-  num_symbols_tmp_copy = num_symbols;
+  num_jet_symbols_tmp_copy = num_jet_symbols;
   deg_jet_vars_tmp_copy = deg_jet_vars;
   
-  if(overwriteJetLibrary != NULL)
+  if (overwriteJetLibrary != NULL)
     {
       /*
        * if overwrite is requested, and the supplied library does not apply, 
@@ -414,91 +494,126 @@ int main(int ac, char **av)
        */
       
       if(!strcmp(overwriteJetLibrary, "1_1") || !strcmp(overwriteJetLibrary, "jet1_1")) {
-	// Macros, can only be used in 1_1
+          // Macros, can only be used in 1_1
+          if (num_jet_symbols == 1 && deg_jet_vars == 1)
+            {my_jet_arith = ARITH_JET1_1;}
+          else
+            {
+              fprintf(stderr, "\nRequested 1_1 arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
       } else if(!strcmp(overwriteJetLibrary, "1_n") || !strcmp(overwriteJetLibrary, "jet1")) {
         // 1 symbol, arbitary degree
+          if (num_jet_symbols == 1 && deg_jet_vars > 0)
+            {my_jet_arith = ARITH_JET1;}
+          else
+            {
+              fprintf(stderr, "\nRequested 1_n arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
       } else if(!strcmp(overwriteJetLibrary, "n_1") || !strcmp(overwriteJetLibrary, "jet_1")) {
         // n symbols,  degree 1
+          if (num_jet_symbols > 0 && deg_jet_vars == 1)
+            {my_jet_arith = ARITH_JET_1;}
+          else
+            {
+              fprintf(stderr, "\nRequested n_1 arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
       } else if(!strcmp(overwriteJetLibrary, "2_n") || !strcmp(overwriteJetLibrary, "jet2")) {
 	// 2 symbols, fall through by default
+          if (num_jet_symbols == 2 && deg_jet_vars > 0)
+            {my_jet_arith = ARITH_JET2;}
+          else
+            {
+              fprintf(stderr, "\nRequested 2_n arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
       } else if(!strcmp(overwriteJetLibrary, "n_2") || !strcmp(overwriteJetLibrary, "jet_2")) {
 	// deg=2, n symbols. only overrite 2_n with 2 symbols.
+          if (num_jet_symbols > 0 && deg_jet_vars == 2)
+            {my_jet_arith = ARITH_JET_2;}
+          else
+            {
+              fprintf(stderr, "\nRequested n_2 arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
       } else if(!strcmp(overwriteJetLibrary, "m_n") || !strcmp(overwriteJetLibrary, "jet_m")) {
           // can overwrite all
-          num_symbols_tmp_copy = -2;
+          if (num_jet_symbols > 0 && deg_jet_vars > 0)
+            {my_jet_arith = ARITH_JET_m;}
+          else
+            {
+              fprintf(stderr, "\nRequested m_n arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
+          num_jet_symbols_tmp_copy = -2;
           deg_jet_vars_tmp_copy= -2;
       } else if(!strcmp(overwriteJetLibrary, "tree") || !strcmp(overwriteJetLibrary, "jet_tree")) {
 	// can overwrite all
-        num_symbols_tmp_copy = -1;
-        deg_jet_vars_tmp_copy= -1;
+          if (num_jet_symbols > 0 && deg_jet_vars > 0)
+            {my_jet_arith = ARITH_JET_TREE;}
+          else
+            {
+              fprintf(stderr, "\nRequested tree arithmetic with %d_%d inputs. Bye!\n\n", num_jet_symbols, deg_jet_vars);
+              exit(4);
+            }
       } else {
         fprintf(stderr, "jet lib invalid\n"); fflush(stderr); exit(1);
       }
     }
-  else if(num_symbols > 0 && deg_jet_vars > 0)
+  else if (num_jet_symbols > 0 && deg_jet_vars > 0)
     {
-      num_symbols_tmp_copy = -1;
+      num_jet_symbols_tmp_copy = -1;
       deg_jet_vars_tmp_copy= -1;
-    }
 
-  if (num_symbols_tmp_copy ==0 || deg_jet_vars_tmp_copy==0)
-    {
-      index_my_jet_header = HEADER_NONE;
-      index_my_jet_code = CODE_NONE;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      fprintf(outfile, "/* No jet */\n");      
+      if (num_jet_symbols_tmp_copy ==0 || deg_jet_vars_tmp_copy==0)
+        {my_jet_arith = ARITH_JET_NONE;}
+      else if (num_jet_symbols_tmp_copy==1 && deg_jet_vars_tmp_copy==1)
+        {my_jet_arith = ARITH_JET1_1;}
+      else if (num_jet_symbols_tmp_copy > 0 && deg_jet_vars_tmp_copy==1)
+        {my_jet_arith = ARITH_JET_1;}
+      else if (num_jet_symbols_tmp_copy==1 && deg_jet_vars_tmp_copy > 0)
+        {my_jet_arith = ARITH_JET1;}
+      else if (num_jet_symbols_tmp_copy==2 && deg_jet_vars_tmp_copy > 0)
+        {my_jet_arith = ARITH_JET2;}
+      else if (num_jet_symbols_tmp_copy > 0 && deg_jet_vars_tmp_copy==2)
+        {my_jet_arith = ARITH_JET_2;}
+      else if (num_jet_symbols_tmp_copy==-2 && deg_jet_vars_tmp_copy==-2)
+        {my_jet_arith = ARITH_JET_m;}
+      else {my_jet_arith = ARITH_JET_TREE;}
     }
-  else if (num_symbols_tmp_copy==1 && deg_jet_vars_tmp_copy==1)
+  else if (num_jet_symbols == 0 && deg_jet_vars == 0)
     {
-      index_my_jet_header = HEADER_JET1_1;
-      index_my_jet_code = CODE_JET1_1;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      fprintf(outfile, "/* Using jet lib: jet1_1. one symbol, degree one */\n");      
-    }
-  else if (deg_jet_vars_tmp_copy==1)
-    {
-      index_my_jet_header = HEADER_JET_1;
-      index_my_jet_code = CODE_JET_1;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      fprintf(outfile, "/* Using jet lib: jet_1. degree one, n symbols*/\n");            
-    }
-  else if (num_symbols_tmp_copy==1)
-    {
-      index_my_jet_header = HEADER_JET1;
-      index_my_jet_code = CODE_JET1;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      fprintf(outfile, "/* Using jet lib: jet1. one symbol, degree n */\n");            
-    }
-  else if (num_symbols_tmp_copy==2)
-    {
-      index_my_jet_header = HEADER_JET2;
-      index_my_jet_code = CODE_JET2;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      jetStorageType=1;
-      fprintf(outfile, "/* Using jet lib: jet2. 2 symbols, degree n */\n");            
-    }
-  else if (deg_jet_vars_tmp_copy==2)
-    {
-      index_my_jet_header = HEADER_JET_2;
-      index_my_jet_code = CODE_JET_2;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      fprintf(outfile, "/* Using jet lib: jet_2. n symbols, degree 2 */\n");            
-    }
-  else if (deg_jet_vars_tmp_copy==-2)
-    {
-      index_my_jet_header = HEADER_JET_m;
-      index_my_jet_code = CODE_JET_m;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      fprintf(outfile, "/* Using jet lib: jet_m.   general lib */\n");            
+      /* taylor version1 */
     }
   else
     {
-      index_my_jet_header = HEADER_JET_TREE;
-      index_my_jet_code = CODE_JET_TREE;
-      my_jet_prefix = my_jet_prefixes[index_my_jet_code];
-      jetStorageType=2;
-      fprintf(outfile, "/* Using jet lib: jet_tree. general lib */\n");            
-    }    
+      fprintf(stderr, "\nerror: %d_%d symbols and degree are not allowed. Bye!\n", num_jet_symbols, deg_jet_vars);
+      fflush(stderr); exit(4);
+    }
+
+  if (my_coef_flags & NON_EMPTY)
+    {
+      /* default behaviours: if symbols or degree were not provided, we take them as the ones for my_jet */
+      if (!(my_coef_flags & SYMBOLS)) {my_coef_num_symbols = num_jet_symbols;}
+      if (!(my_coef_flags & DEGREE)) {my_coef_deg = deg_jet_vars;}
+
+      /* if symbols and degree coincide with those of my_jet, some tables can be reused */
+      if (my_coef_num_symbols == num_jet_symbols && my_coef_deg == deg_jet_vars && my_jet_arith == my_coef_arith)
+        {my_coef_flags|= AS_MYJET;}
+
+      if (my_jet_arith == ARITH_JET1_1) my_jet_arith = ARITH_JET1_1_BIS;
+    }
+
+  fprintf(outfile, "/* taylor %s */\n", versionString);
+  setMyCoefIndexes();
+  setMyJetIndexes();
+
+  if (genMyCoef)
+    {
+      my_coef_prefix = my_coef_prefixes[index_my_coef_prefix];
+    }
 
   if (header_only) {
     fprintf(outfile, "%s\n",sample_headerI);              
@@ -512,10 +627,17 @@ int main(int ac, char **av)
   }
 
   genCode();
+
+  //20230418
+  if(genExpressions)   genExpressionCode();
+
+  if(genPoincare) genPoincareSectionCode();
+
   exit(0);
 }
+
 /********************************************************/
-void help(char *name)
+void help(const char *name)
 {
   fprintf(stderr, "Taylor %s\n\n", versionString);
   fprintf(stderr, "Usage: %s \n", name);
@@ -527,7 +649,10 @@ void help(char *name)
   fprintf(stderr, "   -complex |\n");
   fprintf(stderr, "   -long_complex | -complex128 |\n");
   fprintf(stderr, "   -mpc | -mpc_precision [PRECISION_REAL | PRECISION_IMAG] ]\n");
-  fprintf(stderr, "  [-main | -header | -jet | -jet_helper | -main_only ]\n");
+  fprintf(stderr, "  [-main | -header | -jet | -main_only ]\n");
+  fprintf(stderr, "  [-jlib MY_JET_LIB | -jet_helper ]\n");
+  fprintf(stderr, "  [-clib MY_COEF_LIB ]\n");
+  fprintf(stderr, "  [-expression ]\n");
   fprintf(stderr, "  [-step STEP_CONTROL_METHOD ]\n");
   fprintf(stderr, "  [-u | -userdefined STEP_SIZE_FUNCTION_NAME ORDER_FUNCTION_NAME ]\n");
   fprintf(stderr, "  [-f77 ]\n");
@@ -556,22 +681,22 @@ void genSampleHeader(void)
   fprintf(outfile,"#define _NUMBER_OF_STATE_VARS_         %d\n", neqns - nonautonomous);  
   fprintf(outfile,"#define _NUMBER_OF_JET_VARS_           %d\n", njets);
   // 20220608+
-  fprintf(outfile,"#define _NUMBER_OF_MAX_SYMBOLS_        %d\n", num_symbols);
+  fprintf(outfile,"#define _NUMBER_OF_MAX_SYMBOLS_        %d\n", num_jet_symbols);
   
   fprintf(outfile,"#define _MAX_DEGREE_OF_JET_VARS_       %d\n", djets);
   
   // 20220608r
   //fprintf(outfile,"#define _JET_COEFFICIENTS_COUNT_TOTAL_ %d\n",coefficients_count(njets,djets));
-  fprintf(outfile,"#define _JET_COEFFICIENTS_COUNT_TOTAL_ %d\n",coefficients_count(num_symbols,djets));
+  fprintf(outfile,"#define _JET_COEFFICIENTS_COUNT_TOTAL_ %d\n",coefficients_count(num_jet_symbols,djets));
   
 //   fprintf(outfile,"static int _number_of_jet_vars_ =      %d;\n", njets);
   // 20220608+
-//   fprintf(outfile,"static int _number_of_symbols_  =      %d;\n", num_symbols);
+//   fprintf(outfile,"static int _number_of_symbols_  =      %d;\n", num_jet_symbols);
   
 //   fprintf(outfile,"static int _degree_of_jet_vars_ =      %d;\n", djets);
 /*  fprintf(outfile,"static int _monomial_counts_[]  =      {1");
   for(i=1; i<= djets; i++) {
-    int k=num_monomials(num_symbols, i);
+    int k=num_monomials(num_jet_symbols, i);
     jsize +=k;
     fprintf(outfile, ",%d", k);
   }
@@ -581,13 +706,13 @@ void genSampleHeader(void)
   for(i=0;i<= djets; i++) {
     // 20220608r
     //n += num_monomials(njets, i);
-    n += num_monomials(num_symbols, i);    
+    n += num_monomials(num_jet_symbols, i);
     fprintf(outfile, ",%d", n);
   }
   fprintf(outfile, "};\n");*/
 //   fprintf(outfile, "static int _size_of_jet_variable_ =    %d;\n", jsize);
 
-  for(i=1; i<= djets; i++) jsize+=num_monomials(num_symbols, i);
+  for(i=1; i<= djets; i++) jsize+=num_monomials(num_jet_symbols, i);
   fprintf(outfile,"#define _MAX_SIZE_OF_JET_VAR_          %d\n", jsize);    
   fprintf(outfile,"#endif\n\n");
 
@@ -611,7 +736,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",qd_header);
 
     fprintf(outfile, "#endif\n");    
-  } else if (mpfr) {     
+  } else if (my_float_arith == ARITH_MPFR) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");
     fprintf(outfile,"#include <math.h>\n");   
@@ -621,7 +746,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n", mpfr_header);
     
     fprintf(outfile, "#endif\n");        
-  } else if (gmp) {
+  } else if (my_float_arith == ARITH_GMP) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");  
     fprintf(outfile,"#include <string.h>\n");
@@ -631,7 +756,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",gmp_header);
 
     fprintf(outfile, "#endif\n");    
-  } else if (ldouble) {    
+  } else if (my_float_arith == ARITH_LONG_DOUBLE) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n"); 
     fprintf(outfile,"typedef long double MY_FLOAT;\n\n");
@@ -641,7 +766,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",longdouble_header);
     
     fprintf(outfile, "#endif\n");    
-  } else if (float128) {    
+  } else if (my_float_arith == ARITH_FLOAT128) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n"); 
     fprintf(outfile,"#include <quadmath.h>\n");
@@ -652,7 +777,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",_float128_header);
     
     fprintf(outfile, "#endif\n");    
-  } else if (complexx) {     
+  } else if (my_float_arith == ARITH_COMPLEX_DOUBLE) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n"); 
     fprintf(outfile,"#include <complex.h>\n");      
@@ -663,7 +788,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",complex_header);
     
     fprintf(outfile, "#endif\n");
-  } else if (lcomplex) {    
+  } else if (my_float_arith == ARITH_COMPLEX_LONG_DOUBLE) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");
     fprintf(outfile,"#include <complex.h>\n");      
@@ -674,7 +799,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",longcomplex_header);
     
     fprintf(outfile, "#endif\n");
-  } else if (complexx128) {     
+  } else if (my_float_arith == ARITH_COMPLEX128) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");
     fprintf(outfile,"#include <complex.h>\n"); 
@@ -686,7 +811,7 @@ void genSampleHeader(void)
     fprintf(outfile, "%s\n",complex128_header);
     
     fprintf(outfile, "#endif\n");
-  } else if (mpc) {         
+  } else if (my_float_arith == ARITH_MPC) {
     fprintf(outfile,"#include <stdio.h>\n");  
     fprintf(outfile,"#include <stdlib.h>\n");
     fprintf(outfile,"#include <complex.h>\n");
@@ -723,7 +848,16 @@ void genSampleHeader(void)
 //    jetHeader = strlen(sample_header_JET);
   }
 
+  if (genMyCoef) my_coef_prefix = my_coef_prefixes[index_my_coef_prefix];
+
   genMyJetHeader();
+
+  // 20221219 20220614
+  if( jsize > 1)
+    {
+      fprintf(outfile, "%s\n", JetIOHelperHeader);
+    }
+  // 20221219 202206014
 
   /*  function prototypes */
   {
@@ -733,58 +867,82 @@ void genSampleHeader(void)
       fprintf(outfile,"\nMY_FLOAT **%sA(MY_FLOAT t, MY_FLOAT *x, int order, int reuse_last_computation);\n", outNames[i]);
       fprintf(outfile,"\nMY_FLOAT **%s_A(MY_FLOAT t, MY_FLOAT *x, int order, int reuse_last_computation, MY_JET *jetIn, MY_JET ***jetOut);\n", outNames[i]);
       fprintf(outfile, "int       taylor_step_%s(MY_FLOAT *ti, MY_FLOAT *x, int dir, int step_ctl,\n", suffixes[i]);
-      fprintf(outfile, "                          double log10abserr, double log10relerr, \n");
-      fprintf(outfile, "                          MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetInOut);\n\n");
+      fprintf(outfile, "                         double log10abserr, double log10relerr,\n");
+      fprintf(outfile, "                         MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetInOut);\n\n");
     }
+    if(genExpressions){
+      Expression expr = expression_list;
+      while(expr) {
+	Node var = EXPRESSION_NAME(expr);
+	expr =  EXPRESSION_NEXT(expr);
+	//fprintf(outfile,"\nvoid %s(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));
+	//fprintf(outfile,"\nvoid %s_derivative(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));		
+	//fprintf(outfile,"\nMY_FLOAT *%s_value(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));
+
+	fprintf(outfile,"\nMY_FLOAT *%s(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***sOut);", NODE_GIVEN_NAME(var));
+	fprintf(outfile,"\nMY_FLOAT *%s_derivative(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***sOut);", NODE_GIVEN_NAME(var));		
+	fprintf(outfile,"\nMY_FLOAT **%s_taylor_coefficients(MY_FLOAT t, MY_FLOAT *in, int order, MY_JET *sIn, MY_JET ***sOut);\n", NODE_GIVEN_NAME(var));	
+      }
+    }
+    if(genPoincare) {
+      fprintf(outfile,"\nvoid poincare_section_%s(MY_FLOAT *xx_in, \n",suffix);
+      fprintf(outfile,"\t\t int nsteps_in, int nintersections_in, int step_ctl_in,\n");
+      fprintf(outfile,"\t\t double startT_in, double stopT_in,  double step, \n");
+      fprintf(outfile,"\t\t double pEpsilon_in, double tolerance_in, double rtolerance_in, \n");
+      fprintf(outfile,"\t\t MY_FLOAT *(*_poincare_section_f)(MY_FLOAT t, MY_FLOAT *x, MY_FLOAT *v,MY_JET *sIn, MY_JET ***sOut), \n");
+      fprintf(outfile,"\t\t MY_FLOAT *(*_poincare_section_derivative_f)(MY_FLOAT t, MY_FLOAT *x, MY_FLOAT *v,MY_JET *sIn, MY_JET ***sOut),\n");
+      fprintf(outfile,"\t\t int crossing, int intesection_method, char *out_file, MY_JET *sIn \n");
+      fprintf(outfile,");\n");
+      fprintf(outfile,"\nint RK4_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
+      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
+      fprintf(outfile,"\nint RK4QC_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
+      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
+      
+    }
+    if(genExpressions){
+      Expression expr = expression_list;
+      while(expr) {
+	Node var = EXPRESSION_NAME(expr);
+	expr =  EXPRESSION_NEXT(expr);
+	//fprintf(outfile,"\nvoid %s(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));
+	//fprintf(outfile,"\nvoid %s_derivative(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));		
+	//fprintf(outfile,"\nMY_FLOAT *%s_value(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));
+
+	fprintf(outfile,"\nMY_FLOAT *%s(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***sOut);", NODE_GIVEN_NAME(var));
+	fprintf(outfile,"\nMY_FLOAT *%s_derivative(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***sOut);", NODE_GIVEN_NAME(var));		
+	fprintf(outfile,"\nMY_FLOAT **%s_taylor_coefficients(MY_FLOAT t, MY_FLOAT *in, int order, MY_JET *sIn, MY_JET ***sOut);\n", NODE_GIVEN_NAME(var));	
+      }
+    }
+    if(genPoincare) {
+      fprintf(outfile,"\nvoid poincare_section_%s(MY_FLOAT *xx_in, \n",suffix);
+      fprintf(outfile,"\t\t int nsteps_in, int nintersections_in, int step_ctl_in,\n");
+      fprintf(outfile,"\t\t double startT_in, double stopT_in,  double step, \n");
+      fprintf(outfile,"\t\t double pEpsilon_in, double tolerance_in, double rtolerance_in, \n");
+      fprintf(outfile,"\t\t MY_FLOAT *(*_poincare_section_f)(MY_FLOAT t, MY_FLOAT *x, MY_FLOAT *v,MY_JET *sIn, MY_JET ***sOut), \n");
+      fprintf(outfile,"\t\t MY_FLOAT *(*_poincare_section_derivative_f)(MY_FLOAT t, MY_FLOAT *x, MY_FLOAT *v,MY_JET *sIn, MY_JET ***sOut),\n");
+      fprintf(outfile,"\t\t int crossing, int intesection_method, char *out_file, MY_JET *sIn \n");
+      fprintf(outfile,");\n");
+      fprintf(outfile,"\nint RK4_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
+      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
+      fprintf(outfile,"\nint RK4QC_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
+      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");      
+    }    
   }
   fprintf(outfile, "/************************************************************************/\n\n");
-  // 20220614
-  if( jsize > 1)      
-  {
-    fprintf(outfile,"\n/* JET IO Helpers */\n\n");
-
-    fprintf(outfile,"\n/* Set Jet values  */\n");    
-    fprintf(outfile,"int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values);\n");
-    fprintf(outfile,"int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values);\n");
-    fprintf(outfile,"int taylor_make_unit_jet(MY_JET a, int idx, MY_FLOAT *myfloat, double *value);\n");
-    fprintf(outfile,"int taylor_set_jet(MY_JET a, MY_FLOAT *myfloats, double *values, int include_state);\n");
-
-    fprintf(outfile,"\n/* Convert Jet to array */\n");    
-    fprintf(outfile,"MY_FLOAT *taylor_convert_jet_to_array(MY_JET a, int include_state);\n");
-
-    fprintf(outfile,"\n/* Input/Output Jet */\n");
-    fprintf(outfile,"int taylor_input_jet_from_stdin(MY_JET a, int idx) ;\n");
-    fprintf(outfile,"int taylor_input_jet_from_string(MY_JET a, const char *str);\n");
-    fprintf(outfile,"int taylor_output_jet(FILE *file, char *fmt, MY_JET a);\n");
-
-    fprintf(outfile,"\n/* Init/Cleanup Library/Jet */\n");
-    fprintf(outfile,"void taylor_initialize_jet_library();\n");    
-    fprintf(outfile,"void taylor_initialize_jet_library2(int nvars, int degree);\n");
-    fprintf(outfile,"void taylor_initialize_jet_variable(MY_JET *jet);\n");
-    fprintf(outfile,"void taylor_clear_jet_variable(MY_JET *jet);\n");
-    fprintf(outfile,"void taylor_clear_up_jet_library();\n");
-    fprintf(outfile,"int taylor_set_jet_variable_number_of_symbols(int);\n");
-    fprintf(outfile,"int taylor_set_jet_variable_degree(int);\n\n");
-    fprintf(outfile,"void taylor_jet_reduce(MY_JET, double *);\n");
-    fprintf(outfile,"MY_FLOAT *taylor_get_jet_data_array(MY_JET);\n");
-    fprintf(outfile,"const char **taylor_get_variable_names();\n");                
-    fprintf(outfile,"const char **taylor_get_jet_monomials();\n");            
-    
-  }
-  // 202206014
   fprintf(outfile, "#ifdef __cplusplus\n}\n#endif\n");
 }
+
 /********************************************************/
 void genJetHelpers(int add_header_h) {
   int i, jsize=1, djets =deg_jet_vars;
   
   for(i=1; i<= djets; i++) {
-    int k=num_monomials(num_symbols, i);
+    int k=num_monomials(num_jet_symbols, i);
     jsize +=k;
   }
 
   if( jsize > 1)  {          
-    fprintf(outfile, "#ifndef JET_IO_HELPERS\n#define JET_IO_HELPERS\n\n");
+    fprintf(outfile, "#ifndef _JET_IO_HELPERS_\n#define _JET_IO_HELPERS_\n\n");
 
     if(add_header_h)
       fprintf(outfile, "#include \"%s\"\n\n", header_name);
@@ -794,23 +952,24 @@ void genJetHelpers(int add_header_h) {
     int i;
     fprintf(outfile,"\nstatic const char *ode_variable_names[]={ ");
     for(i = 0; i <neqns; i++) {
-      fprintf(outfile, "\"%s\", ",NODE_GIVEN_NAME(equations[i].name));
+      fprintf(outfile, "\"%s\", ", NODE_GIVEN_NAME(equations[i].name));
     }
     fprintf(outfile, "NULL };\n");
-    int djets =deg_jet_vars;
+    int djets = deg_jet_vars;
 
     fprintf(outfile,"\nstatic const char *jet_variable_monomials[]={\n");    
-    for(i = 1; i <= djets; i++)
-      list_monomials2(i, outfile);
+    for(i = 1; i <= djets; i++) {list_monomials2(i, outfile);}
     fprintf(outfile,"\n\nNULL\n\n};\n\n");
     
     //fprintf(outfile, "#endif\n");
 
-    fprintf(outfile, "%s\n", JetVarIOHelpers);
+    fprintf(outfile, "%s\n", JetIOHelperCode);
     
-    output_taylor_jet_reducer(outfile);
+    // 20230411
+    //output_taylor_jet_reducer(outfile);
+    // 20230411
     
-    fprintf(outfile, "#endif\n\n");
+    fprintf(outfile, "#endif /* _JET_IO_HELPERS_ */\n\n");
   }
 }
   
@@ -1113,11 +1272,11 @@ void mn_multiply_jets( int m, int n, int flag ) {
   free( f );
 
   fprintf(outfile, "void jet_m_nm_mul_jet_%s( MY_JET c, MY_JET a, MY_JET b) { \n", suffix);
-  fprintf(outfile, "\tstatic myscal_t tmp1, tmp2;\n");
+  fprintf(outfile, "\tstatic mycoef_t tmp1, tmp2;\n");
   fprintf(outfile, "\tstatic int inited = 0;\n");
   fprintf(outfile,"#pragma omp threadprivate(tmp1, tmp2, inited)\n");
   fprintf(outfile,"\t if(inited == 0) {\n");
-  fprintf(outfile,"\t\tmyscal_init(tmp1); myscal_init(tmp2);\n");
+  fprintf(outfile,"\t\tmycoef_init(tmp1); mycoef_init(tmp2);\n");
   fprintf(outfile,"\t\tinited =1;\n\t}\n"); 
 
   
@@ -1137,22 +1296,22 @@ void mn_multiply_jets( int m, int n, int flag ) {
 	
 	if(cnt == 1) { // special one term case
 	  if(d > 0)
-	    fprintf(outfile, "\t\tmyscal_mul2(c[%d], a[%d], b[%d]);\n\n", IDX(i-1), IDX(term->i), IDX(term->j));
+            fprintf(outfile, "\t\tmycoef_mul2(c[%d], a[%d], b[%d]);\n\n", IDX(i-1), IDX(term->i), IDX(term->j));
 	  else
-	    fprintf(outfile, "\tmyscal_mul2(c[%d], a[%d], b[%d]);\n\n", IDX(i-1), IDX(term->i), IDX(term->j));	      	    
+            fprintf(outfile, "\tmycoef_mul2(c[%d], a[%d], b[%d]);\n\n", IDX(i-1), IDX(term->i), IDX(term->j));
 	} else {
 	  //fprintf(outfile, "\tMakeMyFloatA(tmp2, 0);\n");
 	  while(term) {
-	    fprintf(outfile, "\t\tmyscal_mul2(tmp1, a[%d], b[%d]);\n", IDX(term->i), IDX(term->j));
+            fprintf(outfile, "\t\tmycoef_mul2(tmp1, a[%d], b[%d]);\n", IDX(term->i), IDX(term->j));
 	    if(term->next != NULL) {
 	      if(out == 0) {
-		fprintf(outfile, "\t\tmyscal_set(tmp2, tmp1);\n");
+                fprintf(outfile, "\t\tmycoef_set(tmp2, tmp1);\n");
 		out = 1;
 	      } else {
-		fprintf(outfile, "\t\tmyscal_add2(tmp2, tmp1, tmp2);\n");
+                fprintf(outfile, "\t\tmycoef_add2(tmp2, tmp1, tmp2);\n");
 	      }
 	    } else {
-	      fprintf(outfile, "\t\tmyscal_add2(c[%d], tmp1, tmp2);\n", IDX(i-1));
+              fprintf(outfile, "\t\tmycoef_add2(c[%d], tmp1, tmp2);\n", IDX(i-1));
 	    }
 	    term = term->next;
 	  }
@@ -1160,7 +1319,7 @@ void mn_multiply_jets( int m, int n, int flag ) {
 	  //fprintf(outfile, "\tAssignMyFloat(c[%d], tmp2);\n", IDX(i-1));	      	  
 	}
       } else {
-	fprintf(outfile, "\tmyscal_set_d(c[%d], 0);\n", IDX(i-1)); // shouldn't be here
+        fprintf(outfile, "\tmycoef_set_d(c[%d], 0);\n", IDX(i-1)); // shouldn't be here
       }
     }
     if(d>0) fprintf(outfile, "\t}\n"); 	      	    
@@ -1218,8 +1377,8 @@ void genlexia (int *c, int n) {
   c[0]=ordp-c[inz+1];
 }
 
-int *tree_monomial_order_map() {
-  int dim=num_symbols, kmax=deg_jet_vars, i, j, k, m, r, order,*im, *indicies, *map;
+int *tree_monomial_order_map(int dim, int kmax) {
+  int i, j, k, m, r, order,*im, *indicies, *map;
 
   im = ( int * ) malloc ( (1+dim) * sizeof ( int ) );
   indicies = mn_rearrange_indicies(dim, kmax);
@@ -1252,17 +1411,17 @@ int *tree_monomial_order_map() {
   return map;
 }
 
-void print_jet_tree_monomial_index_mapper() {
+void print_jet_tree_monomial_index_mapper(const char *prefix, const char *suffix, int dim, int kmax) {
   int j=0, *p, *mapper;  
-  fprintf(outfile, "static int _tr_idx_map_[] = {\n");
+  fprintf(outfile, "static int _%s_tr_idx_map_%s_[] = {\\\n",prefix,suffix);
 
-  mapper = tree_monomial_order_map();
+  mapper = tree_monomial_order_map(dim, kmax);
   p = mapper;
   while(*p >= 0) {
     fprintf(outfile, "%3d,", *p);
     p++; j++;
     if(j == 20) {
-      fprintf(outfile, "\n");
+      fprintf(outfile, "\\\n");
       j=0;
     }
   }
@@ -1274,8 +1433,8 @@ void output_jet_multiplication_code(void) {
   if (outfile == NULL) return;  
   
   if(index_my_jet_code == CODE_JET_m) {
-    fprintf(outfile, "/*Multiplication table for degree %d in %d symbols.*/\n", deg_jet_vars,num_symbols);
-    mn_multiply_jets( num_symbols, deg_jet_vars,0);
+    fprintf(outfile, "/*Multiplication table for degree %d in %d symbols.*/\n", deg_jet_vars,num_jet_symbols);
+    mn_multiply_jets( num_jet_symbols, deg_jet_vars,0);
   }
 }
 
@@ -1283,7 +1442,7 @@ void output_jet_multiplication_code(void) {
 int list_monomials2(int degree, FILE *file ) {
   int i, j, k, d, order, *f1;
   int *indicies;
-  int m = num_symbols;
+  int m = num_jet_symbols;
   int n = degree;
 
   order = 1; // one xtra, o count starts with 1.
@@ -1331,7 +1490,7 @@ int list_monomials2(int degree, FILE *file ) {
 int output_taylor_jet_reducer(FILE *outfile) {
   int i, j, d, order, *f1;
   int *indicies;
-  int m = num_symbols;
+  int m = num_jet_symbols;
   int n = deg_jet_vars;
 
   order = 1; // one xtra, o count starts with 1.
@@ -1409,11 +1568,11 @@ int output_taylor_jet_reducer(FILE *outfile) {
     fprintf(outfile, "\tMY_FLOAT *monomials = taylor_jet_monomial_values(params);\n\n");
     fprintf(outfile, "\tif(inited==0){ inited=1;InitMyFloat(ftmp); }\n");    
 
-    //fprintf(outfile, "\tfor(i=1; i< %d; i++) {\n", order-1); fprintf(outfile, "fprintf(stderr, \"%%f \",MY_JET_DATA((a),i);}\nfprintf(stderr,\"\\n\");\n"); 
+    //fprintf(outfile, "\tfor(i=1; i< %d; i++) {\n", order-1); fprintf(outfile, "fprintf(stderr, \"%%f \"," MY_JET_DATA_ACCESS "((a),i);}\nfprintf(stderr,\"\\n\");\n");
     
     fprintf(outfile, "\tfor(i=1; i< %d; i++) {\n", order-1);
-    fprintf(outfile, "\t\tMultiplyMyFloatA(ftmp, MY_JET_DATA((a),i),monomials[i]);\n");
-    fprintf(outfile, "\t\tAddMyFloatA(MY_JET_DATA(a,0), MY_JET_DATA(a,0), ftmp);\n");
+    fprintf(outfile, "\t\tMultiplyMyFloatA(ftmp, " MY_JET_DATA_ACCESS "((a),i),monomials[i]);\n");
+    fprintf(outfile, "\t\tAddMyFloatA(" MY_JET_DATA_ACCESS "(a,0), " MY_JET_DATA_ACCESS "(a,0), ftmp);\n");
     fprintf(outfile, "\t}\n");
     fprintf(outfile, "\tfor(i=0; i< %d; i++) {ClearMyFloat(monomials[i]);}\n", order);    
     fprintf(outfile, "\tfree(monomials);\n");

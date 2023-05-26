@@ -59,6 +59,7 @@ static char f128_out_buf[128];\n\
 #define   SubtractMyFloatA(r,a,b)   (r=(a)-(b))\n\
 #define   SubtractMyFloatD          SubtractMyFloatA\n\
 #define   SubtractMyFloatSI         SubtractMyFloatA\n\
+#define   SubtractDMyFloat          SubtractMyFloatA\n\
 #define   SubtractSIMyFloat         SubtractMyFloatA\n\
 \n\
 /* multiplication r=a*b */\n\
@@ -70,6 +71,8 @@ static char f128_out_buf[128];\n\
 #define   DivideMyFloatA(r,a,b)     (r=(a)/(b))\n\
 #define   DivideMyFloatD(r,a,b)     (r=(a)/(__float128)(b))\n\
 #define   DivideMyFloatSI           DivideMyFloatD\n\
+#define   DivideDMyFloat(r,a,b)     (r=(__float128)(a)/(b))\n\
+#define   DivideSIMyFloat           DivideDMyFloat\n\
 \n\
 /* division by an integer r=a/i */\n\
 #define   DivideMyFloatByInt(r,a,i)    (r=(a)/(__float128)(i))\n\
@@ -111,6 +114,9 @@ static char f128_out_buf[128];\n\
 #define   MyFloatToInt(ir,fa)          (ir=(int)(fa))\n\
 /* convert to double */\n\
 #define   MyFloatToDouble(ir,fa)       (ir=(double)(fa))\n\
+/* convert to string */\n\
+#define   MyFloatToString3(s,fmt,a)    quadmath_snprintf(s,fmt,a)\n\
+#define   MyFloatToString(s,a)         MyFloatToString3(s,\"\%.33Qe\",a)\n\
 \n\
 \n\
 /* boolean operation  */\n\
@@ -120,10 +126,19 @@ static char f128_out_buf[128];\n\
 #define   MyFloatA_LT_B(a,b)        ((a)< (b))\n\
 #define   MyFloatA_EQ_B(a,b)        ((a)==(b))\n\
 #define   MyFloatA_NEQ_B(a,b)       ((a)!=(b))\n\
+#define   MyFloatA_CMP_B(a,b)       ((a)-(b))\n\
+#define   MyFloatA_CMPABS_B(a,b)    (fabsq(a)-fabsq(b))\n\
 \n\
 \n\
-#define   OutputMyFloat(a)          quadmath_snprintf(f128_out_buf, 128, \"%.33Qe\", a),fprintf(stdout,\"%s \",f128_out_buf)\n\
-#define   OutputMyFloat3(file,format,a)     quadmath_snprintf(f128_out_buf, 128, format, a),fprintf(file,\"%s \",f128_out_buf)\n\
+#define   OutputMyFloat3(file,fmt,a)  quadmath_snprintf(f128_out_buf, 128, fmt, a),fprintf(file,\"\%s \",f128_out_buf)\n\
+#define   OutputMyFloat(a)            OutputMyFloat3(stdout, \"\% .33Qe\", a)\n\
+\n\
+#define   InputMyFloat3(file,fmt,a)   (fscanf(file,\"\%128s\",f128_out_buf),a=strtoflt128(f128_out_buf,NULL))\n\
+#define   InputMyFloat(a)             InputMyFloat3(stdin,NULL,a)\n\
+\n\
+#define   StringToMyFloat4(s,fmt,a,n) (a=strtoflt128(s,&(s)),s)\n\
+#define   StringToMyFloat3(s,fmt,a)   a=strtoflt128(s,NULL)\n\
+#define   StringToMyFloat(s,a)        StringToMyFloat3(s,NULL,a)\n\
 \n\
 /************************************************************************/\n\
 ";

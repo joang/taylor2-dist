@@ -1,4 +1,6 @@
 \documentclass[10pt]{article}
+\usepackage[margin=2cm]{geometry}
+\usepackage{secdot}
 \usepackage{listings}
 \usepackage{soul,ifthen}
 \lstnewenvironment{code}[1][]{%
@@ -21,18 +23,20 @@
 \theoremstyle{remark}
 \newtheorem*{warnings}{Warnings}
 
-\usepackage{xcolor} \newcommand{\jg}[1]{\textcolor{violet}{JG: #1}}
+\usepackage{xcolor} 
+\newcommand{\jg}[1]{\textcolor{violet}{JG: #1}}
 \newcommand{\mz}[1]{\textcolor{red}{MZ: #1}}
 
 
 \newcommand{\taylorname}{{\bf taylor}}
-\newcommand{\version}{2.0.2}
+\newcommand{\version}{2.1}
+% \newcommand{\version}{2.0.2}
 % \newcommand{\version}{2.0.1}
 % \newcommand{\version}{2.0.0}
 
 \newcommand{\myfloat}{{\tt MY\symbol{95}FLOAT}}
 \newcommand{\myjet}{{\tt MY\symbol{95}JET}}
-\newcommand{\myscal}{{\tt MY\symbol{95}SCAL}}
+\newcommand{\mycoef}{{\tt MY\symbol{95}COEF}}
 
 \newcommand{\inputfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt lorenz1.eq}}{%
@@ -45,7 +49,8 @@
 \ifthenelse{\equal{#1}{sec:ex_equilibria}}{{\tt lorenz5.eq}}{%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt model.eq}}{%
 \ifthenelse{\equal{#1}{sec:ex_driving}}{{\tt lorenz1.eq}}{%
-ERROR!!!!!}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}myjet.eq}}{%
+ERROR!!!!!}}}}}}}}}}}%
 }
 \newcommand{\odecfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt lorenz1.c}}{%
@@ -58,7 +63,8 @@ ERROR!!!!!}}}}}}}}}}%
 \ifthenelse{\equal{#1}{sec:ex_equilibria}}{{\tt lorenz5.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt jdata.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_driving}}{{\tt lorenz.c}}{%
-ERROR!!!!!}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}myjet.c}}{%
+ERROR!!!!!}}}}}}}}}}}%
 }
 \newcommand{\odehfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt taylor.h}}{%
@@ -71,7 +77,8 @@ ERROR!!!!!}}}}}}}}}}%
 \ifthenelse{\equal{#1}{sec:ex_equilibria}}{{\tt lorenz5.h}}{%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt jdata.h}}{%
 \ifthenelse{\equal{#1}{sec:ex_driving}}{{\tt taylor.h}}{%
-ERROR!!!!!}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}myjet.h}}{%
+ERROR!!!!!}}}}}}}}}}}%
 }
 \newcommand{\mainfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt main\symbol{95}lrnz.c}}{%
@@ -83,7 +90,8 @@ ERROR!!!!!}}}}}}}}}}%
 \ifthenelse{\equal{#1}{sec:ex_omp}}{{\tt main\symbol{95}omp.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_equilibria}}{{\tt main\symbol{95}equilibria.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt jdata\symbol{95}main.c}}{%
-ERROR!!!!!}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}main.c}}{%
+ERROR!!!!!}}}}}}}}}}%
 }
 
 \newcommand{\inputfile}{}
@@ -97,17 +105,10 @@ ERROR!!!!!}}}}}}}}}%
 
 \author{Joan Gimeno {\tt <joan@maia.ub.es>} \and \`Angel Jorba {\tt
     <angel@maia.ub.es>} \and Maorong Zou {\tt <mzou@math.utexas.edu>}}
-\date{November 28, 2022} % version 2.0.2
+\date{May 26, 2023} % version 2.1
+% \date{November 28, 2022} % version 2.0.2
 % \date{November 7, 2022} % version 2.0.1
 % \date{September 9, 2022} % version 2.0.0
-
-
-\voffset=-20mm       % vertical displacement
-\oddsidemargin=3mm   % horizontal displacement (odd pages)
-\evensidemargin=3mm  % horizontal displacement (even pages)
-%
-\textwidth=160mm
-\textheight=225mm
 
 \begin{document}
 \maketitle
@@ -207,12 +208,12 @@ other variant of Unixes. It has been tested on Linux and OsX.
       user)
     
     
-    \tt {wget -qO - https://web.ma.utexas.edu/repos/deb/taylor.gpg.key
-      | apt-key add - } }
+    \tt{wget -qO - https://web.ma.utexas.edu/repos/deb/taylor.gpg.key
+      | apt-key add - }}
     \item{Add the Taylor repository 
 
     
-    \tt{ echo "deb http://web.ma.utexas.edu/repos/deb focal main " >
+    \tt{echo "deb http://web.ma.utexas.edu/repos/deb focal main " >
       /etc/apt/sources.list.d/taylor.list }}
     \item{Install taylor 
 
@@ -303,12 +304,12 @@ transparent unless you want to modify them. Here is the list.
       arbitrary number of symbols, and arbitrary degree. It works well
       when the jet size is below 1000 terms, i.e., whenever ${{d+m}
         \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on \url{
- http://www.maia.ub.es/dsg/param/chapter2.html}}.
+    \item \verb+jet_tree+ a general library\footnote{based on
+    \url{http://www.maia.ub.es/dsg/param/chapter2.html}.}.
 \end{itemize}
 
 
-\section{What is the syntax in \taylorname{}} \label{sec:syntax}
+\section{Input syntax in \taylorname{}} \label{sec:syntax}
 
 \subsection*{ODE declaration}
 To use \taylorname{}, the first order of business is to prepare an
@@ -340,7 +341,7 @@ non-nested sums with static range. For example,
     ss = sum( i*sin(i * x)+ i *cos(i*t), i=1,10);
     diff(x,t) = ss;
     diff(y,t) = if(y>t) {  if(y>0.0) { y } else { 1-y }  }
-                else    { y+t};
+                else    { y+t };
 \end{verbatim}
 
 \subsection*{Parameter declaration}
@@ -365,11 +366,12 @@ For example,
 \end{verbatim}
 In the first example, the variables {\tt x},{\tt y} will be treated as
 polynomials of 2 symbols of degree up to 2.
-
+Lyap
 In the second example, all the state variables will be polynomials of
 3 symbols and degree 1. Note that if our system of ODEs consists of 3
 equations, this is equivalent of integrating the ODEs along with its
 first order variational equations.
+
 
 \bigskip
 
@@ -396,6 +398,37 @@ form
 If $y$ is a jet variable, then $x$ must be a jet variable due to
 (\ref{A2}). However, it is allowed to consider $x$ a jet variable and
 $y$ not; as far as $f$ is written first (\ref{A1}).
+
+%\iffalse
+\iftrue
+\subsection*{Expression declaration}
+Occasionally, there are needs to evaluate certain expressions along an orbit of the ODE. For example,
+when integrating a Hamiltonian system, one may wish to check the value of the Hamiltonian along the orbit.
+\taylorname{} allows you to declare expressions and generates the C functions for them.  The syntax is
+\begin{verbatim}
+    expression energy=0.5*(xp^2+yp^2)+0.5*(x^2+y^2+2*x^2*y -2./3.*y^3);
+\end{verbatim}
+
+When \taylorname{} is run with the \verb+-expression+ flag, functions like the following will be generated.
+\begin{verbatim}    
+    MY_FLOAT *energy(MY_FLOAT t, MY_FLOAT *x_in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***jOut);
+    MY_FLOAT *energy_derivative(MY_FLOAT t, MY_FLOAT *x_in, 
+                                MY_FLOAT *out, MY_JET *sIn, MY_JET ***jOut);
+    MY_FLOAT **energy_taylor_coefficients(MY_FLOAT t, MY_FLOAT *x_in, MY_FLOAT *out, int order,
+                                          MY_JET *sIn, MY_JET ***jOut);
+\end{verbatim}
+Here \verb+t+ is time, \verb+x_in+ is the state variable assigned in the same order as the ODEs are defined,  \verb+sIn+ is the value of the attached jet vars or NULL. 
+\verb+out+, if not NULL, will be used to return the value(s) of the expressions. \verb+jOut+ is used to return the value of the evolved jet variables if provided.
+The first two functions returns a static array of \verb+MY_FLOATs+. The last one returns the taylor coefficients of up to order \verb+order+ of the declared expressions. 
+
+\bigskip
+Multiple expressions can be declared on the same line, for example
+\begin{verbatim}
+    expression two_exprs = x^2+y^2, x *xp + y *yp;
+\end{verbatim}
+This is the preferred (and more efficient) way to use expressions if you need to evaluate a few of them.
+\fi
+
 
 \section{How to run \taylorname{}}
 
@@ -603,7 +636,7 @@ For example, we can add the following lines to
     relative_error_tolerance = 0.1e-16;
 \end{verbatim}
 
-\subsection{Extended precision arithmetic} \label{sec:ex1}
+\subsection{Using extended precision arithmetic} \label{sec:ex1}
 \renewcommand{\inputfile}{\inputfiles{sec:ex1}}
 \renewcommand{\odecfile}{\odecfiles{sec:ex1}}
 \renewcommand{\odehfile}{\odehfiles{sec:ex1}}
@@ -644,7 +677,7 @@ properly. We strongly suggest you to read the documentation that comes
 with these libraries before using them.
 
 
-\subsection{Using External Parameters} \label{sec:ex_params}
+\subsection{Using external parameters} \label{sec:ex_params}
 \renewcommand{\inputfile}{\inputfiles{sec:ex_params}}
 \renewcommand{\odecfile}{\odecfiles{sec:ex_params}}
 \renewcommand{\odehfile}{\odehfiles{sec:ex_params}}
@@ -742,7 +775,7 @@ Now we can compile \odecfile{} and \mainfile{} and run the executable.
    ./a.out
 \end{command}
 
-\subsection{First order directional derivative} \label{sec:ex_lyap}
+\subsection{Computing first order directional derivative} \label{sec:ex_lyap}
 \renewcommand{\inputfile}{\inputfiles{sec:ex_lyap}}
 \renewcommand{\odecfile}{\odecfiles{sec:ex_lyap}}
 \renewcommand{\odehfile}{\odehfiles{sec:ex_lyap}}
@@ -817,7 +850,7 @@ driver generated by \taylorname{}.
                                       log10abs, log10rel, 
                                       &stopT, &nextT, &order, jetIn);
     
-        if(++counter >= 1000) {  // we normalize the jet every 1000 steps                                                                             
+        if(++counter >= 1000) {  // we normalize the jet every 1000 steps
           norm = 0;
           for(i=0; i < 3; i++)  norm += MY_JET_DATA(jetIn[i],1) * MY_JET_DATA(jetIn[i],1);  
     
@@ -845,13 +878,14 @@ Now we can compile and run the code.
     gcc \mainfile{} \odecfile{} -lm
     ./a.out
 \end{command}
-After a few seconds, it should report a result similar to the following.
+After a few seconds, it should report a result similar to the
+following.
 \begin{verbatim}
-    The estimated Lyapunov exponent is: 9.055203
+    The estimated Lyapunov exponent is: 0.9055203
 \end{verbatim}%0.903542
 
 
-\subsection{First order variational derivative} \label{sec:ex_varieq}
+\subsection{Computing first order variational derivative} \label{sec:ex_varieq}
 \renewcommand{\inputfile}{\inputfiles{sec:ex_varieq}}
 \renewcommand{\odecfile}{\odecfiles{sec:ex_varieq}}
 \renewcommand{\odehfile}{\odehfiles{sec:ex_varieq}}
@@ -1172,6 +1206,60 @@ studies.
     }
 \end{code}
 
+\subsection{Input/Output \myjet{}} 
+\renewcommand{\inputfile}{\inputfiles{sec:ex_io_myjet}}
+\renewcommand{\odecfile}{\odecfiles{sec:ex_io_myjet}}
+\renewcommand{\odehfile}{\odehfiles{sec:ex_io_myjet}}
+\renewcommand{\mainfile}{\mainfiles{sec:ex_io_myjet}}
+
+\taylorname{} also provides a standard way to write and read a
+\myjet{}. Let us see it with a very simple example. First let us
+create a dummy ODE input file \inputfile{} Lorenz model.
+\begin{code}[title={File: \inputfile{}}]
+    x' = x;    
+    jet all symbols 2 deg 4;
+\end{code}
+and let us generate the source and header files using \taylorname{},
+\begin{command}
+    taylor -o \odehfile{} -header \inputfile{}
+    taylor -o \odecfile{} -jet -step -headername \odehfile{} \inputfile{}
+\end{command}
+The \mainfile{} initializes a jet from a string, it computes the its
+square, saves it to a file and read it from the same file. We strongly
+recommend to check I/O of the different \myfloat{} types.
+\begin{code}[title={File: \mainfile{}}]
+    #include "stdio.h"
+    #include "^\odehfile{}^"
+
+    int main(void)
+    {
+      FILE *file=NULL;
+      MY_JET x,y;
+      
+      InitUpJet();
+      
+      InitJet(x); InitJet(y); 
+      
+      MY_JET_FUN(sscanf)("1 2 2 1 0 3", "%lf", x);
+      
+      printf("x= "); OutputJet("%g ", x); printf("\n");
+      
+      MY_JET_FUN(mul2)(y, x, x);
+      
+      
+      file = fopen("kk.txt", "w");   
+      MY_JET_FUN(fprintf)(file, "% .15e\n", y);  
+      fclose(file); file=NULL;
+      
+      file = fopen("kk.txt", "r");   
+      MY_JET_FUN(fscanf)(file, "%lf ", x);  
+      fclose(file); file=NULL;
+      
+      ClearJet(y); ClearJet(x); 
+      ClearUpJet();
+      return 0;
+    }
+\end{code}
 
 \section{Extra details for guru users} \label{sec:advanced}
 This section is intended to provide extra details that an experienced
@@ -1185,20 +1273,22 @@ routines.
 \taylorname{} supports the following command line options.
 \begin{verbatim}
 Usage: ./taylor 
-  [-name ODE_NAME]
-  [-o outfile] 
-  [-long_double | -float128 | 
+  [-name ODE_NAME ]
+  [-o outfile ]
+  [-long_double | -float128 |
    -mpfr | -mpfr_precision PRECISION |
-   -gmp | -gmp_precision PRECISION |
-   -complex | 
-   -long_complex | -complex128 | 
-   -mpc | -mpc_precision [ PRECISION_REAL | PRECISION_IMAG ] ]
-  [-main | -header | -jet | -jhelper | -jet_helper | -main_only] 
-  [-step STEP_CONTROL_METHOD]
-  [-jlib JET_LIBRARY]
-  [-u | -userdefined] STEP_SIZE_FUNCTION_NAME ORDER_FUNCTION_NAME 
-  [-sqrt]
-  [-headername HEADER_FILE_NAME]
+   -complex |
+   -long_complex | -complex128 |
+   -mpc | -mpc_precision [PRECISION_REAL | PRECISION_IMAG] ]
+  [-main | -header | -jet | -main_only ]
+  [-jlib MY_JET_LIB | -jet_helper ]
+  [-clib MY_COEF_LIB ]
+  [-expression ]
+  [-step STEP_CONTROL_METHOD ]
+  [-u | -userdefined STEP_SIZE_FUNCTION_NAME ORDER_FUNCTION_NAME ]
+  [-f77 ]
+  [-sqrt ]
+  [-headername HEADER_FILE_NAME ]
   [-debug] [-help] [-v]  file
 \end{verbatim}
 
@@ -1249,8 +1339,8 @@ the {\bf mpfr} floating point types. If {\tt -mpfr\symbol{95}precision
 
 \item{\verb+-complex+
 
-This option tells \taylorname{} to use the C standard for \verb+double complex+
-floating point arithmetic.  }
+This option tells \taylorname{} to use the C standard for
+\verb+double complex+ floating point arithmetic.  }
 
 \item{\verb+-long_complex+
 
@@ -1333,26 +1423,8 @@ that
 Otherwise, the compiler will complain about multiple defined IO
 helpers.  If you separate \taylorname{} generated code in files, it is
 a good idea to keep the IO Helpers in its own file.  }
-\item{\verb+-jlib JETLIBRARY+ 
 
-This option select a jet library. By default, \taylorname{} uses the
-\verb+jet_tree+ library. This option allows you to overwrite that with
-a special purpose library. Possible value for \verb+JETLIBRARY+ are:
-\begin{itemize}
-    \item \verb+jet1_1+ one symbol, degree one. The arithmetic is
-      implemented using C macros.
-    \item \verb+jet1+  one symbol, arbitrary degree. 
-    \item \verb+jet_1+ degree one, arbitrary number of symbols.
-    \item \verb+jet2+ two symbols, arbitrary degree.
-    \item \verb+jet_2+ degree two, arbitrary number of symbols.
-    \item \verb+jet_m+ an naive implementation of the general case,
-      arbitrary number of symbols, arbitrary degree. This
-      implementation works well when the jet size is below 1000 terms,
-      i.e., when ${{d+m} \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on \url{
- http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the default.
-\end{itemize}
-}
+
 \item{\verb+-main_only+
 
 This option asks \taylorname{} to generate only the \verb+main()+
@@ -1389,10 +1461,48 @@ integrator:
                              MY_JET   *jetInOut)
 \end{verbatim}
 This code needs the header file to be compiled (see the remarks
-above). Given an initial condition ({\tt time},{\tt xvars},{\tt
+above). Given an initial condition ({\tt time}, {\tt xvars}, {\tt
   jetInOut}), this function computes a new point on the corresponding
 orbit with the jet variables transported. The meaning of the
 parameters is explained in Section~\ref{sec:or}.  }
+
+\item{\verb+-jlib JETLIBRARY+ 
+
+This option select a jet library. By default, \taylorname{} uses the
+\verb+jet_tree+ library. This option allows you to overwrite that with
+a special purpose library. Possible values for \verb+JETLIBRARY+ are:
+\begin{itemize}
+    \item \verb+jet1_1+ one symbol, degree one. The arithmetic is
+      implemented using C macros.
+    \item \verb+jet1+  one symbol, arbitrary degree. 
+    \item \verb+jet_1+ degree one, arbitrary number of symbols.
+    \item \verb+jet2+ two symbols, arbitrary degree.
+    \item \verb+jet_2+ degree two, arbitrary number of symbols.
+    \item \verb+jet_m+ an naive implementation of the general case,
+      arbitrary number of symbols, arbitrary degree. This
+      implementation works well when the jet size is below 1000 terms,
+      i.e., when ${{d+m} \choose {d}} < 1000$.
+    \item \verb+jet_tree+ a general library\footnote{based on \url{http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the default.
+\end{itemize}
+}
+\item{\verb+-clib COEFLIBRARY+ 
+
+This option select a library for the coefficients of \myjet{} library,
+i.e. \mycoef{}. By default, \taylorname{} uses the \myfloat{}
+arithmetic. This option allows you to overwrite that with a special
+purpose library. Possible values for \verb+COEFLIBRARY+ are:
+\begin{itemize}
+    \item \verb+my_float+ uses \myfloat{}. This is the default.
+    \item \verb+jet_tree <nsymb> <deg>+ uses \verb+jet_tree+ for
+      \mycoef{}. It uses the maximum number of symbols \verb+nsymb+
+      and the maximum degree \verb+deg+. Otherwise it uses the ones
+      considered in \myjet{}.
+\end{itemize}
+}
+
+\item{\verb+-expression+
+
+This option tells \taylorname{} to generate expression given in the \verb+file+.}
 
 \item{\verb+-userdefined STEP_SIZE_FUNCTION_NAME  ORDER_FUNCTION_NAME+
 
@@ -1473,7 +1583,7 @@ Its prototype is:
 \end{verbatim}
 The function \verb+taylor_step_ODE_NAME+ does one step of numerical
 integration of the given system of ODEs, using the control parameters
-passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
+passed to it. It returns 1 if \verb+endtime+ is reached, -1 unable to compute step size.  doublelog  underflow/overflow. if there is a log over 0 otherwise.
 
 \bigskip
 
@@ -1509,11 +1619,15 @@ passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
     stepsize $h$: the terms of the series -- after being multiplied by
     the suitable power of $h$ -- cannot grow.
   \item[-1:] user defined stepsize control. The code has to be
-    included in the source routine called {\tt
-      compute\symbol{95}timestep\symbol{95}user\symbol{95}defined}
+    included in the source routine called
+    \begin{center}
+     {\tt compute\symbol{95}timestep\symbol{95}user\symbol{95}defined}
+    \end{center}
     (see the code). The user must also include code for the selection
-    of degree, in the function {\tt
-      compute\symbol{95}order\symbol{95}user\symbol{95}defined}.
+    of degree, in the function 
+    \begin{center}
+     {\tt compute\symbol{95}order\symbol{95}user\symbol{95}defined}.
+    \end{center}
   \end{itemize}
 \item {\tt log10abserr}\newline
   decimal log of the absolute accuracy required.
@@ -1560,6 +1674,7 @@ passed to it. It returns 1 if \verb+endtime+ is reached, 0 otherwise.
 \begin{itemize}
 \item 0: ok.
 \item 1: ok, and {\tt time}={\tt endtime}.
+\item -1: not ok. \taylorname{} has encountered an abnormal situation. The stepper was not able to compute a step size. This happens when the last two terms of the taylor polynomials used are both zeros, or one of them becomes an \verb+NaN+ or \verb+inf+.
 \end{itemize}
 
 
@@ -1669,10 +1784,10 @@ one needs to redefine the set of C macros \taylorname{} calls for. See
 polynomial through an array of monomial coefficients. The exact
 implementation is library dependent and hence is opaque to the end
 user. In all implementations, monomial coefficients are stored as an
-array of \myscal{}s. A C macro \verb+MY_JET_DATA(jet,i)+ is provided
+array of \mycoef{}s. A C macro \verb+MY_JET_DATA(jet,i)+ is provided
 to access the $i^{{\tt th}}$ monomial coefficient, arranged in
 ``graded lexicographical order''.  In the current version of
-\taylorname{}, \myscal{} is just an alias of \myfloat{}. This may
+\taylorname{}, \mycoef{} is just an alias of \myfloat{}. This may
 change in future releases.
 
 \subsubsection*{API functions related to \myjet{}} \label{sec:myjetapi}
@@ -1698,36 +1813,41 @@ computations, it is advised that you use the \verb+MY_FLOAT+ argument,
 as the conversion of double to \verb+MY_FLOAT+ is not precise.
 
 \begin{itemize}
-\item {\verb+int taylor_make_jet(MY_JET a, MY_FLOAT *myfloats, double *values)+  \\  
-    This function fills in the data array of a \myjet{} with either
-    \verb+myfloats+ or \verb+values+. Caller is responsible to make
-    sure there are enough values in \verb+myfloats+ or
-    \verb+values+. It should include the coefficients of all monomials
+\item
+  {\verb+int taylor_make_jet(MY_JET a, MY_COEF *mycs, MY_FLOAT *myfs, double *vals)+
+    \\ This function fills in the data array of a \myjet{} with either
+    \verb+mycs+, \verb+myfs+ or \verb+vals+. Caller is responsible to
+    make sure there are enough values in \verb+mycs+, \verb+myfs+ or
+    \verb+vals+. It should include the coefficients of all monomials
     for the current model, including the constant term.}
     
-\item{\verb+int taylor_make_identity_jets(MY_JET *inOut, MY_FLOAT *myfloats, double *values)+ \\
-    This function fills the array \verb+inOut+ with an identity
-    matrix. If either \verb+myfloats+ or \verb+values+ is not NULL, it
-    fills the constant terms in \verb+inOut+ with elements in
-    \verb+myfloats+ or \verb+values+.  This function uses the symbolic
-    constants \verb+_NUMBER_OF_JET_VARS_+, \verb+_NUMBER_OF_MAX_SYMBOLS_+
-    and \verb+_NUMBER_OF_JET_VARS_+.  Please note, this function
-    only fills the first \verb+_NUMBER_OF_MAX_SYMBOLS_+ or
-    \verb+_NUMBER_OF_JET_VARS_+ rows of \verb+inOut+, whichever is
-    smaller. The constant terms are filled in full, if provided.}
+\item
+  {\verb+int taylor_make_identity_jets(MY_JET *inOut, MY_COEF *mycs, MY_FLOAT *myfs, double *vals)+
+    \\ This function fills the array \verb+inOut+ with an identity
+    matrix. If either \verb+mycs+, \verb+myfs+ or \verb+vals+ is not
+    NULL, it fills the constant terms in \verb+inOut+ with elements in
+    \verb+mycs+, \verb+myfs+ or \verb+vals+.  This function uses the
+    symbolic constants \verb+_NUMBER_OF_JET_VARS_+,
+    \verb+_NUMBER_OF_MAX_SYMBOLS_+ and \verb+_NUMBER_OF_JET_VARS_+.
+    Please note, this function only fills the first
+    \verb+_NUMBER_OF_MAX_SYMBOLS_+ or \verb+_NUMBER_OF_JET_VARS_+ rows
+    of \verb+inOut+, whichever is smaller. The constant terms are
+    filled in full, if provided.}
     
-\item{\verb+int taylor_make_unit_jet(MY_JET a, int idx, MY_FLOAT *myfloat, double *value)+\\
-    This function assigns 1 to the coefficient of the \verb+idx+th
-    symbol in \verb+a+, assign 0 to other coefficients. If either
-    \verb+myfloat+ or \verb+value+ is not NULL, its value is assigned
-    to the constant term in \verb+a+.  }
+\item
+  {\verb+int taylor_make_unit_jet(MY_JET a, int idx, MY_COEF *myc, MY_FLOAT *myfloat, double *val)+\\ This
+    function assigns 1 to the coefficient of the \verb+idx+th symbol
+    in \verb+a+, assign 0 to other coefficients. If either \verb+myc+,
+    \verb+myf+ or \verb+val+ is not NULL, its value is assigned to the
+    constant term in \verb+a+.  }
     
-\item{\verb+int taylor_set_jet(MY_JET a, MY_FLOAT *myfloats, double *values, int include_state)+\\
-    This function fills in the jet variable a with values supplied in
-    \verb+myfloats+ or \verb+values+. \verb+include_state+ signals if
-    the constant term is included in \verb+myfloats+ or
-    \verb+values+. If not, 0 will be assigned to the constant term in
-    a. }
+\item
+  {\verb+int taylor_set_jet(MY_JET a, MY_COEF *mycs, MY_FLOAT *myfs, double *vals, int include_state)+\\ This
+    function fills in the jet variable a with values supplied in
+    \verb+mycs+, \verb+myfs+ or \verb+vals+. \verb+include_state+
+    signals if the constant term is included in \verb+mycs+,
+    \verb+myfs+ or \verb+values+. If not, 0 will be assigned to the
+    constant term in a. }
     
 \item{\verb+int taylor_input_jet_from_stdin(MY_JET a, int idx)+\\
     This function asks the user to fill in a jet variable from stdin.
@@ -1950,7 +2070,7 @@ We first ask \taylorname{} to generate a integrator and a header file
 for us.
 \begin{command}
    taylor -o \odecfile{} -jet -step -name lorenz \inputfile{}
-   taylor -o \odehfile{} -header \inputfile{}
+   taylor -name lorenz -o \odehfile{} -header \inputfile{}
 \end{command}
 The first command will produce a file \odecfile{} with no driving
 routine in it.  This file will be compiled and linked with our main
@@ -1981,8 +2101,8 @@ Our first example is very similar to the driving routine generated by
        t     = 0.0;
        /* control parameters       */
        h= 0.001;
-       log10abs_err = -16 /* i.e. 1.0e-16 absolute error */
-       log10rel_err = -16 /* i.e. 1.0e-16 relative error */
+       log10abs_err = -16; /* i.e. 1.0e-16 absolute error */
+       log10rel_err = -16; /* i.e. 1.0e-16 relative error */
        endtime = 10.0;
     
        /* integrate 100 steps */
@@ -2217,7 +2337,9 @@ i}\right)(\sin p)_{i-1-r} (p)_{r+1}\cr
   methods. {\it Exp. Math.}, 14(1):99–117, 2005.
 \bibitem{GJJMZ} J. Gimeno, \`A. Jorba, M. Jorba-Cusc\'o, N. Miguel,
   and M. Zou. Numerical integration of high-order variational
-  equations of ODEs. Forthcoming to {\it Appl. Math. Comput.}, 2022.
+  equations of ODEs. In: {\it Appl. Math. Comput.} 442 (2023),
+  p. 127743. {\sc issn}: 0096-3003.
 % \bibitem{GJZ} J. Gimeno, \`A. Jorba, and M. Zou. A software package for the numerical integration of ODE by means of high-order Taylor methods using jet transport. Work in progress, 2022.
 \end{thebibliography}
 \end{document}
+ 

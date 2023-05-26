@@ -41,9 +41,14 @@ int       neqns     = 0;
 int       eqnSpace   = 0;
 int       nonautonomous = 0;
 int       etype = 0;
+int       parser_pass = 0;
+
+int       tvarCounter=0;
+char      tvarName[16];
 
 Control   controlParams;
 /********************************************************/
+
 /* list of elementary functions currently handled */
 static char *elemFunctions[] =  
 {
@@ -122,7 +127,7 @@ void  insert_one_variable(Node left, Node right)
   canonicalTree(left);
   canonicalTree(right);
   if(VAR_IS_JET(right)) {SET_VAR_IS_JET(left);}
-  nvars++;
+  nvars++;  
 }
 /********************************************************/
 void parse_one_equation(Node left, Node var, Node right) 
@@ -166,7 +171,7 @@ void parse_one_equation(Node left, Node var, Node right)
   equations[neqns].name = left;
   equations[neqns].def  = right;
   canonicalTree(left);
-  canonicalTree(right);
+  canonicalTree(equations[neqns].def);
   SET_ID_IS_VAR(left);
   SET_VAR_IS_STATE_VAR(left); // to check for jet parameter consistency
   ID_EINDEX(left) = 1+neqns;  // remember which equation it is used 
@@ -585,6 +590,7 @@ void checkAllDefined(Node def, Node *badvar)
   if(def && *badvar == NULL)
     {
       int code = NODE_CODE(def);
+
       switch(code)
 	{
 	case ID_NODE:
@@ -594,6 +600,7 @@ void checkAllDefined(Node def, Node *badvar)
 	    {
 	      int  idx = ID_V_INDEX(def);
 	      Node ndef = variables[idx].def;
+
 	      checkAllDefined(ndef,badvar);
 	    }
 	  break;
@@ -614,6 +621,7 @@ void checkAllDefined(Node def, Node *badvar)
 	  if(*badvar == NULL) checkAllDefined(NODE_RIGHT(def), badvar);
 	  break;
 	case NEGATE_EXPR:
+
 	  checkAllDefined(NODE_LEFT(def), badvar);
 	  break;
 	case CALL_EXPR:
@@ -697,9 +705,9 @@ void checkEquations()
 
   /* 20220523 */
   {
-    if(njetVars != 0 && (num_symbols == 0 ||  deg_jet_vars == 0)) {
+    if(njetVars != 0 && (num_jet_symbols == 0 ||  deg_jet_vars == 0)) {
       fprintf(stderr, "\nThe 'Jet declaration' line in your input declaried %d varirables, each consists of %d symbols of %d degree, ",
-	      njetVars, num_symbols, deg_jet_vars);
+              njetVars, num_jet_symbols, deg_jet_vars);
       fprintf(stderr, "which effectively make them non-jet variables.\nPlease either comment out the 'Jet declaration' line, or declare some nontrivial jet vars.\n\n");
       exit(4);
     }
@@ -708,8 +716,6 @@ void checkEquations()
   
 }
 /********************************************************/
-static int   tvarCounter=0;
-static char  tvarName[16];
 
 Node getTmpVar()  /* return a tmp variable */
 {
@@ -980,7 +986,7 @@ void decompose()
       equations[i].def = nn;
       SET_KEEP_ME(equations[i].def);
     }
-  
+ 
   identifyConstants();  
 
   /* sin(h) and cos(h) need each other */
@@ -1138,12 +1144,13 @@ void showVars()
           name = variables[i].name;
           def =  variables[i].def;
           sprintf(tstr, "Var: %s=%s", NODE_INFO(name), NODE_INFO(def));	      
-          fprintf(stderr, "%-56s %-14s %-10s %s %s\n",tstr,
+          fprintf(stderr, "%-56s %-14s %-10s %s %s %s\n",tstr,
                   ID_IS_DELETED(name) != 0 ? "(redundant)":
                   (ID_IS_CST(name) != 0? "(cvar)" : " "),
                   (NODE_IS_LOCAL(name)? "(local)" : " "),
 		  (NODE_IS_A_NUMBER(name)? "(a number)" : " "),
-		  (VAR_IS_JET(name)? " JET " : " "));
+		  (VAR_IS_JET(name)? " JET " : " "),
+		  (VAR_IS_EXPR(name)? " EXPR " : " "));
           if(NODE_CODE(def) == SUM_EXPR)
             {
               SumP sum = NODE_SUM_BLOCK(def);
@@ -1162,6 +1169,12 @@ void showVars()
           def =  equations[i].def;
           fprintf(stderr, "Eqn: %s'=%s\n", NODE_INFO(name), NODE_INFO(def));
         }
+      fprintf(stderr,"\n");      
+      for(i = 0; i < num_expr_vars; i++)
+       {
+          name = exprVars[i];
+          fprintf(stderr, "Expression: %s=(%s)\n", NODE_GIVEN_NAME(name), NODE_INFO(name));
+        }      
     }
 }
 /*************************************************************************************/
@@ -1699,7 +1712,7 @@ Node markJet(Node var)
       SET_VAR_IS_JET(var);
       SET_VAR_IS_DECLARED_JET(var);
       ID_SINDEX(var) = ++state_jet_vars;
-      record_jet_var(var);
+      record_jet_var(var);      
       return(var);
     }
   return(NULL);
@@ -1710,6 +1723,8 @@ void record_jet_initv(Node id, char *val) {
   val[len-1]=0;
   NODE_JINITV(id)=val;
 }
+
+
 
 // 20220609 start
 /*******************************************************************************/

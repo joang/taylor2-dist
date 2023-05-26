@@ -36,7 +36,7 @@ int main(void)
   MakeMyFloatC(x[2],"0",0);
   MakeMyFloatC(x[3],"28",28); /* parameter RR */
 
-  taylor_make_identity_jets(xjet,x,NULL);
+  taylor_make_identity_jets(xjet,x,NULL, NULL);
 
   MakeMyFloatC(startT,"0",0);
   MakeMyFloatC(stopT,"1",1);

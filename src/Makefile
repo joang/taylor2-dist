@@ -28,7 +28,7 @@ HEADER1= y.tab.h
 HEADER2= Node.h NodeCode.h
 LEXSRC = Lex.l
 YACCSRC= parse.y
-SRC    = lex.yy.c y.tab.c Node.c  Parse.c my_jet_code.c  Code.c Code1.c Sum.c CodeMain.c Main.c
+SRC    = lex.yy.c y.tab.c Node.c  Parse.c my_jet_code.c my_coef_code.c Code.c Code1.c Sum.c CodeMain.c Expr.c Poincare.c Main.c
 OBJ    = $(SRC:.c=.o)
 
 CC=gcc
@@ -48,7 +48,7 @@ y.tab.c: y.tab.h
 	bison -y -v parse.y
 
 taylor: $(OBJ)
-	gcc -O -o taylor $(OPFLAG) $(OBJ) $(LEXLIB) -lm
+	$(CC) -g -o $@ $(OPFLAG) $(OBJ) $(LEXLIB) -lm
 
 clean:
 	/bin/rm -rf *.o lex.yy.c y.tab.c y.tab.h y.output  *~ parse

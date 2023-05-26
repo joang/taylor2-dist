@@ -49,24 +49,27 @@ static char *complex_header="\
 #define   MakeMyFloatC(r,s,a)       MakeMyFloatA(r,a)\n\
 /* addition r=a+b   */\n\
 #define   AddMyFloatA(r,a,b)        (r=(a)+(b))\n\
-#define   AddMyFloatD(r,a,b)        AddMyFloatA\n\
-#define   AddMyFloatSI(r,a,b)       AddMyFloatA\n\
+#define   AddMyFloatD(r,a,b)        AddMyFloatA(r,a,b)\n\
+#define   AddMyFloatSI(r,a,b)       AddMyFloatA(r,a,b)\n\
 \n\
 /* substraction r=a-b */\n\
 #define   SubtractMyFloatA(r,a,b)   (r=(a)-(b))\n\
-#define   SubtractMyFloatD(r,a,b)   SubtractMyFloatA\n\
-#define   SubtractMyFloatSI(r,a,b)  SubtractMyFloatA\n\
-#define   SubtractSIMyFloat(r,a,b)  SubtractMyFloatA\n\
+#define   SubtractMyFloatD(r,a,b)   SubtractMyFloatA(r,a,b)\n\
+#define   SubtractMyFloatSI(r,a,b)  SubtractMyFloatA(r,a,b)\n\
+#define   SubtractDMyFloat(r,a,b)   SubtractMyFloatA(r,a,b)\n\
+#define   SubtractSIMyFloat(r,a,b)  SubtractMyFloatA(r,a,b)\n\
 \n\
 /* multiplication r=a*b */\n\
 #define   MultiplyMyFloatA(r,a,b)   (r=(a)*(b))\n\
-#define   MultiplyMyFloatD(r,a,b)   MultiplyMyFloatA\n\
-#define   MultiplyMyFloatSI(r,a,b)  MultiplyMyFloatA\n\
+#define   MultiplyMyFloatD(r,a,b)   MultiplyMyFloatA(r,a,b)\n\
+#define   MultiplyMyFloatSI(r,a,b)  MultiplyMyFloatA(r,a,b)\n\
 \n\
 /* division r=a/b */\n\
 #define   DivideMyFloatA(r,a,b)     (r=(a)/(b))\n\
 #define   DivideMyFloatD(r,a,b)     (r=(a)/(double)(b))\n\
-#define   DivideMyFloatSI(r,a,b)    DivideMyFloatD\n\
+#define   DivideMyFloatSI(r,a,b)    DivideMyFloatD(r,a,b)\n\
+#define   DivideDMyFloat(r,a,b)     (r=(double)(a)/(b))\n\
+#define   DivideSIMyFloat(r,a,b)    DivideDMyFloat(r,a,b)\n\
 \n\
 /* division by an integer r=a/i */\n\
 #define   DivideMyFloatByInt(r,a,i) (r=(a)/(double)(i))\n\
@@ -119,11 +122,20 @@ static char *complex_header="\
 #define   MyFloatA_LT_B(a,b)        (creal(a)< creal(b))\n\
 #define   MyFloatA_EQ_B(a,b)        (creal(a)==creal(b))\n\
 #define   MyFloatA_NEQ_B(a,b)       (creal(a)!=creal(b))\n\
+#define   MyFloatA_CMP_B(a,b)       (creal(a)-creal(b))\n\
+#define   MyFloatA_CMPABS_B(a,b)    (fabs(creal(a))-fabs(creal(b)))\n\
 \n\
 \n\
+#define   OutputMyFloat3(file,fmt,a) fprintf(file,fmt,(double)creal(a), (double)cimag(a))\n\
+#define   OutputMyFloat(a)           fprintf(stdout,\"\%g,\%g \",(double)creal(a), (double)cimag(a))\n\
 \n\
-#define   OutputMyFloat(a)          fprintf(stdout,\"%g %g \",(double) creal(a), (double) cimag(a))\n\
-#define   OutputMyFloat3(file,format,a)     fprintf(file,format,(double)creal(a), (double) cimag(a))\n\
+#define   InputMyFloat3(file,fmt,a)  fscanf(file,fmt,(double*)&(a),((double*)&(a))+1)\n\
+#define   InputMyFloat(a)            InputMyFloat3(stdin,\"\%lf,\%lf \",a)\n\
+\n\
+#define   StringToMyFloat4(s,fmt,a,n) (sscanf(s,fmt,(double*)&(a),((double*)&(a))+1,n),(s)+*(n))\n\
+#define   StringToMyFloat3(s,fmt,a)  sscanf(s,fmt,(double*)&(a),((double*)&(a))+1)\n\
+#define   StringToMyFloat(s,a)       StringToMyFloat3(s,\"\%lf,\%lf \",a)\n\
+\n\
 /************************************************************************/\n\
 ";
 

@@ -93,6 +93,7 @@ struct node_
   int            sidx;     /* index in jet def */
   int            eidx;     /* in which equation */
   int            pidx;     /* jet parameter index */
+  int            emkr;     /* expression marker */  
   char           isarray;
   char           inttype;
   char           deridone;
@@ -144,6 +145,8 @@ struct node_
 #define ID_GIVEN_NAME(NODE)        ((NODE)->givenName)
 #define NODE_GIVEN_NAME(NODE)      ((NODE)->givenName)
 
+#define ID_EXP_MARKER(NODE)        ((NODE)->emkr)
+  
 /*********************************************************************************************/
 #define  IS_CST_BIT                 (1 << 0)
 #define  IS_INT_BIT                 (1 << 1)
@@ -174,7 +177,6 @@ struct node_
 #define  DEP_BIT                    (1 << 27)
 #define  KEEP_BIT                   (1 << 28)
 #define  IS_EXTERN_BIT              (1 << 29)
-
 
 /*********************************************************************************************/
 
@@ -213,9 +215,12 @@ struct node_
 #define  JET_DEFINED_BIT            (1 << 3)
 #define  JET_COUNTED_BIT            (1 << 4)
 #define  JET_DEP_MARKER_BIT         (1 << 5)
-#define  JET_IS_DECLARED_BIT        (1 << 6)    
+#define  JET_IS_DECLARED_BIT        (1 << 6)
+
+#define  IS_EXPRESSION_BIT          (1 << 7)    
 
 /*********************************************************************************************/
+
 #define  VAR_IS_JET(NODE)             ((NODE)->flags2 & IS_JET_BIT)
 #define  SET_VAR_IS_JET(NODE)         {(NODE)->flags2 |= IS_JET_BIT;}
 
@@ -237,6 +242,10 @@ struct node_
 
 #define  VAR_IS_DECLARED_JET(NODE)     ((NODE)->flags2 & JET_IS_DECLARED_BIT)
 #define  SET_VAR_IS_DECLARED_JET(NODE) {(NODE)->flags2 |= JET_IS_DECLARED_BIT;}
+
+
+#define  VAR_IS_EXPR(NODE)          ((NODE)->flags2 & IS_EXPRESSION_BIT)
+#define  SET_VAR_IS_EXPR(NODE)      {(NODE)->flags2 |= IS_EXPRESSION_BIT;}
   
 /*********************************************************************************************/
 #define NODE_IS_INDEX(NODE)          (((NODE)->flags) &  INTERNAL_INDEX_BIT)       
@@ -285,9 +294,11 @@ struct node_
 
 #define ID_IS_DELETED(NODE)       (((NODE)->flags) &  IS_DELETED_BIT)       
 #define SET_ID_IS_DELETED(NODE)   {((NODE)->flags) |=  IS_DELETED_BIT;} 
+#define CLEAR_ID_IS_DELETED(NODE) {(NODE)->flags &= ~IS_DELETED_BIT;}
 
 #define ID_IS_DEFINED(NODE)       (((NODE)->flags) &  IS_DEFINED_BIT)      
 #define SET_ID_IS_DEFINED(NODE)   {((NODE)->flags) |=  IS_DEFINED_BIT;}
+#define CLEAR_ID_IS_DEFINED(NODE) {(NODE)->flags &= ~IS_DEFINED_BIT;}
 
 #define ID_IS_VAR(NODE)           (((NODE)->flags) &  IS_VAR_BIT)
 #define SET_ID_IS_VAR(NODE)       {((NODE)->flags) |=  IS_VAR_BIT;}
@@ -358,7 +369,32 @@ typedef struct control_
   Node *initials;
 } Control;
 /*********************************************************************************************/
+typedef struct expression_ {
+  Node name;
+  int  count;
+  int  space;
+  Node *list;
+  struct expression_ *next;
+} *Expression;
+
+#define EXPRESSION_NAME(s)        ((s)->name)
+#define EXPRESSION_COUNT(s)       ((s)->count)
+#define EXPRESSION_SPACE(s)       ((s)->space)
+#define EXPRESSION_LIST(s)        ((s)->list)
+#define EXPRESSION_NEXT(s)        ((s)->next)  
+
+#ifndef NODE_HASH_TABLE_SIZE
+#define NODE_HASH_TABLE_SIZE 499
+#endif
+
+typedef struct hash_entry_  {
+  Node node;
+  struct hash_entry_ *next; 
+}  Hash_Entry, *Hash_EntryP;
+
+/*********************************************************************************************/
 #ifndef NODE_C
+extern Hash_Entry node_hash_table[];
 extern Node error_node;
 extern Node int_zero_node;
 extern Node int_one_node;
@@ -366,6 +402,8 @@ extern Node current_id;
 extern Node id_list;
 extern Node timeVar;
 extern char *current_qstring;
+extern Expression expression_list;
+extern Expression current_expression;
 #endif
 
 #ifndef PARSE_C
@@ -378,7 +416,19 @@ extern int        nonautonomous, etype;
 extern Control    controlParams;
 extern Node      *jetVars;
 extern int       njetVars;
+extern int       jetVarSpace;
+extern int       parser_pass;
+extern int       tvarCounter;
+extern char      tvarName[16];
 #endif
+
+
+#ifndef EXPR_C
+extern int       num_expr_vars;
+extern Node      *exprVars;
+extern int       exprVarLen;
+#endif
+
 
 #ifndef CODE_C
 extern Node *varlistFinal;
@@ -401,9 +451,35 @@ extern char  *kmarks;
 extern int insum;
 #endif
 
+typedef enum { \
+  ARITH_NONE =0, \
+  ARITH_MY_FLOAT, \
+  ARITH_DOUBLE, \
+  ARITH_COMPLEX_DOUBLE, \
+  ARITH_LONG_DOUBLE, \
+  ARITH_COMPLEX_LONG_DOUBLE, \
+  ARITH_FLOAT128, \
+  ARITH_COMPLEX128, \
+  ARITH_GMP, \
+  ARITH_MPFR, \
+  ARITH_MPC, \
+  \
+  ARITH_JET_NONE, \
+  ARITH_JET1_1, \
+  ARITH_JET1, \
+  ARITH_JET_1, \
+  ARITH_JET2, \
+  ARITH_JET_2, \
+  ARITH_JET_m, \
+  ARITH_JET_TREE, \
+  \
+  ARITH_JET1_1_BIS, \
+} my_arith_t;
+
 #ifndef MY_JET_CODE_C
 extern int deg_jet_vars;
 extern int num_jet_vars;
+extern int num_jet_symbols;
 extern int num_symbols;
 extern int state_jet_vars;
 extern int param_jet_vars;
@@ -415,14 +491,47 @@ extern char *my_jet_prefixes[];
 extern char *my_jet_headers[];
 extern char *my_jet_codes[];
 
+void print_jet_tree_num_coef_homog_table(const char *, const char *, int, int );
+void print_and_subs(char **, const char *, const char *, const char *);
+
+int setMyJetIndexes(void);
 extern void genMyJetHeader(void);
 extern void genMyJetCode(void);
 #endif
 #include "my_jet_header.h"
 
+#ifndef MY_COEF_CODE_C
+extern int my_coef_num_symbols;
+extern int my_coef_deg;
+extern int total_my_coef_vars;
+
+extern char *my_coef_api_macros[];
+extern char *my_coef_prefixes[];
+
+extern char *my_coef_preheaders[];
+extern char *my_coef_headers[];
+extern char *my_coef_postheaders[];
+
+extern char *my_coef_precodes[];
+extern char *my_coef_codes[];
+extern char *my_coef_postcodes[];
+
+extern char *my_coef_of_jets_preheaders[];
+extern char *my_coef_of_jets_headers[];
+extern char *my_coef_of_jets_postheaders[];
+
+extern char *my_coef_of_jets_precodes[];
+extern char *my_coef_of_jets_codes[];
+extern char *my_coef_of_jets_postcodes[];
+
+int setMyCoefIndexes(void);
+extern void genMyCoefHeader(void);
+extern void genMyCoefCode(void);
+#endif
+#include "my_coef_header.h"
+
 #ifndef MAIN_C
 extern int   debug;
-extern int   ddouble, cdouble;
 extern int   foldcst;
 extern int   expandsum;
 extern int   expandpower;
@@ -433,14 +542,18 @@ extern int   genStep;
 extern int   genJet;
 extern int   genTestJet;
 extern int   genMyJet;
+extern int   genMyCoef;
+extern int   genExpressions;
+extern int   genPoincare;
 extern int   ignoreJetInconsistency;
 extern int   genJetHelper;
 extern int   jetStorageType;
-extern int   genSeries;
+extern int   coefStorageType;
 extern int   genSeries;
 extern int   use_rational_exponent;
-extern int   gmp, gmp_precision,mpfr,mpfr_precision,mpc,mpc_precision[2];
-extern int   ldouble, qd2, qd4, float128;
+extern my_arith_t my_float_arith;
+extern int   gmp_precision,mpfr_precision,mpc,mpc_precision[2];
+extern int   ddouble, cdouble, qd2, qd4; /* DEPRECATED */
 extern char  *outNames[10];
 extern char  *suffixes[10];
 extern int   num_names,f77hook;
@@ -448,11 +561,22 @@ extern int   step_ctrl;
 extern char  *outName;
 extern char  *suffix;
 extern char  *my_jet_prefix;
+extern my_arith_t my_jet_arith;
+extern index_my_jet_prefix_t index_my_jet_prefix;
 extern index_my_jet_header_t index_my_jet_header;
 extern index_my_jet_code_t index_my_jet_code;
+extern char  *my_coef_prefix;
+extern my_arith_t my_coef_arith;
+extern index_my_coef_prefix_t index_my_coef_prefix;
+extern index_my_coef_header_t index_my_coef_header;
+extern index_my_coef_code_t index_my_coef_code;
+extern my_coef_flags_t my_coef_flags;
 extern char  *header_name;
 extern char  *uss_name, *uso_name;
 extern FILE  *infile, *outfile;
+extern char  *saved_input_file;
+
+int num_monomials(int, int);
 #endif
 /*********************************************************************************************/
 
@@ -486,15 +610,27 @@ void identifyConstants(void);
 int nodeIsNumber(Node node);
 void checkVars(void);
 void checkJetVars(void);
+void checkExpressionVars(void);
 void checkEquations(void);
 void makeCompanionVariables(void);
 void decompose(void);
 void genVariables(void);
 void genCode(void);
 void showPaserInfo(void);
+void showDepend(void);
+void showDepWork(Node node);
+void outputVarDependcyGraph(Node node);
+void outputConstDependcyGraph(Node node);
+void outputIntDependcyGraph(Node node);
+void simplify(Node *node);
+void replaceVariables(int aa, int bb);
+void checkAllDefined(Node def, Node *badvar);
+int nodeIsConst(Node node);
 unsigned long hash(char *str);
 Node expand_sum(Node expr, Node var, Node ifrm, Node ito);
 Node build_sum(Node expr, Node var, Node ifrm, Node ito);
+Node findVarDef(Node node);
+void define_expression(Node idexpr);
 Node declareArray(Node id, Node nothing);
 Node declareExternVar(Node var);
 Node markJet(Node var);
@@ -530,18 +666,29 @@ int  isRational(Node var, Node *num, Node *den);
 void outputExtern(void);
 void addInitial(Node n);
 void genMainCode(void);
+void genExpressionCode(void);
+void build_expression_list(Node name);
+void reset_all_variables();
+void checkExpressions();
+void decomposeExpressions();
+void genExpressionVariables();
+void EmitExpressionCode();
+void genPoincareSectionCode();
 void genStepCode(void);
 void genSampleHeader(void);
 void genJetHelpers(int flag);
 double cstNodeValue(Node node);
 char *cstNodeStringValue(Node node, char *rbuf);
 Node linearTime(Node node, int *dflag, int *mflag);
-Node scaleTime(Node node, int *dflag);
+Node coefSeTime(Node node, int *dflag);
 int getControlParameterValue(char *str, double *value_return, Node *node_return);
 void record_jet_initv(Node id, char *val);
 void output_jet_multiplication_code(void);
-void print_jet_tree_monomial_index_mapper();
+void print_jet_tree_monomial_index_mapper(const char*, const char *, int, int);
+Expression new_expression();
+void destroy_all_nodes();
+void destroy_all_expressions();
 /******************************************************************/
-int matchWord(char *, char *, int, int *);
+int matchWord(const char *, char *, int, int *);
 
 #endif /* HEADER_H */
