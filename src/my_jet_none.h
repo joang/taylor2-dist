@@ -29,6 +29,7 @@
 /* *******  ******************  ******* */
 /* *******  MY_JET_NONE_HEADER  ******* */
 /* *******  ******************  ******* */
+#define MY_JET_NONE_FIXES(x) ""
 
 #define MY_JET_NONE_PREHEADER(MY_JET_FIXES) "\
 " \

@@ -56,7 +56,7 @@ typedef " PREFIX_TREE(t) "* " PREFIX_TREE(ptr) ";\n\
 /* CODE " PREFIX_TREE(t) " */\n\
 " \
 
-#define MY_TREE_CODE(PREFIX_TREE,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,MYFLOAT_TMP_VAR,MY_RECURSION) "\
+#define MY_TREE_CODE(PREFIX_TREE,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,MYCOEF_TMP_VAR,MYFLOAT_TMP_VAR,MY_RECURSION) "\
 \n\
 size_t " PREFIX_TREE(create_tree) "(" PREFIX_TREE(ptr) " h, " PREFIX_MYCOEF(t) " *coef) {\n\
   static " PREFIX_MYCOEF(t) " *pcoef=NULL;\n\
@@ -198,7 +198,8 @@ void " PREFIX_TREE(nrm2) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_TREE(ptr) " h)
        hc < hf;\n\
        ++hc)\n\
    {\n\
-      " PREFIX_MYCOEF(nrm2) "(&" MYFLOAT_TMP_VAR ",(*hc));\n\
+      " PREFIX_MYCOEF(set_fabs) "(" MYCOEF_TMP_VAR ",(*hc));\n\
+      " PREFIX_MYCOEF(nrm2) "(&" MYFLOAT_TMP_VAR "," MYCOEF_TMP_VAR ");\n\
       " PREFIX_MYFLOAT(add2) "(*nrm,*nrm," MYFLOAT_TMP_VAR ");\n\
    }\n\
 }\n\
@@ -497,6 +498,12 @@ void " PREFIX_TREE(pph_si) "(" PREFIX_TREE(ptr) " h, " I " coef, " PREFIX_TREE(p
       h = h->term+idx[k];\n\
     }\n\
   return h->coef;\n\
+}\n\
+\n\
+void " PREFIX_TREE(set_fabs) "(" PREFIX_TREE(ptr) " h, " PREFIX_TREE(ptr) " a)\n\
+{\n\
+  " I " i, k = " PREFIX_TREE(nch) "(h->nsymb, h->deg);\n\
+  for (i = 0; i < k; ++i) {" PREFIX_MYCOEF(set_fabs) "(h->coef[i],a->coef[i]);}\n\
 }\n\
 \n\
 void " PREFIX_TREE(sumeval) "(" PREFIX_MYCOEF(t) " val[1], " PREFIX_TREE(ptr) " h, " PREFIX_MYFLOAT(t) " x[])\n\

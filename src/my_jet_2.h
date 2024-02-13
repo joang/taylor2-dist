@@ -234,7 +234,8 @@ void " PREFIX_JET_2(nrm2) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_JET_2(t) " a)
 \t" I " k;\n\
 \t/* WARNING initial value for nrm GIVEN!! */\n\
 \tfor (k = 0; k < " MAX_COEFFS_COUNT_NAME "; k++) {\n\
-\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_2(faux) ",a[k]);\n\
+\t\t" PREFIX_MYCOEF(set_fabs) "(" PREFIX_JET_2(caux) ",a[k]);\n\
+\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_2(faux) "," PREFIX_JET_2(caux) ");\n\
 \t\t" PREFIX_MYFLOAT(add2) "(*nrm,*nrm," PREFIX_JET_2(faux) ");\n\
 \t}\n\
 \t" PREFIX_MYFLOAT(set_sqrt) "(*nrm,*nrm);\n\
@@ -723,6 +724,11 @@ void " PREFIX_JET_2(set_tanh) "(" PREFIX_JET_2(t) " t," PREFIX_JET_2(t) " b) {\n
   " PREFIX_JET_2(set_sinh) "(t1,b);\n\
   " PREFIX_JET_2(set_cosh) "(t2,b);\n\
   " PREFIX_JET_2(div2) "(t, t1, t2);  \n\
+}\n\
+\n\
+void " PREFIX_JET_2(set_fabs) "(" PREFIX_JET_2(t) " f, " PREFIX_JET_2(t) " a) {\n\
+  " I " i;\n\
+  for(i=0;i<" MAX_COEFFS_COUNT_NAME ";i++){" PREFIX_MYCOEF(set_fabs) "(f[i],a[i]);}\n\
 }\n\
 \n\
 void " PREFIX_JET_2(fprintf) "(FILE *file, const char *fmt, " PREFIX_JET_2(t) " a)\n\

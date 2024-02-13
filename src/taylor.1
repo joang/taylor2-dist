@@ -2,8 +2,8 @@
 .SH NAME
 taylor \(em
 generating C-code to solve a system of ODEs using the taylor
-method, optionally integrate a set of variational equations
-simutaneously via the Jet Transport mechanism.
+method, optionally solve a set of associated variational equations
+simutaneously through the Jet Transport mechanism.
 .SH SYNOPSIS
 .B taylor
 .RI [ options ] " input_file"
@@ -12,23 +12,27 @@ simutaneously via the Jet Transport mechanism.
 .PP
 .B taylor
 \(em version
-.B "2.0.0"
-\(em is a translator that generates C-procedure that computes the
-coefficients of the taylor series of the dependent variables
-with respect to time. It can also generate complete C-code
-that solves a system of ODEs. 
+.B "2.2.0"
+\(em is a translator that generates C-procedure to integrate
+a system of ODEs using the taylor method. It does so by
+first compute the coefficients of a truncated taylor
+series of the state variables with repect to time, and then
+evaluate the taylor polynomial.
+
 .PP
 .B taylor 
 reads from a file or stdin and writes to stdout or a file. The
 input is a system of ODEs specified in the format: 
 .PP
 .in 20
+.ft B
 diff(var, t) = expr;
 .PP
+.ft R
 .in 8
 where expr is an expression composed from +, -, *, /, ^ and mathematical
 functions sqrt, sin, cos, tan, exp, log, sinh, cosh and atan. For example, the
-following specifies the famous lorenz equation
+following specifies the famous lorenz system
 .br
 .PP
 .in 20
@@ -42,29 +46,31 @@ diff(z,t) = x* y - 8.0* z /3.0;
 .br
 .in 8
 .PP
-Jet transport is defined by a statement like
+Jet transport is declared using a statement like
 .PP
 .in 20
 jet x,y,z  symbols 3 degree 1;
 .br
 .in 8
 .PP
-This statement tells taylor to generate code to integrate
+The above statement tells taylor to generate code to integrate
 the first order variational equations for the Lorenz system.
 .PP
-The output routines are of the following prototype
+The output routines have the following prototype
 .PP
-int taylor_step__ODE_NAME__(MY_FLOAT *time,
-                 MY_FLOAT *xvars,
+.ft B
+int taylor_step__ODE_NAME__(MY_FLOAT *t,
+                 MY_FLOAT *xInOut,
                  int      direction,
                  int      step_ctrl_method,
                  double   log10abserr,
                  double   log10relerr,
                  MY_FLOAT *endtime,
-                 MY_FLOAT *stepused,
+                 MY_FLOAT *step,
                  int      *order,
                  MY_JET   *jetInOut)
-.PP
+
+
 MY_FLOAT **taylor_coefficient__ODE_NAME___A(MY_FLOAT t, 
                                             MY_FLOAT *x, 
                                             int order,
@@ -72,28 +78,46 @@ MY_FLOAT **taylor_coefficient__ODE_NAME___A(MY_FLOAT t,
                                             MY_JET ***jetOut
                                            )
 .PP
+.ft R		 
 where MY_FLOAT is a custom floating point data type. It may
 be float, double or other floating point data types
-like long double or complex. For the later cases, the user
-must redefine a few macros that handle arithmetic operations.
-MY_JET is a custom data structure that is used to integrate
+like long double or complex. MY_FLOAT arithmetic operations
+is handled by a set of pre-defined Macros. MY_JET is a
+custom data structure that is used to integrate
 the variational equations (Jet Transport). A macro
-MY_JET_DATA(jet,idx) is provided for accessing individual
-monomial coefficients in MY_JET arranged in 'graded lexicographical' order. 
+MY_JET_DATA(jet,idx) is provided for getting and setting individual
+monomial coefficients in MY_JET. The order of the coefficients 
+is arranged in the 'graded lexicographical' order. 
 
 .PP
 The function 
 .B taylor_step__ODE_NAME__
-integrates the given system of ODEs one step forward, using
-the supplied step-size, error_tolerance and some other control parameters.
-If jetInOut is not NULL, it will compute the corresponding
-jet (monomial coefficients).
+advances the given system of ODEs one step, using the
+supplied step-size, error_tolerance and some other control
+parameters. If jetInOut is not NULL, it will compute and
+return the corresponding jet (monomial coefficients).
+
+.PP
+In the stepper, t, xInOut and step are the initial values of time,
+state variables and step. The values will be updated when 
+the stepper returns. The stepper returns 1 when endtime is
+reached and 0 otherwise.  order specifies the order of taylor
+polynomial to use, it will be updated with the actual order
+used in the stepper.  It can change when step_ctrl is
+nonzero. jetInOut, if not NULL, specifies the initial values
+of the jet variables. The values will be updated when the
+stepper returns.
+
 .PP
 The function
 .B taylor_coefficient__ODE_NAME___A
 returns a static two dimensional array whose rows are
-the taylor coefficients of the state variables. If jetIn is
-not NULL, it returns the corresponding array of jet coefficients in jetOut. 
+the taylor coefficients of the state variables, in
+the format MY_FLOAT[n][order].  If jet variables are
+used and jetOut is not NULL, it returns the corresponding
+array of jet coefficients, in the format of 
+MY_JET[m][order], where m is the number of jet vars.
+
 .PP
 Normally, the user writes a main procedure that
 does the control. The following is a simple example.
@@ -108,7 +132,7 @@ int main(int argc, char **argv)
    MY_FLOAT  xx[3], t;
    double    abs_err, rel_err, h_return;
    double    log10_abs_err, log10_rel_err, endtime;
-   int       nsteps = 100;
+   int       order=16, nsteps = 100;
 
    /* set initiaial conditions */
    xx[0] = 0.1;
@@ -127,15 +151,23 @@ int main(int argc, char **argv)
       /* do something with xx and t. We just print it */
       printf("%f %f %f %f\n", xx[0],xx[1],xx[2],t);
       taylor_step_lorenz(&t, &xx[0], 1, 1, log10_abs_err,
-                          log10_rel_err, &endtime, &h_return, 16, NULL);
+                          log10_rel_err, &endtime, &h_return, &order, NULL);
    }       
 }
 .fi
 .PP
+Here, the header taylor.h and the stepper stepper.c can be
+generated with commands
+.nf
+  taylor -header -o taylor.h -name lorenz lorenz.eq
+  taylor -step -jet -o stepper.c -name lorenz lorenz.eq  
+.fi
+
+.PP
 .B Taylor
 can also generate the main driving function. The user may supply some
 control information in the ODE specification. 
-Supported control information is listed below.
+Supported control parameters are listed below.
 .PP
 .nf
 initial_values = 2.0, 3.0, -0.7;     /* initial values */
@@ -150,9 +182,124 @@ Initial value for jet coefficients can also be provided, like
 jetInitialValues x ="(0.03   1 0 0 )";
 jetInitialValues y ="(-0.02  0 1 0 )";
 jetInitialValues z ="(0.15   0 0 1 )";
+
 .PP
+Taylor also outputs a uniform stepper along with the taylor stepper.
+.PP
+.ft B
+int taylor_uniform_step__ODE_NAME__(MY_FLOAT *t,
+                 MY_FLOAT *xInOut,
+                 int      direction,
+                 int      step_ctrl_method,
+                 double   log10abserr,
+                 double   log10relerr,
+                 MY_FLOAT *endtime,
+                 MY_FLOAT *step,
+                 int      *order,
+                 MY_JET   *jetInOut)
 
+.PP
+.ft R
+The uniform stepper output solutions on the uniform grid
+t0, t0+h, t0+2h, t0+3h, ...  where h is the initial step.
+If step_ctrl is used, this stepper is much faster
+than the constant step stepper, because it may use much
+larger steps internally, resulting in most of the work are just
+evaluation of taylor polynomials.
 
+.PP
+Taylor can also generate Runge Kutta stepper with the -rk command
+line option. Runge Kutta 4th, 5th, 6th,7th, 8th and 9th
+methods are all included the output. The prototype of
+Runge Kutta stepper is
+
+.PP
+.ft B
+int RungeKutta_step__ODE_NAME__(MY_FLOAT *t,
+                 MY_FLOAT *xInOut,
+                 int      direction,
+                 int      step_ctrl_method,
+                 double   log10abserr,
+                 double   log10relerr,
+                 MY_FLOAT *endtime,
+                 MY_FLOAT *step,
+                 int      *order,
+                 MY_JET   *jetInOut,
+                 double *trun_err);
+		 
+.PP
+.ft R
+The parameter 'trun_err', if not NULL, returns the estimated
+truncation error. The parameter 'order' is used to select
+the Runge Kutta method. Choices are 4,5,6,7,8 and 9. The
+parameter log10relerr is not used. The 'step_ctl' can be
+either 0 or 1,  with 0 for constant step size and 1 for 
+1 adaptive step size.
+
+.SH INPUT MACRO EXPANSION
+.PP
+Taylor includes a simple macro expansion mechansim to
+facilitate the input of large repetitive ODE systems. It
+includes only two control statements: #loop/#endloop and
+#if/#else/#endif. The syntax is
+.PP
+.ft B
+#loop var = start, end
+.br
+.ft R
+ ... var will be expanded from start to end, inclusive
+.br
+.ft B
+#endloop
+.br
+.ft R
+.PP
+.ft B
+#if _expression_
+.ft R
+.br
+ ... block will be included if _expression_ is true
+.br
+.ft B
+#endif
+.ft R
+.br
+.PP
+Here is an example of generating equations for the 3-body problem.
+.PP
+.nf
+extern G, m[3];
+
+#loop i = 0, 2
+  qx$i' = px$i;
+  qy$i' = py$i;
+  qz$i' = pz$i;  
+#endloop
+
+#loop i = 0, 2
+  px$i' = 
+  #loop j = 0,2   
+   #if $i != $j
+     +G*m[$j]*(qx$i-qx$j)/((qx$i-qx$j)^2+(qy$i-qy$j)^2+(qz$i-qz$j)^2)^1.5
+   #endif
+  #endloop
+  ;
+  py$i' = 
+  #loop j = 0,2   
+   #if $i != $j
+     +G*m[$j]*(qy$i-qy$j)/((qx$i-qx$j)^2+(qy$i-qy$j)^2+(qz$i-qz$j)^2)^1.5
+   #endif
+  #endloop
+  ;
+  pz$i' = 
+  #loop j = 0,2   
+   #if $i != $j
+     +G*m[$j]*(qz$i-qz$j)/((qx$i-qx$j)^2+(qy$i-qy$j)^2+(qz$i-qz$j)^2)^1.5
+   #endif
+  #endloop
+  ;
+#endloop   
+.fi
 
 .SH OPTIONS
 .LP
@@ -174,12 +321,10 @@ can then be compiled directly into executable.
 Generate only the main driving function.
 .TP
 .BR \-long_double 
-.TP
 .BR
 Generate code use long double as MY_FLOAT.
 .TP
 .BR \-float128
-.TP
 .BR
 Generate code use float128 (IEEE 754 quadruple precision
 floating point format) as MY_FLOAT. 
@@ -187,9 +332,19 @@ floating point format) as MY_FLOAT.
 .BR \-gmp_precision " PRECISION_IN_BITS"
 .TP
 .BR \-gmp 
+.TP
 .BR
 Generate code to use the Gnu Multiple Precision library.
 See "http://www.swox.com/gmp/" for more info about this
+library.
+.TP
+.BR \-mpfr_precision " PRECISION_IN_BITS"
+.TP
+.BR \-mpfr
+.TP
+.BR
+Generate code to use the Gnu MPFR library.
+See "https://www.mpfr.org/" for more info about this
 library.
 .TP
 .TP
@@ -289,6 +444,70 @@ Specify the threshold for rewriting powers as product. Default value is 0.
 .br
 Compute exponentials like x^(-3/2)  using the sqrt function
 instead of the pow function.
+
+.TP
+.BI \-rk 
+.br
+Generate Runge Kutta stepper.
+
+.TP
+.BI \-expression 
+.br
+Inform taylor to generate code to evaluate expressions, if
+provided. This is useful when one wish to evaluate an
+expression along the orbit.  For example, when integrate a
+Hamiltonian system, one may want to check the how well the
+hamiltonian is preserved along the orbit.
+.br
+
+Expressions are declared in the input file using the
+keyword 'expression' or 'expr'. For example, 
+.br
+.in 20
+.ft B
+expr hamiltonian = 0.5 * y^2 + cos(x);
+.br
+.ft R
+.in 14
+defines the hamiltonian of a simple pendulum.
+.br
+Multiple expressions can be declared on the same line, for
+example.
+.br
+.in 18
+.ft B
+expr  momentum = m1*v1x+m2*v2x, m1*v1y+m2*v2y;
+.br
+.ft R
+.in 14
+defines the compoments of the momentum of two particle system.
+
+.br
+For each expression 'name', taylor genertes three functions:
+
+.nf
+.ft B
+MY_FLOAT *name(MY_FLOAT t, MY_FLOAT *x,MY_FLOAT *out,MY_JET *sIn,MY_JET ***sOut);
+MY_FLOAT *name_derivative(MY_FLOAT t,MY_FLOAT *x,MY_FLOAT *out,MY_JET *sIn,MY_JET ***sOut);
+MY_FLOAT **name_taylor_coefficients(MY_FLOAT t,MY_FLOAT *x,int order,MY_JET *sIn,MY_JET ***sOut);
+.fi
+.ft R
+
+The first function returns a pointer to a (static) MY_FLOAT array
+whose elements are the expressions defined.  For our
+momentum example, the array is of size 2, they are the x,y
+components of the momentum.  If 'out' is not null, the values
+will be returned in 'out' as well. Caller is responsible for
+allocating storage for 'out'.  If jet vars are used, the jet version
+of the expressions will be returned in 'sout', evaluated using input
+from 'sIn'.
+
+The second function computes the time derivative of the
+expressions.
+
+The third function can be used to compute the taylor
+coefficients (w.r.t time) of the expressions to any arbitary order
+specified in 'order'.
 
 
 .SH SYNTAX

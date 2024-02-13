@@ -90,8 +90,7 @@ static " PREFIX_JET1(t) " " PREFIX_JET1(jaux) ";\n\
 }\n" \
   "void " PREFIX_JET1(initup2) "(" I " nsymbs, " I " deg)\n\
 {\n\
-\tif (" PREFIX_JET1(flag_init_jet_library) "==1) {\n\
-\t\tfprintf(stderr, \"arithmetic %d_%d already initialized\\n\", 1, " PREFIX_JET1(deg) "); return;}\n\
+\tif (" PREFIX_JET1(flag_init_jet_library) "==1) return;\n\
 \tif (nsymbs != 1) {\n\
 \t\tfprintf(stderr, \"\%d: Not allowed nsymbs value: \%d!=1\\n\",__LINE__,nsymbs);\n\
 \t\tfflush(stderr); exit(1);\n\
@@ -243,7 +242,8 @@ return &a[1+idx];\
 \t" I " k;\n\
 \t/* WARNING initial value for nrm GIVEN!! */\n\
 \tfor (k = 0; k <= " PREFIX_JET1(deg) "; k++) {\n\
-\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET1(faux) ",a[k]);\n\
+\t\t" PREFIX_MYCOEF(set_fabs) "(" PREFIX_JET1(caux) ",a[k]);\n\
+\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET1(faux) "," PREFIX_JET1(caux) ");\n\
 \t\t" PREFIX_MYFLOAT(add2) "(*nrm,*nrm," PREFIX_JET1(faux) ");\n\
 \t}\n\
 \t" PREFIX_MYFLOAT(set_sqrt) "(*nrm,*nrm);\n\
@@ -744,6 +744,13 @@ return &a[1+idx];\
 "void " PREFIX_JET1(set_sinh) "(" PREFIX_JET1(t) " s, " PREFIX_JET1(t) " a)\n\
 {" PREFIX_JET1(sinhcosh) "(s," PREFIX_JET1(jaux) ",a);}\n" \
 "\n" \
+  "void " PREFIX_JET1(set_fabs) "(" PREFIX_JET1(t) " f, " PREFIX_JET1(t) " a)\n\
+{\n\
+\t" I " k;\n\
+\tfor (k = 0; k <= " PREFIX_JET1(deg) "; k++) {\n\
+\t\t" PREFIX_MYCOEF(set_fabs) "(f[k],a[k]);\n\
+\t}\n\
+}\n" \
 "void " PREFIX_JET1(fprintf) "(FILE *file, const char *fmt, " PREFIX_JET1(t) " s)\n\
 {\n\
 \t" I " k;\n\

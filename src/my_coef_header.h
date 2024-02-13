@@ -1,3 +1,27 @@
+/*********************************************************************
+ *
+ *       Taylor  
+ *
+ *    Copyright (C) 2022 Joan Gimeno, Angel Jorba, Maorong Zou
+ *
+ *
+ *  This file is part of taylor.
+ *
+ * Taylor is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * Taylor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Taylor; see the file COPYING.  If not, write to
+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+ *
+ *************************************************************************/
 #ifndef MY_COEF_HEADER_H
 #define MY_COEF_HEADER_H
 
@@ -156,8 +180,6 @@ typedef enum { \
 
 #define MY_COEF_MACROS_MY_FLOAT(PREFIX_MYCOEF,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME) \
  MY_COEF_MACROS_GENERAL(PREFIX_MYCOEF,MAX_NUM_SYMBOLS_NAME,MAX_DEGREE_NAME,InitCleanFlagStruct)
-
-#define MY_COEF_FIXES(x) "mycoef_" #x
 
 #define MY_COEF_PREFIX "__COEF_NAME_"
 #define MY_COEF_SUFFIX "_COEF_ODE_NAME__"

@@ -36,7 +36,7 @@ computer.\n\
 \n\
 #define DEBUG_LEVEL 0 /* to print some internal information */\n\
 \n\
-int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
+int taylor_step__ODE_NAME___Twelve(MY_FLOAT *ti,\n\
                  MY_FLOAT *x,\n\
                  int      dir,\n\
                  int      step_ctl,\n\
@@ -45,7 +45,9 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
                  MY_FLOAT *endtime,\n\
                  MY_FLOAT *ht,\n\
                  int      *order,\n\
-                 MY_JET   *jetInOut)\n\
+                 MY_JET   *jetInOut,\n\
+                 MY_FLOAT ***s_return,\n\
+                 MY_JET   ***jet_return)\n\
 /*\n\
  * single integration step with taylor method. the parameters are:\n\
  *\n\
@@ -104,6 +106,9 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
  *\n\
  * jetInOut: on input: the value of all declared jet variables\n\
  *           on output: new value of the jet variable, corresponding to the new time\n\
+ *\n\
+ * s_return: return the last computed taylor coefficients if not NULL\n\
+ * jet_return: return the last computed jet coefficients if not NULL\n\
  *\n\
  * return value:\n\
  *  0: ok.\n\
@@ -198,6 +203,8 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
     s=taylor_coefficients__ODE_NAME___A(*ti,x,nt,0, jetInOut, &jetJetOut); \n\
  }\n\
 \n\
+ if(s_return) *s_return = s;\n\
+ if(jet_return) *jet_return = jetJetOut;\n\
 /*\n\
   selection of the routine to compute the time step. the value\n\
   step_ctl=3 has been reserved for the user, in case she/he wants to\n\
@@ -304,6 +311,21 @@ int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
     }\n\
   return(flag_endtime);\n\
 }\n\
+\n\
+int taylor_step__ODE_NAME__(MY_FLOAT *ti,\n\
+                 MY_FLOAT *x,\n\
+                 int      dir,\n\
+                 int      step_ctl,\n\
+                 double   log10abserr,\n\
+                 double   log10relerr,\n\
+                 MY_FLOAT *endtime,\n\
+                 MY_FLOAT *ht,\n\
+                 int      *order,\n\
+                 MY_JET   *jetInOut)\n\
+{\n\
+  return taylor_step__ODE_NAME___Twelve(ti,x,dir,step_ctl,log10abserr,log10relerr,endtime,ht,order,jetInOut,NULL,NULL);\n\
+}\n\
+\n\
 int compute_order_1__ODE_NAME__(double xnorm, double log10abserr, double log10relerr, int* flag_err)\n\
 /*\n\
  * this is to determine the 'optimal' degree of the taylor expansion.\n\
@@ -590,6 +612,236 @@ double double_log_MyFloat__ODE_NAME__(MY_FLOAT x)\n\
   lx=log(b)-(LEXP2*0.69314718055994530942)*k;\n\
 \n\
   return(lx);\n\
+}\n\
+\n\
+int taylor_uniform_step__ODE_NAME___tag(\n\
+			     MY_FLOAT *ti,\n\
+			     MY_FLOAT *x,\n\
+			     int      dir,\n\
+			     int      step_ctl,\n\
+			     double   log10abserr,\n\
+			     double   log10relerr,\n\
+			     MY_FLOAT *endtime,\n\
+			     MY_FLOAT *ht,\n\
+			     int      *order,\n\
+			     MY_JET   *jetInOut,\n\
+			     int tag)\n\
+/*\n\
+ *  Solve ODE on an equally spaced time grid.\n\
+ *\n\
+ *  parameters:  same as those in taylor_step__ODE_NAME__ \n\
+ *  except the meaning of 'ht' changed.\n\
+ *\n\
+ *   *ht is not changed by this stepper (except make sure it is positive),\n\
+ *   it is used to form a uniform time grid.  In other words, the stepper\n\
+ *   will compute solutions on t0, t0+h, t0+2h, ... .  h = *ht or -*ht\n\
+ *   depending on dir=1 or -1.\n\
+ *   \n\
+ *  If step_ctl=0, this stepper is the same as taylor_step__ODE_NAME__\n\
+ *  Otherwise, it internally use taylor_step__ODE_NAME__ with possibly\n\
+ *  very large steps, and evaluate the taylor polynomail on the time grid.\n\
+ *  \n\
+ *  tag: when integrate multiple orbits, tag specifies which orbit we are\n\
+ *  integrating. One still has to integrate consecutively b/c static vars\n\
+ *  are used. \n\
+ */\n\
+{\n\
+  static MY_FLOAT last_t0, last_t1, target_t, last_h, working_t, working_h, the_h;\n\
+  static MY_FLOAT last_x0[_N_DIM_+1], last_x1[_N_DIM_+1], **last_s, mtmp, h0, zer0;\n\
+  static MY_JET   last_jet0[_J_DIM_+1], last_jet1[_J_DIM_+1], **last_j, jtmp;\n\
+  static int init=0, last_order, last_tag=-1;\n\
+  int i,j,k,nt, ans, compute, ended;\n\
+#pragma omp threadprivate(last_t0,last_t1,target_t,last_h,working_t,working_h, the_h) \n\
+#pragma omp threadprivate(last_x0,last_x1,last_s,mtmp,h0,zer0)\n\
+#pragma omp threadprivate(last_jet0,last_jet1,last_j,jtmp)\n\
+#pragma omp threadprivate(init,last_order, last_tag)  \n\
+  \n\
+  if(step_ctl == 0)\n\
+    return  taylor_step__ODE_NAME__(ti, x, dir, step_ctl, log10abserr, log10relerr, endtime, ht, order, jetInOut);\n\
+\n\
+  compute = 0;\n\
+  if(init == 0) {\n\
+    init = 1;\n\
+    last_s = NULL;\n\
+    last_j = NULL;\n\
+    InitMyFloat(mtmp);InitMyFloat(h0); InitMyFloat(the_h);\n\
+    InitMyFloat(zer0); MakeMyFloatA(zer0,0.0);   \n\
+    InitMyFloat(last_t0);InitMyFloat(last_t1);\n\
+    InitMyFloat(working_t);InitMyFloat(working_h);\n\
+    InitMyFloat(last_h); InitMyFloat(target_t);\n\
+    xInitUpJet();\n\
+    for(i=0;i<=_N_DIM_;i++) {\n\
+      InitMyFloat(last_x0[i]); InitMyFloat(last_x1[i]);      \n\
+    }\n\
+    for(i=0;i<=_J_DIM_;i++)  {\n\
+      xInitJet(last_jet0[i]); xInitJet(last_jet1[i]);      \n\
+    }\n\
+    xInitJet(jtmp);    \n\
+    compute = 1;    \n\
+  } // init == 0\n\
+\n\
+  if(last_tag != tag) {\n\
+    AssignMyFloat(last_t1, *ti);\n\
+    AssignMyFloat(last_t0, *ti);\n\
+    AssignMyFloat(last_h, *ht);        \n\
+#if _J_DIM_ != 0\n\
+    for(i=0; i<_J_DIM_; i++) {\n\
+      xAssignJetToJet(last_jet0[i],jetInOut[i]);\n\
+      xAssignJetToJet(last_jet1[i],jetInOut[i]);	\n\
+    }\n\
+#endif\n\
+    for(i=_J_DIM_; i<_N_DIM_; i++) {\n\
+      AssignMyFloat(last_x0[i],x[i]);\n\
+      AssignMyFloat(last_x1[i],x[i]);	\n\
+    }\n\
+    if(MyFloatA_LT_B(*ht, zer0)) {\n\
+      NegateMyFloatA(the_h, *ht);\n\
+    } else {\n\
+      AssignMyFloat(the_h, *ht);      \n\
+    }\n\
+    compute = 1;\n\
+    last_tag=tag;\n\
+  }\n\
+  \n\
+  if(dir == -1) {\n\
+    SubtractMyFloatA(target_t, *ti, the_h);\n\
+    if(MyFloatA_LT_B(target_t,last_t1)) {  \n\
+      compute = 1;\n\
+    }\n\
+  } else {\n\
+    AddMyFloatA(target_t, *ti, the_h);\n\
+    if(MyFloatA_GT_B(target_t,last_t1)) {  \n\
+      compute = 1;\n\
+    }\n\
+  }\n\
+\n\
+  ans = 0;\n\
+  if(compute) {\n\
+    // set solver to start at the last computed point on orbit\n\
+    AssignMyFloat(working_t, last_t1);\n\
+    AssignMyFloat(working_h, last_h);    \n\
+#if _J_DIM_ != 0\n\
+    for(i=0; i<_J_DIM_; i++) {\n\
+      xAssignJetToJet(jetInOut[i],last_jet1[i]);\n\
+    }\n\
+#endif\n\
+    for(i=_J_DIM_; i<_N_DIM_; i++) {\n\
+      AssignMyFloat(x[i],last_x1[i]);\n\
+    }\n\
+    \n\
+    do {\n\
+#if _J_DIM_ != 0\n\
+      for(i=0; i<_J_DIM_; i++) {\n\
+	xAssignJetToJet(last_jet0[i],jetInOut[i]);\n\
+      }\n\
+#endif\n\
+      for(i=_J_DIM_; i<_N_DIM_; i++) {\n\
+	AssignMyFloat(last_x0[i],x[i]);\n\
+      }\n\
+      AssignMyFloat(last_t0,working_t);\n\
+      ans = taylor_step__ODE_NAME___Twelve(&working_t, x, dir, step_ctl, log10abserr, log10relerr, endtime, &working_h, &nt, jetInOut, &last_s, &last_j);\n\
+      last_order = nt;\n\
+      if (order) *order = nt;\n\
+      if( ans < 0 ) {\n\
+	AssignMyFloat(last_t1, working_t);	\n\
+	break;\n\
+      } else {\n\
+	if( (dir == 1 && MyFloatA_GE_B(working_t, target_t)) || (dir == -1 && MyFloatA_LE_B(working_t, target_t))) {\n\
+	  AssignMyFloat(last_t1, working_t);\n\
+	  AssignMyFloat(last_h, working_h);	  \n\
+#if _J_DIM_ != 0\n\
+	  for(i=0; i<_J_DIM_; i++) {\n\
+	    xAssignJetToJet(last_jet1[i],jetInOut[i]);\n\
+	}\n\
+#endif\n\
+	  for(i=_J_DIM_; i<_N_DIM_; i++) {\n\
+	    AssignMyFloat(last_x1[i],x[i]);\n\
+	  }\n\
+	  break;\n\
+	}\n\
+      }\n\
+    } while( ans == 0);\n\
+  }\n\
+\n\
+  if(ans == 1) {\n\
+    ans = 0;\n\
+  }\n\
+  ended = 0;  \n\
+  // evaluate last taylor polynomial -- start\n\
+  if(ans == 0) {\n\
+    AssignMyFloat(mtmp, target_t);\n\
+    if(dir == -1) {\n\
+      if(endtime && MyFloatA_LE_B(mtmp, *endtime)) {\n\
+	AssignMyFloat(mtmp, *endtime);\n\
+	ended = 1;	\n\
+      }\n\
+    } else {\n\
+      if(endtime && MyFloatA_GE_B(mtmp, *endtime)) {\n\
+	AssignMyFloat(mtmp, *endtime);\n\
+	ended = 1;\n\
+      }\n\
+    }\n\
+    SubtractMyFloatA(h0, mtmp, last_t0);          \n\
+    nt = last_order;\n\
+    j=nt-1;\n\
+#if _J_DIM_ != 0\n\
+      for(i=0; i<_J_DIM_; i++)\n\
+	{\n\
+	  xAssignJetToJet(jetInOut[i],last_j[i][nt]);\n\
+	  for(k=j; k>=0; k--)\n\
+	    {\n\
+	      xMultiplyFloatJetA(jtmp, h0, jetInOut[i]);\n\
+	      xAddJetJetA(jetInOut[i], jtmp, last_j[i][k]);\n\
+	    }\n\
+	  xAssignJetToFloat(x[i],jetInOut[i]);\n\
+	}\n\
+#endif\n\
+      for(i=_J_DIM_; i<_N_DIM_; i++)\n\
+	{\n\
+	  AssignMyFloat(x[i],last_s[i][nt]);\n\
+	  for(k=j; k>=0; k--)\n\
+	    {\n\
+	      MultiplyMyFloatA(mtmp, h0, x[i]);\n\
+	      AddMyFloatA(x[i], mtmp, last_s[i][k]);\n\
+	    }\n\
+	}\n\
+  }\n\
+  // evaluate last taylor polynomial -- end\n\
+  \n\
+  if(ans == 0) {\n\
+    if(ended) {\n\
+      AssignMyFloat(*ti, *endtime);\n\
+      ans = 1;\n\
+    } else {\n\
+      AddMyFloatA(*ti, last_t0, h0); // advance ti, do not change *ht\n\
+    }\n\
+  }\n\
+  return(ans);\n\
+}\n\
+int taylor_uniform_step__ODE_NAME__(\n\
+			     MY_FLOAT *ti,\n\
+			     MY_FLOAT *x,\n\
+			     int      dir,\n\
+			     int      step_ctl,\n\
+			     double   log10abserr,\n\
+			     double   log10relerr,\n\
+			     MY_FLOAT *endtime,\n\
+			     MY_FLOAT *ht,\n\
+			     int      *order,\n\
+			     MY_JET   *jetInOut)\n\
+{\n\
+  return taylor_uniform_step__ODE_NAME___tag(\n\
+		             ti,\n\
+			     x,\n\
+			     dir,\n\
+			     step_ctl,\n\
+			     log10abserr,\n\
+			     log10relerr,\n\
+			     endtime,\n\
+			     ht,\n\
+			     order,\n\
+			     jetInOut,\n\
+			     0);\n\
 }\n\
 \n\
 ";

@@ -223,7 +223,8 @@ return 1;\
 \t" I " k;\n\
 \t/* WARNING initial value for nrm GIVEN!! */\n\
 \tfor (k = 0; k <= " PREFIX_JET_1(nsymb) "; k++) {\n\
-\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_1(faux) ",a[k]);\n\
+\t\t" PREFIX_MYCOEF(set_fabs) "(" PREFIX_JET_1(caux) ",a[k]);\n\
+\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_1(faux) "," PREFIX_JET_1(caux) ");\n\
 \t\t" PREFIX_MYFLOAT(add2) "(*nrm,*nrm," PREFIX_JET_1(faux) ");\n\
 \t}\n\
 \t" PREFIX_MYFLOAT(set_sqrt) "(*nrm,*nrm);\n\
@@ -537,6 +538,13 @@ return 1;\
 \t" PREFIX_MYCOEF(set_cosh) "(c[0],a[0]);\n\
 \tfor (k = 1; k <= " PREFIX_JET_1(nsymb) "; k++) {\
 " PREFIX_MYCOEF(mul2) "(c[k]," PREFIX_JET_1(caux) ",a[k]);\
+}\n\
+}\n" \
+  "void " PREFIX_JET_1(set_fabs) "(" PREFIX_JET_1(t) " f, " PREFIX_JET_1(t) " a)\n\
+{\n\
+\t" I " k;\n\
+\tfor (k = 0; k <= " PREFIX_JET_1(nsymb) "; k++) {\
+" PREFIX_MYCOEF(set_fabs) "(f[k],a[k]);\
 }\n\
 }\n" \
   "void " PREFIX_JET_1(fprintf) "(FILE *file, const char *fmt, " PREFIX_JET_1(t) " a)\n\

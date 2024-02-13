@@ -24,6 +24,18 @@ We recommend reviewing the manual for further details.
 
 ## Changelog
 
+### Feb 13, 2024 -- v2.2
+
+* Preprocessor of macro expansion, flag -input_only                                                             
+* Uniform time grid for a taylor integration                                                                    
+* Runge Kutta steppers                                                                                          
+* Wrapper for Python                                                                                            
+* Header for ARB library                                                                                        
+* MY_CLOUD datatype for vectorized integrations                                                                  
+* Power operator ** in ODE definition is now accepted                                                           
+* Manual upgraded                                                                                               
+* Other minor bugs fixed
+
 ### May 26, 2023 -- v2.1
 
 * New macro MY_JET_FUN and MY_COEF_FUN

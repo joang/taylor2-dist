@@ -32,8 +32,8 @@
  * if pos_ret is not NULL, it returns the starting
  * location of the match.
  */
-int matchWord(buf, word, buflen, pos_ret) 
-     const char *buf; char *word; int *pos_ret, buflen;
+int matchWord(const char *buf, char *word, int buflen, int *pos_ret) 
+//     const char *buf; char *word; int *pos_ret, buflen;
 {
   int blen, wlen;
   int pfxS[256], *pfx = pfxS;
@@ -105,8 +105,8 @@ void genMainCode()
 
   fprintf(outfile,"int main(int argc, char **argv)\n{\n");
 
-  fprintf(outfile,"\t int       i, j, order=20, itmp=0, direction = 1, nsteps = -1;\n");
-  fprintf(outfile,"\t double    ftmp, dstep, tolerance, rtolerance, log10tolerance, log10rtolerance;\n");
+  fprintf(outfile,"\t int       i, j, order=20, itmp=0, direction = 1, nsteps = -1, rungekutta = 0;\n");
+  fprintf(outfile,"\t double    ftmp, dstep, tolerance, rtolerance, log10tolerance, log10rtolerance, err_ret=0.0;\n");
   fprintf(outfile,"\t MY_FLOAT  startT, stopT, nextT;\n");
   fprintf(outfile,"\t MY_FLOAT  myFloatZero;\n");
   fprintf(outfile,"\t char  format_string[32];\n");  
@@ -220,7 +220,7 @@ if(1 || state_jet_vars==0) {
 
   Node pnode;
   char ibuf[256];
-  
+
   if(getControlParameterValue("numberOfSteps",&dtmp, &pnode) || getControlParameterValue("number_of_steps",&dtmp, &pnode)||
      getControlParameterValue("NumberOfSteps",&dtmp, &pnode) || getControlParameterValue("Number_Of_Steps",&dtmp, &pnode))
     {
@@ -270,7 +270,7 @@ if(1 || state_jet_vars==0) {
     }
   else 
     {
-      fprintf(outfile, "\t dstep=0.001; /* only nedeed when step_ctrl_method==0 (see manual) */\n");
+      fprintf(outfile, "\t dstep= 0.00390625; /* only nedeed when step_ctrl_method==0 (see manual) */\n");
       fprintf(outfile,"\t MakeMyFloatC(nextT, \"0.001\", (double)dstep);\n");
     }
   /* get max error tolerance */
@@ -317,8 +317,17 @@ if(1 || state_jet_vars==0) {
     fprintf(outfile, "\t (void)strcpy(format_string, \"%%.33Qe\");\n");    
   } else {
     fprintf(outfile, "\t (void)strcpy(format_string, \"%%.16g \");\n");    
-  }  
+
+  }
+
+  if(getControlParameterValue("RungeKuttaMethod",&dtmp, &pnode) || getControlParameterValue("Runge_Kutta_Method",&dtmp, &pnode))
+    {
+      fprintf(outfile,"\t rungekutta = %d;\n", (int)dtmp);
+    }
+  if(genRungeKutta > 1)  fprintf(outfile,"\t rungekutta = %d;\n", genRungeKutta);    
+  
   fprintf(outfile, "\t itmp = 0; \n");      
+
   fprintf(outfile, "\t while(1)  {\n");
   /* output current value first */
   
@@ -338,17 +347,25 @@ if(1 || state_jet_vars==0) {
   else
     fprintf(outfile, "\t\t if(itmp != 0) {break;} \n");      
   /* if stopTime is reached, break */
-  fprintf(outfile, "\t\t if(MyFloatA_GE_B(startT,stopT)) { break;}\n");
-
+  fprintf(outfile, "\t\t if( (direction > 0 && MyFloatA_GE_B(startT,stopT)) || (direction < 0 && MyFloatA_LE_B(startT,stopT)) ) { break;}\n");
+  
   /* integrate one step */
-  fprintf(outfile, "\n\t\t itmp = taylor_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
-          suffix, step_ctrl);
-  fprintf(outfile, "\n\t\t //itmp = RK4_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
-          suffix, step_ctrl);
-  fprintf(outfile, "\n\t\t //itmp = RK4QC_step_%s( &startT, xx, direction, %d, 6+log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
-          suffix, step_ctrl);
-
-
+  if(genRungeKutta) {   
+    fprintf(outfile, "\n\t\t if(rungekutta == 0)");
+    fprintf(outfile, "\n\t\t   itmp = taylor_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);",
+	    suffix, step_ctrl);
+    fprintf(outfile, "\n\t\t   //itmp = taylor_uniform_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);", 
+	    suffix, step_ctrl);  
+    fprintf(outfile, "\n\t\t else");  
+    fprintf(outfile, "\n\t\t   itmp = RungeKutta_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &rungekutta, jetIn, &err_ret);\n", 
+	    suffix, step_ctrl);
+  } else {
+    fprintf(outfile, "\n\t\t itmp = taylor_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);",
+	    suffix, step_ctrl);
+    fprintf(outfile, "\n\t\t //itmp = taylor_uniform_step_%s( &startT, xx, direction, %d, log10tolerance, log10rtolerance, &stopT, &nextT, &order, jetIn);\n", 
+	    suffix, step_ctrl);  
+  }
+  fprintf(outfile, "\n\n");  
   /* check stop condition */
   if(nsteps > 0) { 
     fprintf(outfile, "\t\t nsteps--;\n");
@@ -370,9 +387,11 @@ void genStepCode()
   fprintf(outfile," */\n\n");
 
   fprintf(outfile, "#define _N_DIM_ %d\n", neqns - nonautonomous);
-  fprintf(outfile, "#define _J_DIM_ %d\n", state_jet_vars);
+  if (state_jet_vars > 0) fprintf(outfile, "#define _J_DIM_ %d\n", state_jet_vars);
+  else if (num_cloud_vars > 0) fprintf(outfile, "#define _J_DIM_ %d\n", num_cloud_vars);
+  else fprintf(outfile, "#define _J_DIM_ 0\n");
   fprintf(outfile, "\n\n");
-  if(state_jet_vars>0) {
+  if(state_jet_vars > 0 || num_cloud_vars > 0) {
     fprintf(outfile, "#define xInitUpJet InitUpJet\n");
     fprintf(outfile, "#define xInitJet InitJet\n");
     fprintf(outfile, "#define xNormJet NormJet\n");

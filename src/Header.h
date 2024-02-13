@@ -219,7 +219,16 @@ struct node_
 
 #define  IS_EXPRESSION_BIT          (1 << 7)    
 
+#define  IS_CLOUD_BIT               (1 << 8)
+#define  CLOUD_IS_DECLARED_BIT      (1 << 9)
+
 /*********************************************************************************************/
+#define  VAR_IS_CLOUD(NODE)              ((NODE)->flags2 & IS_CLOUD_BIT)
+#define  SET_VAR_IS_CLOUD(NODE)          {(NODE)->flags2 |= IS_CLOUD_BIT;}
+#define  VAR_IS_DECLARED_CLOUD(NODE)     ((NODE)->flags2 & CLOUD_IS_DECLARED_BIT)
+#define  SET_VAR_IS_DECLARED_CLOUD(NODE) {(NODE)->flags2 |= CLOUD_IS_DECLARED_BIT;}
+/*********************************************************************************************/
+  
 
 #define  VAR_IS_JET(NODE)             ((NODE)->flags2 & IS_JET_BIT)
 #define  SET_VAR_IS_JET(NODE)         {(NODE)->flags2 |= IS_JET_BIT;}
@@ -420,6 +429,11 @@ extern int       jetVarSpace;
 extern int       parser_pass;
 extern int       tvarCounter;
 extern char      tvarName[16];
+
+extern Node      *cloudVars;
+extern int       ncloudVars;
+extern int       cloudVarSpace;
+
 #endif
 
 
@@ -463,6 +477,7 @@ typedef enum { \
   ARITH_GMP, \
   ARITH_MPFR, \
   ARITH_MPC, \
+  ARITH_ARF, \
   \
   ARITH_JET_NONE, \
   ARITH_JET1_1, \
@@ -475,6 +490,16 @@ typedef enum { \
   \
   ARITH_JET1_1_BIS, \
 } my_arith_t;
+
+#include "my_blas.h"
+
+#ifndef MY_CLOUD_CODE_C
+extern int num_cloud_vars;
+extern int max_cloud_size;
+extern char *prefixMyCloud;
+extern char *suffixMyCloud;
+#endif
+#include "my_cloud_code.h"
 
 #ifndef MY_JET_CODE_C
 extern int deg_jet_vars;
@@ -530,7 +555,11 @@ extern void genMyCoefCode(void);
 #endif
 #include "my_coef_header.h"
 
+
 #ifndef MAIN_C
+extern int   num_cloud_vars;
+extern int   max_cloud_size;
+
 extern int   debug;
 extern int   foldcst;
 extern int   expandsum;
@@ -541,10 +570,14 @@ extern int   genMain;
 extern int   genStep;
 extern int   genJet;
 extern int   genTestJet;
-extern int   genMyJet;
+extern int   genMyCloud;
 extern int   genMyCoef;
+extern int   genMyJet;
+extern int   genMyBlas;
+extern int   gencppwrapper;
 extern int   genExpressions;
 extern int   genPoincare;
+extern int   genRungeKutta;
 extern int   ignoreJetInconsistency;
 extern int   genJetHelper;
 extern int   jetStorageType;
@@ -560,7 +593,10 @@ extern int   num_names,f77hook;
 extern int   step_ctrl;
 extern char  *outName;
 extern char  *suffix;
+extern char  *prefixMyCloud;
+extern char  *suffixMyCloud;
 extern char  *my_jet_prefix;
+extern char  *my_jet_myblas_prefix;
 extern my_arith_t my_jet_arith;
 extern index_my_jet_prefix_t index_my_jet_prefix;
 extern index_my_jet_header_t index_my_jet_header;
@@ -633,6 +669,10 @@ Node findVarDef(Node node);
 void define_expression(Node idexpr);
 Node declareArray(Node id, Node nothing);
 Node declareExternVar(Node var);
+
+int  markAllVarsCloud();
+Node markCloud(Node var);
+  
 Node markJet(Node var);
 int  markAllVarsJet();
 Node markJetParameter(Node var);
@@ -688,6 +728,12 @@ void print_jet_tree_monomial_index_mapper(const char*, const char *, int, int);
 Expression new_expression();
 void destroy_all_nodes();
 void destroy_all_expressions();
+void genRungeKuttaMacros();
+void genRungeKuttaWrapper(); 
+void genGeneralRK45Code();
+void genGeneralRK67Code();
+void genGeneralRK78Code();
+void genGeneralRK89Code();
 /******************************************************************/
 int matchWord(const char *, char *, int, int *);
 

@@ -84,6 +84,8 @@ diff                            { return(DIFF); }
 extern                          { return(EXTRN); }
 
 jet                             { return(JET); }
+cloud                           { return(CLOUD); }
+size                            { return(SIZE); }
 
 vars                            { return(VARS); }
 symbols                         { return(VARS); }
@@ -169,7 +171,10 @@ Initial_Values                  { return(INITIALV);}
                  yylval.code = EXP_EXPR;
                  return('^');        
               }
-
+"**"          {
+                 yylval.code = EXP_EXPR;
+                 return(EXP);        
+              }
 "<"           {
                  yylval.code = LT_EXPR;
                  return(LT);        

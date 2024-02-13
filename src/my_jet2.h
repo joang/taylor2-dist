@@ -592,7 +592,8 @@ return " PREFIX_JET2(deg) ";\
 \t" I " j,k;\n\
 \t/* WARNING initial value for nrm GIVEN!! */\n\
 \tfor (k = 0; k <= " PREFIX_JET2(deg) "; k++) for (j = 0; j < nc[k]; j++) {\n\
-\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET2(faux) ",a[k][j]);\n\
+\t\t" PREFIX_MYCOEF(set_fabs) "(" PREFIX_JET2(caux) ",a[k][j]);\n\
+\t\t" PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET2(faux) "," PREFIX_JET2(caux) ");\n\
 \t\t" PREFIX_MYFLOAT(add2) "(*nrm,*nrm," PREFIX_JET2(faux) ");\n\
 \t}\n\
 \t" PREFIX_MYFLOAT(set_sqrt) "(*nrm,*nrm);\n\
@@ -1089,6 +1090,14 @@ return;}\n\
   "void " PREFIX_JET2(set_sinh) "(" PREFIX_JET2(t) " s, " PREFIX_JET2(t) " a)\n\
 {" PREFIX_JET2(sinhcosh) "(s," PREFIX_JET2(jaux) ",a);}\n" \
   "\n" \
+  "void " PREFIX_JET2(set_fabs) "(" PREFIX_JET2(t) " f, " PREFIX_JET2(t) " a)\n\
+{\n\
+\t" I " j,k;\n\
+\tfor (k = 0; k <= " PREFIX_JET2(deg) "; k++) {\n\
+\t\tfor (j = 0; j < nc[k]; j++) \n\t\t{\
+" PREFIX_MYCOEF(set_fabs) "(f[k][j],a[k][j]);}\n\
+\t}\n\
+}\n" \
   "" PREFIX_MYCOEF(t) " * " PREFIX_JET2(get_coef) "(" PREFIX_JET2(t) " a, const " I " k[])\n\
 {\n\
 \t" I " no=k[0]+k[1],ll=" PREFIX_MP2(exll) "(no,k);\n\

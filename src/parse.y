@@ -42,7 +42,7 @@ extern char yytext[];
 %start program
 %union { Node ntype; enum node_code code; }
 
-%token IF ELSE ID INTCON FLOATCON EXTRN SUM DIFF INT REAL SHORT CHAR JET VARS DEG INCLUDE ALLVARS EXPR
+%token IF ELSE ID INTCON FLOATCON EXTRN SUM DIFF INT REAL SHORT CHAR JET CLOUD VARS DEG INCLUDE ALLVARS EXPR EXP SIZE
 %token INITIALV JINITIALV QSTRING
 
 %nonassoc IF
@@ -55,13 +55,14 @@ extern char yytext[];
 %left <code> '*' '/' 
 %right <code>  UNARY
 %right <code>  '^'
+%right <code>  EXP
 %left <code> '(' 
 %left <code> '[' 
 %type <ntype> ID INTCON FLOATCON
 %type <ntype> idexpr id term  arrayref one_idx 
 %type <ntype> expr bexpr
-%type <ntype> EXTRN SUM JET EXPR
-%type <ntype> decl_id decl_array declare_one declrs jet_id jet_one jets expr_one expr_list 
+%type <ntype> EXTRN SUM JET CLOUD EXPR
+%type <ntype> decl_id decl_array declare_one declrs jet_id jet_one jets expr_one expr_list clouds cloud_id
 %type <ntype> jparameters jparm1 jparm_id 
 
 %%
@@ -83,6 +84,7 @@ stmt:
                     | define
                     | declare
                     | jet
+                    | cloud		      
                     | control
 		    | jetinit
 		    | expr_var
@@ -139,7 +141,6 @@ jparm_id:
                    { $$ = markJetParameter(current_id);}
                    ;
 
-
 var:
 		    INTCON
                     { num_jet_symbols = atoi(yytext);}
@@ -171,6 +172,39 @@ jet_id:
 		      ID
                      { $$ = markJet(current_id); num_jet_vars++; }
                       ;
+
+
+
+cloud:          
+                    CLOUD clouds SIZE cloud_size
+                     { }
+
+clouds:               ALLVARS
+                    { $$ =NULL;  markAllVarsCloud();  }
+                    | cloud_list
+		    { $$ = 0;}
+		    ;
+		    
+cloud_list:
+		    cloud_one
+		    | cloud_list ',' cloud_one
+		    ;
+
+cloud_one:
+		      cloud_id
+		      ;
+
+cloud_id:
+		      ID
+                     { $$ = markCloud(current_id); num_cloud_vars++; }
+                      ;
+
+cloud_size:
+		    INTCON
+                    { max_cloud_size = atoi(yytext);}
+                    ;
+
+
 
 expr_var:
                      EXPR id '=' expr_list
@@ -257,6 +291,8 @@ expr:
                       term
 		    |  expr '^' expr
                         { $$ = build_op(EXP_EXPR,$1,$3); }
+		    |  expr EXP expr
+                        { $$ = build_op(EXP_EXPR,$1,$3); }
 		    | expr '*' expr
                         { $$ = build_op(MULT_EXPR,$1,$3); }
 		    | expr '/' expr
@@ -313,8 +349,7 @@ one_idx:
  **************************************************************/
 %%
 
-void yyerror(s)
-  char *s;
+void yyerror(char *s)
 {
    extern int yylineno;
    extern char yytext[];

@@ -1353,7 +1353,7 @@ void genGeneralRK4Code() {
   fprintf(outfile, "        AddMyFloatA(xx_in[i], xtmp[i], ptmp1);\n");
   fprintf(outfile, "     }\n");
   if(state_jet_vars>0){
-    fprintf(outfile, "     for(i=0;i<4;i++){\n");
+    fprintf(outfile, "     for(i=0;i<%d;i++){\n",n);
     fprintf(outfile, "        MultiplyJetFloatA(jtmp2,jet3[i], FCOR);      \n");
     fprintf(outfile, "        AddJetJetA(jetIn[i], jet[i], jtmp2);\n");
     fprintf(outfile, "     }\n");

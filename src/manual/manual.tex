@@ -26,10 +26,16 @@
 \usepackage{xcolor} 
 \newcommand{\jg}[1]{\textcolor{violet}{JG: #1}}
 \newcommand{\mz}[1]{\textcolor{red}{MZ: #1}}
-
-
+\usepackage[]{mdframed}
+\newcommand{\framedtext}[1]{%
+\par%
+\noindent\fbox{%
+    \parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{#1}%
+}%
+}
 \newcommand{\taylorname}{{\bf taylor}}
-\newcommand{\version}{2.1}
+\newcommand{\version}{2.2}
+% \newcommand{\version}{2.1}
 % \newcommand{\version}{2.0.2}
 % \newcommand{\version}{2.0.1}
 % \newcommand{\version}{2.0.0}
@@ -50,7 +56,8 @@
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt model.eq}}{%
 \ifthenelse{\equal{#1}{sec:ex_driving}}{{\tt lorenz1.eq}}{%
 \ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}myjet.eq}}{%
-ERROR!!!!!}}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_uniform}}{{\tt vdp.eq}}{%
+ERROR!!!!!}}}}}}}}}}}}%
 }
 \newcommand{\odecfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt lorenz1.c}}{%
@@ -64,7 +71,8 @@ ERROR!!!!!}}}}}}}}}}}%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt jdata.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_driving}}{{\tt lorenz.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}myjet.c}}{%
-ERROR!!!!!}}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_uniform}}{{\tt vdp.c}}{%
+ERROR!!!!!}}}}}}}}}}}}%
 }
 \newcommand{\odehfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt taylor.h}}{%
@@ -78,7 +86,8 @@ ERROR!!!!!}}}}}}}}}}}%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt jdata.h}}{%
 \ifthenelse{\equal{#1}{sec:ex_driving}}{{\tt taylor.h}}{%
 \ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}myjet.h}}{%
-ERROR!!!!!}}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_uniform}}{{\tt vdp.h}}{%
+ERROR!!!!!}}}}}}}}}}}}%
 }
 \newcommand{\mainfiles}[1]{%
 \ifthenelse{\equal{#1}{sec:ex0}}{{\tt main\symbol{95}lrnz.c}}{%
@@ -91,7 +100,8 @@ ERROR!!!!!}}}}}}}}}}}%
 \ifthenelse{\equal{#1}{sec:ex_equilibria}}{{\tt main\symbol{95}equilibria.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_myjetaccess}}{{\tt jdata\symbol{95}main.c}}{%
 \ifthenelse{\equal{#1}{sec:ex_io_myjet}}{{\tt io\symbol{95}main.c}}{%
-ERROR!!!!!}}}}}}}}}}%
+\ifthenelse{\equal{#1}{sec:ex_uniform}}{{\tt main\symbol{95}vdp.c}}{%
+ERROR!!!!!}}}}}}}}}}}%
 }
 
 \newcommand{\inputfile}{}
@@ -101,19 +111,21 @@ ERROR!!!!!}}}}}}}}}}%
 
 \setlength\parindent{0pt} % to remove indent
 
-\title{\taylorname{} User's Manual\\[.5em] \normalsize version \version{}}
+\title{\vspace{-3em}\taylorname{} User's Manual\\[.5em] \normalsize version \version{}}
 
-\author{Joan Gimeno {\tt <joan@maia.ub.es>} \and \`Angel Jorba {\tt
-    <angel@maia.ub.es>} \and Maorong Zou {\tt <mzou@math.utexas.edu>}}
-\date{May 26, 2023} % version 2.1
+\author{%
+Joan Gimeno {\tt <joan@maia.ub.es>} \and %
+\`Angel Jorba {\tt <angel@maia.ub.es>} \and %
+Maorong Zou {\tt <mzou@math.utexas.edu>}}
+\date{February 13, 2024} % version 2.2
+% \date{May 26, 2023} % version 2.1
 % \date{November 28, 2022} % version 2.0.2
 % \date{November 7, 2022} % version 2.0.1
 % \date{September 9, 2022} % version 2.0.0
 
 \begin{document}
 \maketitle
-
-\vspace{-2em}\tableofcontents \newpage %to be removed?
+\vspace{-4em}\tableofcontents \newpage %to be removed?
 
 \section{What is \taylorname{}} \label{sec:whatis}
 \taylorname{} is an Ordinary Differential Equation (ODE) solver
@@ -125,7 +137,7 @@ minimize the global computational effort.  This routine is meant to be
 called from a user main program to perform the desired numerical
 integration. This version of \taylorname{} (2.*) extends the
 functionalities from \cite{JZ} by adding support of jet transport
-\cite{GJJMZ}. That is, by generating code to integrate the variational
+\cite{GJJMZ}, i.e. generating code to integrate the variational
 equations (of any order).
 
 \smallskip 
@@ -156,17 +168,18 @@ Lyapunov exponents, and high-order derivatives of Poincar\'e maps.
 
 \begin{itemize}
     \item \taylorname{} is a high-order ODE-solver.
-    \item \taylorname{} needs input of an ODE in its natural form.
-    \item \taylorname{} admits user-defined arithmetic via a set of
+    \item \taylorname{} reads input of an ODE in its natural form.
+    \item \taylorname{} admits user-defined arithmetics via a set of
       predefined \myfloat{} macros.
-    \item \taylorname{} works with multi-precision arithmetic libraries.
+    \item \taylorname{} works with several multi-precision arithmetic
+      libraries.
     \item \taylorname{} uses an optimized step size control.
     \item \taylorname{} allows user-defined step size control.
     \item \taylorname{} supports complex variables with even quadruple
       or arbitrary precision.
     \item \taylorname{} is OpenMP compatible. Declaration is required
       for thread dependent external parameters.
-    \item \taylorname{} works with jet transport via its \myjet{}
+    \item \taylorname{} works with jet transport via its \mycoef{} and \myjet{}
       macros.
     % \item \taylorname{} assume \myjet{}'s coefficients as \myfloat{}.
 \end{itemize}
@@ -191,8 +204,8 @@ available on Github
 \end{tabbing}
 \taylorname{} is also available on the web using the URLs
 \begin{tabbing}
-    \url{http://www.math.utexas.edu/users/mzou/taylor/}\hspace*{5mm} \= (US)\\
-    \url{http://www.maia.ub.es/~angel/taylor/} \> (Europe)
+    \url{http://www.math.utexas.edu/users/mzou/taylor}\hspace*{5mm} \= (US)\\
+    \url{http://www.maia.ub.es/~angel/taylor} \> (Europe)
 \end{tabbing}
 
 
@@ -271,7 +284,7 @@ To install \taylorname{}, simply run
 
 
 \section{What is jet transport in \taylorname{}} \label{sec:jettransport}
-Jet transport refers to the time transport of what is called {\em jet}
+Jet transport refers to the time transport of what is called a {\em jet}
 through an ODE-solver. In \taylorname{}, a jet is implemented using
 truncated formal power series. Given $m$ symbols $s_1, s_2, \ldots,
 s_m$ and a fixed degree $d$, we represent the state variables as
@@ -304,8 +317,10 @@ transparent unless you want to modify them. Here is the list.
       arbitrary number of symbols, and arbitrary degree. It works well
       when the jet size is below 1000 terms, i.e., whenever ${{d+m}
         \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on
-    \url{http://www.maia.ub.es/dsg/param/chapter2.html}.}.
+    \item \verb+jet_tree+ a general library\footnote{Based on the
+    algebraic manipulator of multivariate power series described in
+    Chapter 2 of \cite{Haetal16}, that can be found at
+    \url{http://www.maia.ub.es/dsg/param/chapter2.html}}.
 \end{itemize}
 
 
@@ -366,7 +381,6 @@ For example,
 \end{verbatim}
 In the first example, the variables {\tt x},{\tt y} will be treated as
 polynomials of 2 symbols of degree up to 2.
-Lyap
 In the second example, all the state variables will be polynomials of
 3 symbols and degree 1. Note that if our system of ODEs consists of 3
 equations, this is equivalent of integrating the ODEs along with its
@@ -402,14 +416,17 @@ $y$ not; as far as $f$ is written first (\ref{A1}).
 %\iffalse
 \iftrue
 \subsection*{Expression declaration}
-Occasionally, there are needs to evaluate certain expressions along an orbit of the ODE. For example,
-when integrating a Hamiltonian system, one may wish to check the value of the Hamiltonian along the orbit.
-\taylorname{} allows you to declare expressions and generates the C functions for them.  The syntax is
+Occasionally, there are needs to evaluate certain expressions along an
+orbit of the ODE. For example, when integrating a Hamiltonian system,
+one may wish to check the value of the Hamiltonian along the orbit.
+\taylorname{} allows you to declare expressions and generates the C
+functions for them.  The syntax is
 \begin{verbatim}
     expression energy=0.5*(xp^2+yp^2)+0.5*(x^2+y^2+2*x^2*y -2./3.*y^3);
 \end{verbatim}
 
-When \taylorname{} is run with the \verb+-expression+ flag, functions like the following will be generated.
+When \taylorname{} is run with the \verb+-expression+ flag, functions
+like the following will be generated.
 \begin{verbatim}    
     MY_FLOAT *energy(MY_FLOAT t, MY_FLOAT *x_in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***jOut);
     MY_FLOAT *energy_derivative(MY_FLOAT t, MY_FLOAT *x_in, 
@@ -417,17 +434,22 @@ When \taylorname{} is run with the \verb+-expression+ flag, functions like the f
     MY_FLOAT **energy_taylor_coefficients(MY_FLOAT t, MY_FLOAT *x_in, MY_FLOAT *out, int order,
                                           MY_JET *sIn, MY_JET ***jOut);
 \end{verbatim}
-Here \verb+t+ is time, \verb+x_in+ is the state variable assigned in the same order as the ODEs are defined,  \verb+sIn+ is the value of the attached jet vars or NULL. 
-\verb+out+, if not NULL, will be used to return the value(s) of the expressions. \verb+jOut+ is used to return the value of the evolved jet variables if provided.
-The first two functions returns a static array of \verb+MY_FLOATs+. The last one returns the taylor coefficients of up to order \verb+order+ of the declared expressions. 
+Here \verb+t+ is time, \verb+x_in+ is the state variable assigned in
+the same order as the ODEs are defined, \verb+sIn+ is the value of the
+attached jet vars or NULL.  \verb+out+, if not NULL, will be used to
+return the value(s) of the expressions. \verb+jOut+ is used to return
+the value of the evolved jet variables,if provided.  The first two
+functions returns a static array of \verb+MY_FLOATs+. The last one
+returns the taylor coefficients of up to order \verb+order+ of the
+declared expressions.
 
 \bigskip
 Multiple expressions can be declared on the same line, for example
 \begin{verbatim}
     expression two_exprs = x^2+y^2, x *xp + y *yp;
 \end{verbatim}
-This is the preferred (and more efficient) way to use expressions if you need to evaluate a few of them.
-\fi
+This is the preferred (and more efficient) way to use expressions if
+you need to evaluate a few of them.  \fi
 
 
 \section{How to run \taylorname{}}
@@ -579,7 +601,7 @@ Now we can compile and link these files,
 to produce an executable. 
 
 
-\subsubsection*{How to automatically generate a main program}
+\subsubsection*{How to automatically generate an example main program}
 The default {\tt -main\symbol{95}only} flag generates a main program
 that asks us to input initial values at run time. We can
 specify the initial conditions, error tolerance, and stop conditions
@@ -782,8 +804,13 @@ Now we can compile \odecfile{} and \mainfile{} and run the executable.
 \renewcommand{\mainfile}{\mainfiles{sec:ex_lyap}}
 
 Let us continue with the Lorenz model. In this example, we will
-compute the positive maximal Lyaponov exponent along the famous Lorenz
-attractor. Save the following text in \inputfile{}.
+compute the positive maximal Lyapunov exponent along the famous Lorenz
+attractor. For simplicity we will not specify which jet library we want
+to use (so the generic jet library \texttt{jet\_tree} will be used).
+A more efficient code would be obtained by using the \texttt{jet1\_1}
+library, see the \texttt{-jlib} option in Section~\ref{sec:clo}
+(see also Section~\ref{sec:myjet}). To start,
+save the following text in \inputfile{}.
 \begin{code}[title={File: \inputfile{}}]
     initialValues = 0.03,-0.02,0.15;
     absoluteErrorTolerance = 1.0E-16;   /* error tolerance for step control */
@@ -868,7 +895,7 @@ driver generated by \taylorname{}.
       }
     
       lyap /= 10000;
-      fprintf(stdout, "The estimated Lyaponov exponent is: %f\n", lyap);
+      fprintf(stdout, "The estimated Lyapunov exponent is: %f\n", lyap);
     
       exit(0);
     }
@@ -892,7 +919,10 @@ following.
 \renewcommand{\mainfile}{\mainfiles{sec:ex_varieq}}
 
 Following the Lorenz example, let us use \taylorname{} to solve the
-first variational equations.  We also add a trivial equation to
+first variational equations. Again, for simplicity we use the
+generic jet library instead of the specific (and more efficient) 
+\texttt{jet\_1} library (see Section~\ref{sec:clo}).
+We also add a trivial equation to
 include the variation with respect to a parameter. \inputfile{}
 contains our Lorenz model, with an extra equation for the parameter
 {\tt RR}.  The last line tells \taylorname{} to generate code to
@@ -961,7 +991,7 @@ by \taylorname{} with or without the {\tt -mpfr} flag.
       MakeMyFloatC(x[2],"0",0); 
       MakeMyFloatC(x[3],"28",28); /* parameter RR */
       
-      taylor_make_identity_jets(xjet,x,NULL);
+      taylor_make_identity_jets(xjet,x,NULL,NULL);
       
       MakeMyFloatC(startT,"0",0);
       MakeMyFloatC(stopT,"1",1);
@@ -1004,7 +1034,7 @@ Finally, we can compile and run the code.
 \renewcommand{\odehfile}{\odehfiles{sec:ex_omp}}
 \renewcommand{\mainfile}{\mainfiles{sec:ex_omp}}
 
-\taylorname{} is openMP compatible provided that the jet variables
+\taylorname{} is OpenMP compatible provided that the jet variables
 initialization are done properly in the driving routine.
 
 \bigskip
@@ -1077,7 +1107,7 @@ instruction is also added.
       MakeMyFloatC(te,"1",1);
       
       /* jets with identity matrix at first order */
-      for (j = 0; j < np; j++) {taylor_make_identity_jets(xjets+NJ*j,x+NS*j,NULL);}
+      for (j = 0; j < np; j++) {taylor_make_identity_jets(xjets+NJ*j,x+NS*j,NULL,NULL);}
     
     #pragma omp parallel private(ord,k)
       {
@@ -1118,9 +1148,9 @@ Finally, we can compile  and run the code
 \renewcommand{\odehfile}{\odehfiles{sec:ex_equilibria}}
 \renewcommand{\mainfile}{\mainfiles{sec:ex_equilibria}}
 
-\taylorname{} can be used to study stability of equilibrium points by
-computing its Jacobian and even bifurcations by computing high-order
-derivatives.
+\taylorname{} can be used to study stability of equilibrium points of
+ODEs by computing its Jacobian and even bifurcations by computing
+high-order derivatives.
 
 Let us create the input ODE file \inputfile{} that codifies the famous
 Lorenz model.
@@ -1175,7 +1205,7 @@ studies.
       for (k = 0; k < NS; k++) {MakeMyFloatC(x[k],"0",0);}
       
       /* jets with identity matrix at first order */
-      taylor_make_identity_jets(jetIn,x,NULL);
+      taylor_make_identity_jets(jetIn,x,NULL,NULL);
       
       /* vector field evaluation */
       taylor_coefficients_lorenz5_eq_A(t, x, 1, 0, jetIn, &jetOut);
@@ -1228,7 +1258,7 @@ The \mainfile{} initializes a jet from a string, it computes the its
 square, saves it to a file and read it from the same file. We strongly
 recommend to check I/O of the different \myfloat{} types.
 \begin{code}[title={File: \mainfile{}}]
-    #include "stdio.h"
+    #include <stdio.h>
     #include "^\odehfile{}^"
 
     int main(void)
@@ -1237,7 +1267,6 @@ recommend to check I/O of the different \myfloat{} types.
       MY_JET x,y;
       
       InitUpJet();
-      
       InitJet(x); InitJet(y); 
       
       MY_JET_FUN(sscanf)("1 2 2 1 0 3", "%lf", x);
@@ -1246,17 +1275,130 @@ recommend to check I/O of the different \myfloat{} types.
       
       MY_JET_FUN(mul2)(y, x, x);
       
-      
-      file = fopen("kk.txt", "w");   
+      file = fopen("output.txt", "w");   
       MY_JET_FUN(fprintf)(file, "% .15e\n", y);  
       fclose(file); file=NULL;
       
-      file = fopen("kk.txt", "r");   
-      MY_JET_FUN(fscanf)(file, "%lf ", x);  
-      fclose(file); file=NULL;
-      
+      file = fopen("input.txt", "r");
+      if (file != NULL)
+        {
+          MY_JET_FUN(fscanf)(file, "%lf ", x);  
+          fclose(file); file=NULL;
+        }
+        else
+        {
+          puts("cannot open input.txt");
+        }
+        
       ClearJet(y); ClearJet(x); 
       ClearUpJet();
+      return 0;
+    }
+\end{code}
+
+\subsection{Input Macro Expansion}
+\taylorname{} includes a simple input macro expansion mechanism to
+facilitate the input of large repetitive ODE systems. Two control
+statements are implemented:
+\begin{verbatim}
+#loop var = start, end
+\end{verbatim}
+  \hspace{2em}   \verb+$var+ will be expanded from start to end
+\begin{verbatim}  
+#endloop
+\end{verbatim}
+and 
+\begin{verbatim}
+#if expr
+\end{verbatim}
+   \hspace{2em} block will be included if \verb+expr+ evaluates to
+   true or a nonzero value
+\begin{verbatim}
+#endif
+\end{verbatim}
+Here is an example of generating equations for the 3-body problem.
+\begin{code}[title={File {\tt 3bp.peq}}]
+       extern MY_FLOAT G, m[3];
+
+       #loop i = 0, 2
+         qx$i' = px$i;
+         qy$i' = py$i;
+         qz$i' = pz$i;
+       #endloop
+
+       #loop i = 0, 2
+         px$i' =
+         #loop j = 0,2
+          #if $i != $j
+            +G*m[$j]*(qx$i-qx$j)/((qx$i-qx$j)**2+(qy$i-qy$j)**2+(qz$i-qz$j)**2)**1.5
+          #endif
+         #endloop
+         ;
+         py$i' =
+         #loop j = 0,2
+          #if $i != $j
+            +G*m[$j]*(qy$i-qy$j)/((qx$i-qx$j)**2+(qy$i-qy$j)**2+(qz$i-qz$j)**2)**1.5
+          #endif
+         #endloop
+         ;
+         pz$i' =
+         #loop j = 0,2
+          #if $i != $j
+            +G*m[$j]*(qz$i-qz$j)/((qx$i-qx$j)**2+(qy$i-qy$j)**2+(qz$i-qz$j)**2)**1.5
+          #endif
+         #endloop
+         ;
+       #endloop
+\end{code}
+
+\smallskip
+
+The expanded input can be viewed by running taylor with the
+\verb+-input_only+ option, i.e.
+\begin{command}
+    taylor 3bp.peq -input_only > 3bp.eq
+\end{command}
+
+\subsection{Using uniform time integration}
+\renewcommand{\inputfile}{\inputfiles{sec:ex_uniform}}
+\renewcommand{\odecfile}{\odecfiles{sec:ex_uniform}}
+\renewcommand{\odehfile}{\odehfiles{sec:ex_uniform}}
+\renewcommand{\mainfile}{\mainfiles{sec:ex_uniform}}
+
+\taylorname{} provides a way to perform uniform integration time
+stops. It is a solution to address table of values needed in other
+numerical methods such as trapezoidal rule of integration or Fourier
+transformation. To illustrate how to run it with \taylorname{}, let us
+consider the Van der Pol's equation (\ref{eq:vanderpol}) and given by
+an ODE input file \inputfile{}.
+\begin{code}[title={File: \inputfile{}}]
+    x'=y;
+    y'=(1-x*x)*y - x;
+\end{code}
+and let us generate the standard source and header files using \taylorname{},
+\begin{command}
+    taylor -o \odehfile{} -header \inputfile{}
+    taylor -o \odecfile{} -jet -step -headername \odehfile{} \inputfile{}
+\end{command}
+The \mainfile{} starts with a known periodic initial condition
+\verb+x+ with period \verb+tf+ in \mainfile{}. It integrates periodic
+orbit stopping in uniform time stops given by \verb+ht+.
+\begin{code}[title={File: \mainfile{}}]
+    #include <stdio.h>
+    #include "^\odehfile{}^"
+
+    #define NS _NUMBER_OF_STATE_VARS_
+    int main(void)
+    {
+      int mesh_size=5;
+      MY_FLOAT x[NS] = {2.0086198608748438, 0.0};
+      MY_FLOAT t=0.0, tf=6.663286859323084, ht;
+    
+      ht = tf*1.0/mesh_size;
+      do {
+          printf("% .15e % .15e % .15e\n", t/tf, x[0], x[1]);
+      } while (taylor_uniform_step_vdp_eq(&t, x, +1, 2, -16, -16, &tf, &ht, NULL, NULL) != 1);
+    
       return 0;
     }
 \end{code}
@@ -1276,6 +1418,7 @@ Usage: ./taylor
   [-name ODE_NAME ]
   [-o outfile ]
   [-long_double | -float128 |
+   -arf |
    -mpfr | -mpfr_precision PRECISION |
    -complex |
    -long_complex | -complex128 |
@@ -1293,9 +1436,9 @@ Usage: ./taylor
 \end{verbatim}
 
 Let us explain them in detail.
-
 \begin{itemize}
-\item{ \verb+-name ODE_NAME+ 
+\item {
+{ \verb+-name ODE_NAME+ 
 
 This option specifies a name for the system of ODEs. The output
 functions will have the specified name appended. For example, if we
@@ -1305,29 +1448,38 @@ procedures will be \verb+taylor_step_lorenz+ and
 \taylorname{} appends the input filename (with non-alpha-numeric
 characters replaced by \verb+_+) to its output procedure names. In the
 case when input is the standard input, the word \verb+_NoName+ will be
-used.}
-\item{ \verb+-o outfile+ 
+used.}  }
+\item {
+{ \verb+-o outfile+ 
 
 This option specifies an output file. If not specified, \taylorname{}
 writes its output to the standard output.}
 
-\noindent
-
-\item{\verb+-long_double+
+}
+\item {
+{\verb+-long_double+
 
 This option tells \taylorname{} to use long double
 floating point arithmetic.  }
-
-\item{\verb+-float128+
+}
+\item {
+{\verb+-float128+
 
 This option tells \taylorname{} to use the GNU C \verb+__float128+
 floating point arithmetic.  }
+}
+\item {
+{\verb+-arf+ 
 
-\item{\verb+-mpfr+ 
+This option tells \taylorname{} to use the the ARB library in its
+arbitrary floating precision.}}
+\item {
+{\verb+-mpfr+ 
 
 This option tells \taylorname{} to use the the GNU MPFR library.  }
-
-\item{\verb+-mpfr_precision PRECISION+
+}
+\item {
+{\verb+-mpfr_precision PRECISION+
 
 This flag is almost equivalent to {\tt -mpfr}; the only difference is
 when a main() program is generated. If {\tt -mpfr} is used the main
@@ -1336,41 +1488,48 @@ the {\bf mpfr} floating point types. If {\tt -mpfr\symbol{95}precision
   PRECISION} is used, the main program will set the precision to {\tt
   PRECISION} without prompting the user.}
 
-
-\item{\verb+-complex+
+}
+\item {
+{\verb+-complex+
 
 This option tells \taylorname{} to use the C standard for
 \verb+double complex+ floating point arithmetic.  }
-
-\item{\verb+-long_complex+
+}
+\item {
+{\verb+-long_complex+
 
 This option tells \taylorname{} to use the C standard for
 \verb+long double complex+ floating point arithmetic.  }
-
-\item{\verb+-complex128+
+}
+\item {
+{\verb+-complex128+
 
 This option tells \taylorname{} to use the GNU C \verb+__complex128+
 floating point arithmetic.  }
-
-\item{\verb+-mpc+ 
+}
+\item {
+{\verb+-mpc+ 
 
 This option tells \taylorname{} to use the the GNU MPC library.  }
-
-\item{\verb+-mpc_precision [ PRECISION_REAL | PRECISION_IMAG ]+
+}
+\item {
+{\verb+-mpc_precision [ PRECISION_REAL | PRECISION_IMAG ]+
 
 This flag is almost equivalent to {\tt -mpc}; the only difference is
 that instead of using default precision from the \verb+mpfr+ for the
 real and imaginary parts, it uses the precision (in bits) of the
 mantissa for the real and imaginary floating point types.}
-
-\item{\verb+-main+
+}
+\item {
+{\verb+-main+
 
 Informs \taylorname{} to generate a very simple \verb+main()+ driving
 routine. This option is equivalent to the options {\tt
   -main\symbol{95}only -jet -step 1}, so it produces a
 ``ready-to-run'' C file.  }
-
-\item{\verb+-header+ 
+}
+\item {
+{\verb+-header+ 
 
 This option tells \taylorname{} to output the header file. The header
 file contains the definition of the \myfloat{} type (the type used to
@@ -1385,8 +1544,9 @@ specified, the standard double precision arithmetic will be used.
 Moreover, if the flag {\tt -name ODE\symbol{95}NAME} is also used, the
 header file will also contain the prototypes for the main functions of
 the Taylor integrator.}
-
-\item{\verb+-jet+
+}
+\item {
+{\verb+-jet+
 
 This option asks \taylorname{} to generate only the code that computes
 the taylor coefficients. The generated routine is
@@ -1405,8 +1565,9 @@ is {\tt taylor.h}.  The header filename can be changed using
 {\verb+-headername NAME+} (see below).  You can also use the
 {\verb+-header+} option to include the necessary macros in the output
 file.}
-
-\item{\verb+-jhelper+
+}
+\item {
+{\verb+-jhelper+
 
 This option asks \taylorname{} to include jet IO helper functions in
 the output.  When not combined with other output options,
@@ -1423,17 +1584,19 @@ that
 Otherwise, the compiler will complain about multiple defined IO
 helpers.  If you separate \taylorname{} generated code in files, it is
 a good idea to keep the IO Helpers in its own file.  }
+}
+\item {
 
-
-\item{\verb+-main_only+
+{\verb+-main_only+
 
 This option asks \taylorname{} to generate only the \verb+main()+
 driving routine. It is useful when you want to separate different
 modules in different files. The main driving routine has to be linked
 with the step size control procedure and the jet derivative procedure
 to run.  }
-
-\item{\verb+-step STEP_SIZE_CONTROL_METHOD+
+}
+\item {
+{\verb+-step STEP_SIZE_CONTROL_METHOD+
 
 This option asks \taylorname{} to generate only the order and step
 size control code supplied by the package. If combined with the {\tt
@@ -1466,7 +1629,9 @@ above). Given an initial condition ({\tt time}, {\tt xvars}, {\tt
 orbit with the jet variables transported. The meaning of the
 parameters is explained in Section~\ref{sec:or}.  }
 
-\item{\verb+-jlib JETLIBRARY+ 
+}
+\item {
+{\verb+-jlib JETLIBRARY+ 
 
 This option select a jet library. By default, \taylorname{} uses the
 \verb+jet_tree+ library. This option allows you to overwrite that with
@@ -1482,10 +1647,14 @@ a special purpose library. Possible values for \verb+JETLIBRARY+ are:
       arbitrary number of symbols, arbitrary degree. This
       implementation works well when the jet size is below 1000 terms,
       i.e., when ${{d+m} \choose {d}} < 1000$.
-    \item \verb+jet_tree+ a general library\footnote{based on \url{http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the default.
+    \item \verb+jet_tree+ a general library\footnote{based on
+    \url{http://www.maia.ub.es/dsg/param/chapter2.html}}. This is the
+      default.
 \end{itemize}
 }
-\item{\verb+-clib COEFLIBRARY+ 
+}
+\item {
+{\verb+-clib COEFLIBRARY+ 
 
 This option select a library for the coefficients of \myjet{} library,
 i.e. \mycoef{}. By default, \taylorname{} uses the \myfloat{}
@@ -1499,12 +1668,14 @@ purpose library. Possible values for \verb+COEFLIBRARY+ are:
       considered in \myjet{}.
 \end{itemize}
 }
+}
+\item {
+{\verb+-expression+
 
-\item{\verb+-expression+
-
-This option tells \taylorname{} to generate expression given in the \verb+file+.}
-
-\item{\verb+-userdefined STEP_SIZE_FUNCTION_NAME  ORDER_FUNCTION_NAME+
+This option tells \taylorname{} to generate expression given in the
+\verb+file+.}  }
+\item{
+{\verb+-userdefined STEP_SIZE_FUNCTION_NAME  ORDER_FUNCTION_NAME+
 
 This flag specifies the names of your own step size and order control
 functions. Then, the code produced with the flag {\tt -step} includes
@@ -1514,15 +1685,17 @@ Section~\ref{sec:tnu}).
 
 For more details (like the parameters for these control functions)
 look at the source code produced by the {\tt -step} flag.  }
-
-\item{\verb+-sqrt+
+}
+\item {
+{\verb+-sqrt+
 
 This option tells \taylorname{} to use the function \verb+sqrt+
 instead of \verb+pow+ when evaluating terms like $(x+y)^{-{3\over
     2}}$.  The use of {\tt sqrt} instead of {\tt pow} produces code
 that runs faster.}
-
-\item{\verb+-headername HEADER_FILE_NAME+
+}
+\item {
+{\verb+-headername HEADER_FILE_NAME+
 
 When \taylorname{} generates the code for the jet and/or step size
 control, it assumes that the header file will be naed {\tt taylor.h}.
@@ -1542,15 +1715,52 @@ the file {\tt l.c}. Moreover, {\tt l.c} includes the header file {\tt
     taylor -name lz -o l.h -header lorenz.eq1
 \end{verbatim}
 }
-
-\item{\verb+-debug+ or \verb+-v+ 
+}
+\item {
+{\verb+-debug+ or \verb+-v+ 
 
 Print some debug info to \verb+stderr+.}
+}
+\item {
+{\verb+-rk+ 
 
-\item{\verb+-help+ (or \verb+-h+)
+Generate Runge Kutta stepper.  \taylorname{} 2.2 includes steppers for
+the 4th, 5th, 6th,7th, 8th and 9th Runge Kutta methods, adaptive step
+size control is also implemented.  With this option, \taylorname{}
+output the following routine in its output.
+
+\begin{verbatim}
+   int RungeKutta_step_ODE_NAME(MY_FLOAT *time,
+                            MY_FLOAT *xvars,
+                            int      direction,
+                            int      step_ctrl_method,
+                            double   log10abserr,
+                            double   log10relerr,
+                            MY_FLOAT *endtime,
+                            MY_FLOAT *stepused,
+                            int      *order,
+                            MY_JET   *jetOut,
+                            double   *etr_err);
+\end{verbatim}
+The meaning of the parameters are the same as those in taylor stepper,
+with the following exceptions:
+\begin{enumerate}
+    \item  \verb+log10relerr+ is not used.
+    \item \verb+order+ is used to select the order of Runge Kutta
+      method, valid values are: 4, 5, 6, 7, 8 and 9.
+    \item the extra argument \verb+etr_err+, if not NULL, returns the
+      estimated truncation error from the previous step.
+    \item{\verb+step_ctrl_method+ can be either 0 or 1.  1 means to
+      use the standard adaptive step size control for Runge Kutta
+      methods; 0 means to use a fixed step size.}
+\end{enumerate}
+}
+}
+\item {
+{\verb+-help+ (or \verb+-h+)
 
 Print a short help message.}
-
+}
 \end{itemize}
 
 \noindent
@@ -1583,7 +1793,9 @@ Its prototype is:
 \end{verbatim}
 The function \verb+taylor_step_ODE_NAME+ does one step of numerical
 integration of the given system of ODEs, using the control parameters
-passed to it. It returns 1 if \verb+endtime+ is reached, -1 unable to compute step size.  doublelog  underflow/overflow. if there is a log over 0 otherwise.
+passed to it. It returns 1 if \verb+endtime+ is reached, -1 unable to
+compute step size.  doublelog underflow/overflow. if there is a log
+over 0 otherwise.
 
 \bigskip
 
@@ -1674,9 +1886,23 @@ passed to it. It returns 1 if \verb+endtime+ is reached, -1 unable to compute st
 \begin{itemize}
 \item 0: ok.
 \item 1: ok, and {\tt time}={\tt endtime}.
-\item -1: not ok. \taylorname{} has encountered an abnormal situation. The stepper was not able to compute a step size. This happens when the last two terms of the taylor polynomials used are both zeros, or one of them becomes an \verb+NaN+ or \verb+inf+.
+\item -1: not ok. \taylorname{} has encountered an abnormal
+  situation. The stepper was not able to compute a step size. This
+  happens when the last two terms of the taylor polynomials used are
+  both zeros, or one of them becomes an \verb+NaN+ or \verb+inf+.
 \end{itemize}
 
+
+A uniform stepper \verb+taylor_uniform_step_ODE_NAME+ is also
+included. The uniform stepper outputs the orbit on an evenly spaced
+time grid specified by the initial step. When step control is used,
+this stepper is usually much faster than the fixed step stepper
+because internally, it may use very large steps, output is achieved by
+simply evaluating the stored taylor polynomial. This method has one
+important limitation. It uses a static array in the stepper to store
+the taylor coefficients from the previous step. This means that one
+can only integrate one orbit continuously from start to finish before
+integrating other orbits.
 
 \subsubsection*{The jet of derivatives}
 Its prototype is
@@ -1733,7 +1959,10 @@ currently supports the following floating point data types.
     \item \verb+long double+. The C \verb+long double+ type.
     \item \verb+__float128+. The GNU C 128 bit floating point
       type\footnote{\url{https://gcc.gnu.org/onlinedocs/libquadmath/index.html}}.
-    \item \verb+mpfr_t+. An arbitary precision floating-point data
+    \item \verb+arf_t+. An arbitrary precision floating-point data
+      type from {\tt ARB}
+      library\footnote{\url{https://arblib.org}}.
+    \item \verb+mpfr_t+. An arbitrary precision floating-point data
       type from {\tt mpfr}
       library\footnote{\url{https://www.mpfr.org}}.
     \item \verb+gmp_t+. An arbitrary precision floating point data
@@ -1745,7 +1974,7 @@ currently supports the following floating point data types.
     \item \verb+__complex128+. The GNU C 128 bit floating point for
       complex
       type\footnote{\url{https://gcc.gnu.org/onlinedocs/libquadmath/index.html}}.
-    \item \verb+mpc_t+. An arbitary precision floating-point data type
+    \item \verb+mpc_t+. An arbitrary precision floating-point data type
       from {\tt mpc}
       library\footnote{\url{https://www.multiprecision.org/mpc}}.
 \end{itemize}
@@ -1893,8 +2122,8 @@ as the conversion of double to \verb+MY_FLOAT+ is not precise.
     in the order as they appear in the model specification.}
     
 \item{\verb+const char **taylor_get_jet_monomials()+\\
-    This function returns the list of monomials in 'graded
-    lexicographic' order for the current model. Because generating the
+    This function returns the list of monomials in ``graded
+    lexicographic" order for the current model. Because generating the
     list of monomials is an expensive operation. This function will
     return an empty list when the total number of monomials exceeds
     1000.}
@@ -1913,7 +2142,7 @@ implementation. A macro \verb+MY_JET_DATA(jet,idx)+ is provided for
 accessing these coefficients in ``graded lexicographic'' order.  That
 is, the monomials are ordered by total degree first, monomials of the
 same total degree are ordered lexicographically.  For example, for
-degree 2 with 3 symbols, the "graded lexicographic" order of the
+degree 2 with 3 symbols, the ``graded lexicographic" order of the
 monomials are
 \[
 1, s_1, s_2, s_3, s_1^2, s_1s_2, s_1s_3, s_2^2, s_2s_3, s_3^2
@@ -1940,7 +2169,7 @@ and save the following code to \mainfile{}.
     #include "^\odehfile{}^"
     
     /**
-     *  This example demostrates how to access MY_JET storage array directly.
+     *  This example demonstrates how to access MY_JET storage array directly.
      */
     
     #define NN  _NUMBER_OF_STATE_VARS_
@@ -1974,7 +2203,7 @@ and save the following code to \mainfile{}.
     
     	 dstep=0.001; /* only nedeed when step_ctrl_method==0 (see manual) */
     
-    	 taylor_make_identity_jets(jetIn, NULL, NULL);
+    	 taylor_make_identity_jets(jetIn, NULL, NULL,NULL);
     
     	 MakeMyFloatA(stopT, T1);
     	 MakeMyFloatA(startT, T0);	 
@@ -2041,7 +2270,7 @@ Finally compile the code and run
     cc -g \odecfile{} \mainfile{} -lm
     ./a.out
 \end{command}
-You'll get a nice printout of elements in \myjet{} like the following.
+You will get a nice printout of elements in \myjet{} like the following.
 \begin{verbatim}
      1            s1           s2           s1^2         s1s2         s2^2         
 x:   0.03000000   1.00000000   0.00000000   0.00000000   0.00000000   0.00000000 
@@ -2179,6 +2408,370 @@ integrator.
         return 0;
     }
 \end{code}
+
+
+\section{Using \taylorname{} in Python}
+
+ It is possible to use \taylorname{} with Python. A generic Python
+ wrapper is in the works. The current distribution includes a simple
+ python script \verb+ptaylor.py+, in the examples/python directory,
+ that demonstrates a method to use Taylor in a python program.
+ 
+ \vspace{4mm} \verb+ptaylor.py+ takes the standard Taylor input file,
+ call Taylor to generate a solver, compiles the solver to a shared
+ library and then generates a runnable python script that uses the
+ Ctypes python module to interface with the shared library. The
+ generated script is a single orbit solver, it can be used as a
+ standalone runnable, or be loaded in a custom python program as a
+ python module.
+
+ \vspace{4mm} \verb+ptaylor.py+ supports multi-precision library mpfr
+ and quadmath (f128).  It also supports jet transport, although you
+ will need some basic understanding of jet transport in Taylor to make
+ sense of the output.
+
+ \vspace{4mm} The generated script outputs the solution to a data file
+ first, then load it back to be used by the other modules in the
+ script. This IO separation provides a simple mechanism for other
+ modules in the script load the data properly. By default, the
+ generated script output the solution to stdout.
+
+ \vspace{4mm} \verb+ptaylor.py+ is a python3 script. It requires the
+ following python modules: \verb+re+, \verb+os+, \verb+sys+,
+ \verb+math+, \verb+subprocess+, \verb+argparse+, and \verb+numpy+.
+
+ \vspace{4mm} The output script requires the following modules:
+ \verb+argparse+, \verb+ctypes+, \verb+numpi+, \verb+matplot+,
+ \verb+mplot3d+, \verb+re+, \verb+os+, \verb+csv+, \verb+math+, and
+ \verb+mpmath+.
+
+ \vspace{4mm} In the following, we will explain how to use this script
+ through examples. We will use the classic Henon-Heiles system for our
+ examples.
+
+ \subsection{The Input File}
+
+Here is the taylor input file for the Henon-Heiles system.
+\begin{code}[title={File {\tt henon.eq}}]
+x'= xp;
+y'= yp;
+xp'= -x -2*x*y;
+yp'= -y -x*x + y*y;
+
+expr Hamiltonian= 0.5*(xp*xp+yp*yp) + 0.5*(x*x+y*y+2*x*x*y -2./3. * y*y*y);
+
+initialValues=0.0,0.1,0.39,0.2 ;
+absoluteErrorTolerance = 1.0E-16;
+relativeErrorTolerance = 1.0E-16;
+stopTime = 100;
+startTime = 0.0; 
+\end{code}
+
+We added Hamiltonian in the input file. When one or more expressions
+is defined along with the ODEs, the generated script will evaluate the
+expression(s) and output the values after the state variables. The
+time value will be the last number in the output. If there are
+multiple expressions declarations in the input file, only the last
+definition will be used. We will check the values of the Hamiltonian
+along the orbit and see how our solver performs, especially when high
+precision mpfr arithmetic is used.
+
+\subsection{Command line options}
+\begin{verbatim}
+usage: ptaylor.py [-h] [-m MODEL_NAME] [-mpfr MPFR] [-f128] [-t0 START_T] [-t1 STOP_T] 
+                  [-nsteps NUM_STEPS] [-step STEP_SIZE] [-iv INIT_V] [-sc {0,1,2}] 
+                  [-abs_err ABS_ERR] [-rel_err REL_ERR] [-lib SHARED_LIB_NAME] 
+                  [-o OUTPUT_FILE] [-jlib {1_1,1_n,n_1,2_n,n_2,m_n,tree}] 
+                  [-d] [-u] [-i INPUT_FILE]
+
+optional arguments:
+  -h, --help            
+          show this help message and exit
+  -m MODEL_NAME, --model_name MODEL_NAME
+  -mpfr MPFR, --mpfr_precision MPFR
+  -f128, --float128
+  -t0 START_T, --start_time START_T
+  -t1 STOP_T, --stop_time STOP_T
+  -nsteps NUM_STEPS, --num_steps NUM_STEPS
+  -step STEP_SIZE, --step_size STEP_SIZE
+  -iv INIT_V, --initial_values INIT_V
+  -sc {0,1,2}, --stepsize_control {0,1,2}
+                   Only 1 is availale when jet var is present
+  -abs_err ABS_ERR, --absolute_error_tolerance ABS_ERR
+  -rel_err REL_ERR, --relative_error_tolerance REL_ERR
+  -lib SHARED_LIB_NAME, --lib_name SHARED_LIB_NAME
+  -o OUTPUT_FILE, --output OUTPUT_FILE
+  -jlib {1_1,1_n,n_1,2_n,n_2,m_n,tree}, --jet_library {1_1,1_n,n_1,2_n,n_2,m_n,tree}
+  -d, --debug
+  -u, --uniform
+          use the uniform stepper
+  -i INPUT_FILE, --input INPUT_FILE
+                     Taylor input file
+\end{verbatim}
+
+\subsection{Example 1: Basic use}
+
+The most basic usage is to just use the -i and -o options.
+\begin{command}
+  ./ptaylor.py -i henon.eq -o ex1.py
+\end{command}
+
+If you run \verb+python3 ex1.py+, you will see an output like the following
+{
+\tiny
+
+\begin{verbatim}
+  0.00000000000000000 0.10000000000000001 0.39000000000000001 0.20000000000000001 0.10071666666666668 0.00000000000000000
+  0.14146921429653089 0.16694583095857063 0.35533127260920483 0.15397458290812380 0.10071666666666666 0.37369311516958242
+   ...  ... ...
+  0.38803476554498956 0.09234490514330268 -0.08793841714914910 -0.08554336650105819 0.10071666666666680 99.69710185083758347
+  0.34132800915608263 0.05650298494628910 -0.21640973974319591 -0.14784208527307291 0.10071666666666680 100.00000000000000000
+\end{verbatim}
+}
+
+The values of each row consists of: \verb+x+, \verb+y+, \verb+xp+,
+\verb+yp+, \verb+Hamiltonian+, \verb+time+. As expected, we see the
+Hamiltonian is preserved along the orbit, with an error close to
+\verb+1E-16+.
+
+\vspace{4mm}
+
+We can also plot the various components of the data with the \verb+-p+
+columns option. For example, \verb+python3 ex1.py -p 6,1+ will plot \verb+x+
+against time, \verb+python3 ex1.py -p 1,2+ will plot \verb+x+ against \verb+y+ and
+\verb+python3 ex1.py -p 1,2,3+ will produce a 3d plot of
+\verb+x+, \verb+y+, and \verb+xp+.
+
+\vspace{4mm}
+
+The generated script support a few command line options of its
+own. For example, you can change the initial values, the starting and
+end time etc.
+\begin{verbatim}
+  usage: ex1.py [-h] [-o OUTPUT_FILE] [-p COLUMNS] [-s {dot,solid}] [-t0 START_T] [-t1 STOP_T] 
+                [-nsteps NUM_STEPS] [-step INITIAL_STEP] [-iv INIT_V] [-sc {0,1,2}] 
+                [-abs_err ABS_ERR] [-rel_err REL_ERR] [-d]
+
+  optional arguments:
+     -h, --help            
+             show this help message and exit
+     -o OUTPUT_FILE, --output_file OUTPUT_FILE
+     -p COLUMNS, --plot COLUMNS
+                     select columns to plot
+     -s {dot,solid}, --style {dot,solid}
+                         set plot style
+     -t0 START_T, --start_time START_T
+     -t1 STOP_T, --stop_time STOP_T
+     -nsteps NUM_STEPS, --num_steps NUM_STEPS
+     -step INITIAL_STEP, --initial_step INITIAL_STEP
+     -iv INIT_V, --initial_values INIT_V
+     -sc {0,1,2}, --stepsize_control {0,1,2}
+                      Only 1 is availale when jet var is present
+     -abs_err ABS_ERR, --absolute_error_tolerance ABS_ERR
+     -rel_err REL_ERR, --relative_error_tolerance REL_ERR
+     -d, --data            
+            return data in an array [data_array, count]
+     -mp, --mpmath         
+              return data in an mpmath array [ data_array, count]
+\end{verbatim}
+
+
+\subsection{Example 2: Use with mpfr library}
+
+Let's do one high precision computation. We will use \taylorname{}
+with the mpfr library. Just for fun, we will use a very high 512 bits
+precision, about 153 decimal digits. We use the command option to
+change the default error tolerance from \verb+1E-16+ to \verb+1E-150+.
+\begin{command}
+./ptaylor.py -mpfr 512 -abs_err 1E-150 -rel_err 1E-150 -i henon.eq -o ex2.py -m ex2
+\end{command}
+
+\begin{mdframed}
+Please note the \verb+-m ex2+ option. By default, \verb+ptaylor.py+
+uses names deduced from the input file for its temp files. For our
+example, it will by default generate the following temp files
+\verb+tp_ode_name_henon_eq.h+, \verb+tp_ode_name_henon_eq_step.c+ and
+\verb+tp_ode_name_henon_eq.c+. The compiled shared library will be
+named \verb+lib_ode_name_henon_eq.so+. The \verb+-m ex2+ overrides
+those default names. It provides a method to avoid name clashes when
+the same input file is used in multiple invocations of
+\verb+ptaylor.py+. In this example, the new temp files will be:
+\verb+tp_ex2.h, tp_ex2_step.c+ and \verb+tp_ex2.c+. The shared library
+name will be \verb+lib_ex2.so+.
+\end{mdframed}
+
+
+If we run \verb+python3 ex2.py+, we will see a list of numbers each
+with about 153 digits. In particular, the variations in Hamiltonian
+columns are only on the last two digits, close to the $\epsilon$ for
+our choice of precision.
+
+  \vspace{3mm}
+  {\tiny{\verb+0.100716666666666674582556832244032962589722161987900303941702774274486085767382608671047985812496007221851735145333500578162325607885681696037257400651773+}}
+  
+\vspace{3mm}
+
+
+\subsection{Example 3: Load ex2.py as a module}
+
+ The \verb+sample_main+ function in \verb+ex2.py+ returns a Python
+ array \verb+[data,count]+ when called with an nonzero
+ argument. Here, \verb+count+ is the number of data points in data,
+ and \verb+data+ is a column majored matrix whose columns contain
+ values of \verb+x+, \verb+y+, \verb+xp+, \verb+yp+, etc. 
+ 
+ Let's now use it in a custom program. Let's
+ take the output data and compute the Hamiltoninan for each point in
+ the output in our python program, using the multiprecison
+ \verb+mpmath+ python module. Save the following in \verb+henon2.py+.
+
+{\footnotesize
+\begin{code}[title={File {\tt henon2.py}}]
+#!/usr/bin/python3
+import mpmath
+import ex2
+
+def main():
+   res,count = ex2.sample_main(1)
+   emax= mpmath.mpf(-123456789)
+   emin= mpmath.mpf(123456789)
+   for i in range(count):
+       a=mpmath.fadd(mpmath.fmul(res[2][i], res[2][i]),mpmath.fmul(res[3][i], res[3][i])); # xp**2+yp**2
+       b=mpmath.fmul(res[0][i], res[0][i])                             # x*x
+       c=mpmath.fmul(res[1][i], res[1][i])                             # y*y
+       d=mpmath.fadd(b,c)                                              # x*x+y*y
+       e=mpmath.fadd(d, mpmath.fmul(2.0,mpmath.fmul(b, res[1][i])))    # x*x+y*y + 2 x*x*y
+       f=mpmath.fdiv(mpmath.fmul(2.0,mpmath.fmul(c, res[1][i])), 3.0)  # 2./3. * y**3
+       g=mpmath.fsub(e,f)                                              # x*x+y*y +x*x*y - 2/3 y*y*y
+       h=mpmath.fmul(0.5,mpmath.fadd(a, g)) # 0.5*(xp*xp+yp*yp) + 0.5*(x*x+y*y+2*x*x*y -2./3. * y*y*y)
+       if(h > emax):
+          emax = h
+       if(h < emin):
+          emin = h
+   print("EnergyMax",emax)
+   print("EnergyMin", emin)
+   print("EnergyRange:", mpmath.fsub(emax,emin))
+
+if __name__ == "__main__":
+    main()
+\end{code}
+}
+
+If you run \verb+python3 henon2.py -mp+, you will see an output
+similar to the following.
+
+{\tiny
+\begin{verbatim}
+  EnergyMax 0.100716666666666674582556832244032962589722161987900303941702774274486085767382608671047985812496007221851735145333500578162325607885681696037257400651773
+  EnergyMin 0.100716666666666674582556832244032962589722161987900303941702774274486085767382608671047985812496007221851735145333500578162325607885681696037257400651772
+  EnergyRange: 1.54760570172404289923287530295855877125561784342958443056134005414030276490204954827425628975808876919751365767558599105158314107975925030205087920214036e-153
+  \end{verbatim}
+}
+
+It shows the Hamiltonian is preserved on the orbit with accuracy of
+ 152 digits. However, if you run the same script without the \verb+-mp+
+ option, i.e, invoked as \verb+python3 henon2.py+ you will get the following
+ output.
+
+\begin{verbatim}
+  EnergyMax 0.100716666666667
+  EnergyMin 0.100716666666667
+  EnergyRange: 5.55111512312578e-17
+\end{verbatim}
+
+This is because the generated script can load the output data as
+normal double precision numbers, or as {\tt mpmath} numbers when {\tt mpfr} is
+used. The \verb+-mp+ option tells \verb+ex2.sample_main+ to load the data
+using {\tt mpmath} objects.
+
+
+\subsection{Example 4: Jet Transport}
+
+In our final example, we demonstrate the jet transport feature in
+\taylorname{}. To that end, we need to modify our input file to add
+definitions of jet variables and their initial values. Save the
+following in \verb+henon2.eq+. It declares all our state variables are
+jet variables of degree 1, with 2 symbols. We essentially tag the
+first order variational equations w.r.t \verb+x+ and \verb+y+ along with our ODEs.
+
+{\footnotesize{
+\begin{code}[title={File {\tt henon2.eq}}]
+x'= xp;
+y'= yp;
+xp'= -x -2*x*y;
+yp'= -y -x**2 + y**2;
+
+initialValues=-0.86659,-0.4999,0.00017,0.00099;
+absoluteErrorTolerance = 1.0E-16;
+relativeErrorTolerance = 1.0E-16;
+stopTime = 14;
+startTime = 0.0;
+
+jet all symbols 2 degree 1;
+
+jetInitialValues x ="(-0.86659   1 0  )";
+jetInitialValues y ="(-0.49990   0 1  )";
+jetInitialValues xp ="(0.00017   0 0  )";
+jetInitialValues yp ="(0.00099   0 0  )";
+\end{code}
+}}
+
+Let's generate our script first.
+\begin{command}
+  ./ptaylor.py -i henon2.eq -o ex4.py -m ex4
+\end{command}
+If we execute the generated script with \verb+ python3 ex4.py+, we
+will see the output printed in the terminal, each row of the output
+consists of the values of
+\begin{verbatim}
+  x, y, xp, yp, x, u1, v1, y, u2, v2, xp, u3, v3, yp, u4, v4, time
+\end{verbatim}
+
+where $u_i$ and $v_i$ are components of the jet of the corresponding variables.
+
+\vspace{4mm} 
+Let's plot the jets. Save the following in \verb+henon2.py+
+{
+\footnotesize{
+\begin{code}[title={File {\tt henon2.py}}]
+#!/usr/bin/python3
+import ex4
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+
+def main():
+    res,count = ex4.sample_main(1)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    plt.plot(res[0],res[1],res[2],linestyle=":")
+    zeros=np.zeros(count);
+    # x y xp yp x u1 v1 y u2 v2 xp u3 v3 yp u4 v4 t
+    u = np.array([res[5],res[6],zeros])
+    v = np.array([res[8],res[9],zeros])
+    ulength=np.linalg.norm(u)
+    vlength=np.linalg.norm(v)
+    log_ulength = np.log(ulength)
+    log_vlength = np.log(vlength)
+    ax.quiver(res[0],res[1],res[2], res[5],res[6],zeros,
+    pivot='tail',length=0.4*log_ulength/ulength,arrow_length_ratio=0.3,color="green")
+    ax.quiver(res[0],res[1],res[2], res[8],res[9],zeros,
+    pivot='tail',length=0.4*log_vlength/vlength,arrow_length_ratio=0.3,color="red")
+  
+    plt.show()
+if __name__ == "__main__":
+   main()
+\end{code}
+}}
+
+and run it \verb+python3 henon2.py+, you will see a graph with the jet
+vectors plotted along the orbit. The directions of the vectors are
+accurate; the lengths are scaled to $0.4\log(l)/l$, the size of the
+vectors would be too large for the plot without this scaling.
+
+
+
+
 
 \appendix
 
@@ -2332,14 +2925,17 @@ i}\right)(\sin p)_{i-1-r} (p)_{r+1}\cr
 \addcontentsline{toc}{section}{\refname}
 \bibliographystyle{alpha}
 \begin{thebibliography}{9}
-\bibitem{JZ} \`A. Jorba and M. Zou. A software package for the
-  numerical integration of ODE by means of high-order Taylor
-  methods. {\it Exp. Math.}, 14(1):99–117, 2005.
 \bibitem{GJJMZ} J. Gimeno, \`A. Jorba, M. Jorba-Cusc\'o, N. Miguel,
   and M. Zou. Numerical integration of high-order variational
   equations of ODEs. In: {\it Appl. Math. Comput.} 442 (2023),
   p. 127743. {\sc issn}: 0096-3003.
-% \bibitem{GJZ} J. Gimeno, \`A. Jorba, and M. Zou. A software package for the numerical integration of ODE by means of high-order Taylor methods using jet transport. Work in progress, 2022.
+\bibitem{Haetal16} A. Haro, M. Canadell, J.-Ll. Figueras, A. Luque
+  and J.M. Mondelo. The parameterization method for invariant manifolds:
+  from rigorous results to effective computations.
+  Applied Mathematical Sciences 195, Springer (2016).
+\bibitem{JZ} \`A. Jorba and M. Zou. A software package for the
+  numerical integration of ODE by means of high-order Taylor
+  methods. {\it Exp. Math.}, 14(1):99–117, 2005.
 \end{thebibliography}
 \end{document}
  

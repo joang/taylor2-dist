@@ -36,21 +36,29 @@
 #include "longcomplexheader.h"
 #include "complex128header.h"
 #include "mpcheader.h"
+#include "arfheader.h"
 #include "jetIOHelper.h"
 #include "VERSION"
+
+
 int    debug = 0;
 int    expandpower = 1;
 int    expandsum = 10;
 int    havesum = 0;
 int    genHeader = 0;
+int    genMyCloud = 0;
 int    genMain = 0;
-int    genStep = 0;
 int    genMyJet = 0;
 int    genMyCoef = 0;
 int    genTestJet = 0;
 int    genJet = 0;
+int    genMyBlas = 0;
+int    gencppwrapper = 0;
+int    genStep = 0;
 int    genExpressions = 0;
 int    genPoincare = 0;
+int    genRungeKutta = 0;
+int    input_only = 0;
 int    ignoreJetInconsistency=0;
 int    genJetHelper = 0;
 int    jetStorageType = 0;
@@ -71,6 +79,7 @@ int    num_names = 0;
 char   *outName = NULL;
 char   *suffix = NULL;
 char   *my_jet_prefix=NULL;
+char   *my_jet_myblas_prefix=NULL;
 my_arith_t my_jet_arith=ARITH_JET_NONE;
 index_my_jet_prefix_t index_my_jet_prefix=PREFIX_NONE;
 index_my_jet_header_t index_my_jet_header=HEADER_NONE;
@@ -106,7 +115,9 @@ int *tree_monomial_order_map(int dim, int kmax);
 
 extern int yyparse();
 
-int main(int ac, char **av)
+extern FILE *preprocessed_file(FILE *, char *);
+
+int main(int ac, char *av[])
 {
   int i, header=0, nariths=0, header_only = 0, jhelper=0, jhelper_only=0;
   int num_jet_symbols_tmp_copy, deg_jet_vars_tmp_copy;
@@ -120,16 +131,55 @@ int main(int ac, char **av)
 	{
 	  switch(arg[1])
 	    {
+            case 'a':
+              if (!strcmp(arg,"-arf"))
+              { if (nariths==0) {my_float_arith=ARITH_ARF; nariths++; arith="arf";} }
+              break;
             case 'c':
               if (!strcmp(arg,"-constantsafe") || !strcmp(arg,"-const"))
                 { cdouble = 1;}
+
               else if (!strcmp(arg,"-complex") || !strcmp(arg,"-cmplx"))
               { if (nariths==0) {my_float_arith=ARITH_COMPLEX_DOUBLE; nariths++; arith="cmplx";} }
               else if (!strcmp(arg,"-complex128") || !strcmp(arg,"-cmplx128"))
               { if (nariths==0) {my_float_arith=ARITH_COMPLEX128; nariths++; arith="cmplx128";} }
 
+              else if (!strcmp(arg, "-cloud")) { genMyCloud=1; }
+              else if (!strcmp(arg, "-cloud_prefix") || !strcmp(arg, "-cloudprefix"))
+                {
+                  if (ac > i+1) {
+                      ++i;
+                      int ii=0, len = strlen(av[i]);
+                      char *s = av[i];
+                      prefixMyCloud = (char *)malloc( (len+len+128)*sizeof(char));
+                      for(ii=0; ii<len; ii++) {
+                        char c = s[ii];
+                        if (isalnum(c)) { prefixMyCloud[ii] =c;} else {prefixMyCloud[ii]='_';}
+                      }
+                      prefixMyCloud[ii]='_';
+                      prefixMyCloud[++ii]='\0';
 
-              if (!strcmp(arg,"-coeflibrary") || !strcmp(arg,"-coef_library") || !strcmp(arg,"-coeflib")
+                      genMyCloud=1;
+                    }
+                }
+              else if (!strcmp(arg, "-cloud_suffix") || !strcmp(arg, "-cloudsuffix"))
+                {
+                  if (ac > i+1) {
+                      ++i;
+                      int ii=0, len = strlen(av[i]);
+                      char *s = av[i];
+                      suffixMyCloud = (char *)malloc( (len+len+128)*sizeof(char));
+                      suffixMyCloud[ii]='_';
+                      for(ii=1; ii<len; ii++) {
+                        char c = s[ii-1];
+                        if (isalnum(c)) { suffixMyCloud[ii] =c;} else {suffixMyCloud[ii]='_';}
+                      }
+                      suffixMyCloud[ii]='\0';
+
+                      genMyCloud=1;
+                    }
+                }
+              else if (!strcmp(arg,"-coeflibrary") || !strcmp(arg,"-coef_library") || !strcmp(arg,"-coeflib")
                   || !strcmp(arg,"-coef_lib") || !strcmp(arg,"-clib"))
                 {
                   if (ac > i+1)
@@ -192,23 +242,27 @@ int main(int ac, char **av)
                       fprintf(stderr, "error: coef library type required\n"); exit(10);
                     }
                 }
+              else if (!strcmp(arg,"-cpp"))
+                {
+                  gencppwrapper=1;
+                }
               break;
             case 'd':
               if (!strcmp(arg,"-debug") || !strcmp(arg,"-d"))
                 debug = 1;
               break;
             case 'e':
-              if (!strncmp(arg,"-expandsum",8))
+              if (!strncmp(arg,"-expandsum",10))
                 {
                   if (++i < ac) expandsum = atoi(av[i]);
                   else --i;
                 }
-              else if (!strncmp(arg,"-expandpower",8))
+              else if (!strncmp(arg,"-expandpower",15))
                 {
                   if (++i < ac) expandpower = atoi(av[i]);
                   else --i;
                 }
-              if (!strncmp(arg,"-expression",10)) { genExpressions = 1;}
+              if (!strncmp(arg,"-expression",14)) { genExpressions = 1;}
               break;
             case 'f':
               if (!strcmp(arg,"-f77")) { f77hook=1;}
@@ -217,20 +271,22 @@ int main(int ac, char **av)
               }
               break;
             case 'g':
-              if (!strcmp(arg,"-gmp_precision")) {
-                if (ac > i+1 && atoi(av[i+1]) > 0)
-                  {
-                    if (nariths==0)
-                      {
-                        my_float_arith=ARITH_GMP; nariths++; arith="gmp";
-                        gmp_precision = atoi(av[i+1]);
-                        i++;
-                      }
-                  } else {
-                    fprintf(stderr,"\t The -gmp_precision flag must be followed by PRECISION in number of bits\n");
-                    exit(1);
-                  }
-              } else if (!strcmp(arg,"-gmp")) {
+              if (!strcmp(arg,"-gmp_precision"))
+                {
+                  if (ac > i+1 && atoi(av[i+1]) > 0)
+                    {
+                      if (nariths==0)
+                        {
+                          my_float_arith=ARITH_GMP; nariths++; arith="gmp";
+                          gmp_precision = atoi(av[i+1]);
+                          i++;
+                        }
+                    } else {
+                      fprintf(stderr,"\t The -gmp_precision flag must be followed by PRECISION in number of bits\n");
+                      exit(1);
+                    }
+                }
+              else if (!strcmp(arg,"-gmp")) {
                 if (nariths==0) {my_float_arith=ARITH_GMP; nariths++; arith="gmp";}
               }
               break;
@@ -242,6 +298,8 @@ int main(int ac, char **av)
             case 'i':
               if (!strcmp(arg,"-ignore_jet_inconsistency") || !strcmp(arg,"-ignoreJI") || !strcmp(arg,"-ignoreji"))
                 ignoreJetInconsistency=1;
+	      if(!strcmp(arg,"-input_only") || !strcmp(arg,"-inputonly"))
+            input_only = 1;
               break;
             case 'j':
               if (!strcmp(arg,"-jet")) { genJet = 1;genMyJet=1; }
@@ -258,7 +316,7 @@ int main(int ac, char **av)
               if (!strcmp(arg,"-long_double") || !strcmp(arg,"-longdouble")) {
                 if (nariths==0) {my_float_arith=ARITH_LONG_DOUBLE; nariths++; arith="longdouble";}
               }
-              if (!strcmp(arg,"-long_complex") || !strcmp(arg,"-longcomplex")) {
+              else if (!strcmp(arg,"-long_complex") || !strcmp(arg,"-longcomplex")) {
                 if (nariths==0) {my_float_arith=ARITH_COMPLEX_LONG_DOUBLE; nariths++; arith="longcomplex";}
               }
               break;
@@ -302,6 +360,9 @@ int main(int ac, char **av)
                     exit(1);
                   }
               }
+            else if (!strcmp(arg,"-myblas") || !strcmp(arg,"-Myblas") || !strcmp(arg,"-MyBlas")) {
+                genMyBlas = 1;
+              }
               break;
 	    case 'n':                   /* -name */
               if (!strcmp(arg,"-n") || !strcmp(arg,"-name"))
@@ -341,6 +402,13 @@ int main(int ac, char **av)
             case 'p':
               if (!strncmp(arg,"-poincare",10)) { genPoincare = 1; genExpressions = 1;}
               break;
+            case 'r':
+              if (!strncmp(arg,"-rungekutta",10) || !strncmp(arg,"-rk",10)) { genRungeKutta = 1;}
+	      if (ac > i+1 && isdigit(av[i+1][0]))
+		{
+		  genRungeKutta = atoi(av[i+1]); i++;
+		}
+              break;	      
             case 's':
               if (!strcmp(arg,"-step")) {
                 genStep = 1;
@@ -377,34 +445,37 @@ int main(int ac, char **av)
                   exit(0);
                 }
               break;
-	    default:
-	      break;
-	    }
+            default:
+              break;
+            }
 	}
       else {
-        if ((infile = fopen(av[i], "r")) == NULL)
-          {
-            fprintf(stderr, "Cannot open '%s'\n", av[i]);
-            exit(2);
-          } else {
-	     if(saved_input_file == NULL) {
-	       int  len= strlen(av[i]);
-                saved_input_file = (char *)malloc( (len+len+128)*sizeof(char));
-		strcpy(saved_input_file, av[i]);
-	     }	  
-            if (suffix == NULL)
-              {
-                int ii, len = strlen(av[i]);
-                char *s = av[i];
-                suffix = (char *)malloc( (len+len+128)*sizeof(char));
-                for(ii=0; ii<len; ii++) {
-                  char c = s[ii];
-                  if ( isalnum(c)) { suffix[ii] =c;} else {suffix[ii]='_';}
+          if ((infile = fopen(av[i], "r")) == NULL)
+            {
+              fprintf(stderr, "Cannot open '%s'\n", av[i]);
+              exit(2);
+            }
+          else
+            {
+              if(saved_input_file == NULL)
+                {
+                  int  len= strlen(av[i]);
+                   saved_input_file = (char *)malloc( (len+len+128)*sizeof(char));
+                   strcpy(saved_input_file, av[i]);
                 }
-                suffix[ii]='\0';
-              }
-          }
-      }
+             if (suffix == NULL)
+               {
+                 int ii, len = strlen(av[i]);
+                 char *s = av[i];
+                 suffix = (char *)malloc( (len+len+128)*sizeof(char));
+                 for(ii=0; ii<len; ii++) {
+                   char c = s[ii];
+                   if ( isalnum(c)) { suffix[ii] =c; } else {suffix[ii]='_';}
+                 }
+                 suffix[ii]='\0';
+               }
+            }
+        }
     }  
   if (suffixes[0] == NULL) {
     if (suffix != NULL) { suffixes[0] = suffix; } else { suffixes[0] = "_NoName";} num_names = 1;
@@ -429,6 +500,12 @@ int main(int ac, char **av)
   suffix = suffixes[0];
   outName = outNames[0];
 
+  if (suffixMyCloud == NULL)
+    {
+      suffixMyCloud = (char *) malloc((strlen(suffix)+1)*sizeof(char));
+      suffixMyCloud[0] = '_'; strcpy(suffixMyCloud+1, suffix);
+    }
+  if (prefixMyCloud == NULL) prefixMyCloud = strdup("");
   if (infile == NULL) infile= stdin;
   if (outfile == NULL) outfile=stdout;
 
@@ -461,8 +538,22 @@ int main(int ac, char **av)
 
   if (genMain > 1) { genStep = 1; genJet = 1; genHeader = 1; genJetHelper=1; genMyJet=1;}
 
-  if (header_name == NULL) { header_name = "taylor.h";}
+  if (header_name == NULL) { header_name = strdup("taylor.h");}
 
+  infile = preprocessed_file(infile, saved_input_file);
+  
+  if(debug || input_only) {
+    char *p, buffer[512];
+    if(!input_only) fprintf(stderr, "/* input file contents start */\n");
+    while(fgets(buffer, 512, infile)) {
+      p = buffer;
+      fprintf(input_only?stdout:stderr, "%s", p);
+    }
+    if(!input_only) fprintf(stderr, "/* input file contents end  */\n");    
+    rewind(infile);
+    if(input_only) exit(0);
+  }
+  
   initialize_vars();
   yyin = infile;
   yyparse();
@@ -629,9 +720,21 @@ int main(int ac, char **av)
   genCode();
 
   //20230418
-  if(genExpressions)   genExpressionCode();
+  if(genExpressions) genExpressionCode();
 
   if(genPoincare) genPoincareSectionCode();
+  
+  if(genRungeKutta) {
+    genRungeKuttaMacros();    
+    genGeneralRK45Code();
+    genGeneralRK67Code();
+    genGeneralRK78Code();
+    genGeneralRK89Code();
+    genRungeKuttaWrapper();
+  }
+  
+  
+  free(prefixMyCloud); free(suffixMyCloud);
 
   exit(0);
 }
@@ -644,6 +747,7 @@ void help(const char *name)
   fprintf(stderr, "  [-name ODE_NAME ]\n");
   fprintf(stderr, "  [-o outfile ]\n");
   fprintf(stderr, "  [-long_double | -float128 |\n");
+  fprintf(stderr, "   -arf |\n");
   fprintf(stderr, "   -mpfr | -mpfr_precision PRECISION |\n");
   fprintf(stderr, "   -gmp | -gmp_precision PRECISION |\n");
   fprintf(stderr, "   -complex |\n");
@@ -652,6 +756,10 @@ void help(const char *name)
   fprintf(stderr, "  [-main | -header | -jet | -main_only ]\n");
   fprintf(stderr, "  [-jlib MY_JET_LIB | -jet_helper ]\n");
   fprintf(stderr, "  [-clib MY_COEF_LIB ]\n");
+  fprintf(stderr, "  [-cloud | -cloud-prefix PREFIX | -cloud-suffix SUFFIX ]\n");
+  fprintf(stderr, "  [-cpp ]\n");
+  fprintf(stderr, "  [-rk ]\n");
+  fprintf(stderr, "  [-myblas ]\n");
   fprintf(stderr, "  [-expression ]\n");
   fprintf(stderr, "  [-step STEP_CONTROL_METHOD ]\n");
   fprintf(stderr, "  [-u | -userdefined STEP_SIZE_FUNCTION_NAME ORDER_FUNCTION_NAME ]\n");
@@ -713,13 +821,27 @@ void genSampleHeader(void)
 //   fprintf(outfile, "static int _size_of_jet_variable_ =    %d;\n", jsize);
 
   for(i=1; i<= djets; i++) jsize+=num_monomials(num_jet_symbols, i);
-  fprintf(outfile,"#define _MAX_SIZE_OF_JET_VAR_          %d\n", jsize);    
+  fprintf(outfile,"#define _MAX_SIZE_OF_JET_VAR_          %d\n", jsize);
+  fprintf(outfile,"#endif\n\n");
+
+  fprintf(outfile,"#ifndef _NUMBER_OF_CLOUD_VARS_\n");
+  fprintf(outfile,"#define _NUMBER_OF_CLOUD_VARS_         %d\n", ncloudVars); //MZ-TODO: nclouds from parse.y
+  fprintf(outfile,"#define _MAX_CLOUD_SIZE_               %d\n", max_cloud_size); //MZ-TODO: scloud from parse.y
   fprintf(outfile,"#endif\n\n");
 
 
   fprintf(outfile, "#ifndef _TAYLOR_H_\n");
   fprintf(outfile, "#define _TAYLOR_H_\n");
-  if (qd4 | qd2 ) { /* use library qd */
+  if (my_float_arith == ARITH_ARF) {
+      fprintf(outfile,"#include <stdio.h>\n");
+      fprintf(outfile,"#include <stdlib.h>\n");
+      fprintf(outfile,"#include <math.h>\n");
+      fprintf(outfile,"#include <string.h>\n");
+      fprintf(outfile,"#include <ctype.h>\n");
+      fprintf(outfile,"#include <arb.h> /* possible flags: -lflint -lflint-arb */\n");
+      fprintf(outfile, "%s\n", arf_header);
+      fprintf(outfile, "#endif\n");
+  } else if (qd4 | qd2 ) { /* use library qd */
     fprintf(outfile, "#include <iostream>\n");
     fprintf(outfile, "#include <qd/qd_real.h>\n");
     fprintf(outfile, "#include <qd/fpu.h>\n");
@@ -848,9 +970,18 @@ void genSampleHeader(void)
 //    jetHeader = strlen(sample_header_JET);
   }
 
-  if (genMyCoef) my_coef_prefix = my_coef_prefixes[index_my_coef_prefix];
+  if (genMyBlas) {
+      fprintf(outfile, "\n#ifndef _MY_FLOAT_MYBLAS_H_\n");
+      fprintf(outfile, "#define _MY_FLOAT_MYBLAS_H_\n");
+      fprintf(outfile, "%s\n", MY_BLAS_HEADER(MY_FLOAT_MYBLAS_FIXES,"MY_FLOAT","MY_FLOAT","MY_FLOAT","int"));
+      fprintf(outfile, "%s\n", MY_FLOAT_MYBLAS_FUN_MACRO);
+      fprintf(outfile, "\n");
+      fprintf(outfile, "\n#endif /* end _MY_FLOAT_MYBLAS_H_ */\n\n");
+    }
 
-  genMyJetHeader();
+  if (genMyCoef) {my_coef_prefix = my_coef_prefixes[index_my_coef_prefix]; genMyCoefHeader();}
+  if (genMyCloud) genMyCloudHeader();
+  else genMyJetHeader();
 
   // 20221219 20220614
   if( jsize > 1)
@@ -869,34 +1000,15 @@ void genSampleHeader(void)
       fprintf(outfile, "int       taylor_step_%s(MY_FLOAT *ti, MY_FLOAT *x, int dir, int step_ctl,\n", suffixes[i]);
       fprintf(outfile, "                         double log10abserr, double log10relerr,\n");
       fprintf(outfile, "                         MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetInOut);\n\n");
-    }
-    if(genExpressions){
-      Expression expr = expression_list;
-      while(expr) {
-	Node var = EXPRESSION_NAME(expr);
-	expr =  EXPRESSION_NEXT(expr);
-	//fprintf(outfile,"\nvoid %s(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));
-	//fprintf(outfile,"\nvoid %s_derivative(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));		
-	//fprintf(outfile,"\nMY_FLOAT *%s_value(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out);", NODE_GIVEN_NAME(var));
-
-	fprintf(outfile,"\nMY_FLOAT *%s(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***sOut);", NODE_GIVEN_NAME(var));
-	fprintf(outfile,"\nMY_FLOAT *%s_derivative(MY_FLOAT t, MY_FLOAT *in, MY_FLOAT *out, MY_JET *sIn, MY_JET ***sOut);", NODE_GIVEN_NAME(var));		
-	fprintf(outfile,"\nMY_FLOAT **%s_taylor_coefficients(MY_FLOAT t, MY_FLOAT *in, int order, MY_JET *sIn, MY_JET ***sOut);\n", NODE_GIVEN_NAME(var));	
-      }
-    }
-    if(genPoincare) {
-      fprintf(outfile,"\nvoid poincare_section_%s(MY_FLOAT *xx_in, \n",suffix);
-      fprintf(outfile,"\t\t int nsteps_in, int nintersections_in, int step_ctl_in,\n");
-      fprintf(outfile,"\t\t double startT_in, double stopT_in,  double step, \n");
-      fprintf(outfile,"\t\t double pEpsilon_in, double tolerance_in, double rtolerance_in, \n");
-      fprintf(outfile,"\t\t MY_FLOAT *(*_poincare_section_f)(MY_FLOAT t, MY_FLOAT *x, MY_FLOAT *v,MY_JET *sIn, MY_JET ***sOut), \n");
-      fprintf(outfile,"\t\t MY_FLOAT *(*_poincare_section_derivative_f)(MY_FLOAT t, MY_FLOAT *x, MY_FLOAT *v,MY_JET *sIn, MY_JET ***sOut),\n");
-      fprintf(outfile,"\t\t int crossing, int intesection_method, char *out_file, MY_JET *sIn \n");
-      fprintf(outfile,");\n");
-      fprintf(outfile,"\nint RK4_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
-      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
-      fprintf(outfile,"\nint RK4QC_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
-      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
+      fprintf(outfile, "int       taylor_uniform_step_%s_tag(MY_FLOAT *ti, MY_FLOAT *x, int dir, int step_ctl,\n", suffixes[i]);
+      fprintf(outfile, "                         double log10abserr, double log10relerr,\n");
+      fprintf(outfile, "                         MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetInOut,int tag);\n\n");
+      fprintf(outfile, "int       taylor_uniform_step_%s(MY_FLOAT *ti, MY_FLOAT *x, int dir, int step_ctl,\n", suffixes[i]);
+      fprintf(outfile, "                         double log10abserr, double log10relerr,\n");
+      fprintf(outfile, "                         MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetInOut);\n\n");            
+      fprintf(outfile, "int       taylor_step_%s_Twelve(MY_FLOAT *ti, MY_FLOAT *x, int dir, int step_ctl,\n", suffixes[i]);
+      fprintf(outfile, "                         double log10abserr, double log10relerr,\n");
+      fprintf(outfile, "                         MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetInOut, MY_FLOAT ***s_return, MY_JET ***jet_return);\n\n");      
       
     }
     if(genExpressions){
@@ -925,8 +1037,15 @@ void genSampleHeader(void)
       fprintf(outfile,"\nint RK4_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
       fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
       fprintf(outfile,"\nint RK4QC_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl, double log10abserr, double log10relerr,\n",suffix);
-      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");      
-    }    
+      fprintf(outfile,"\t\t MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn);\n");
+    }
+
+    if(genRungeKutta) {
+      fprintf(outfile,"\nint RungeKutta_step_%s(MY_FLOAT *t_in, MY_FLOAT *xx_in, int dir, int step_ctl,\n\
+		               double log10abserr, double log10relerr,\n \
+		               MY_FLOAT *endtime, MY_FLOAT *ht, int *order, MY_JET *jetIn, double *err_ret);\n\n",
+	      suffix);
+    }
   }
   fprintf(outfile, "/************************************************************************/\n\n");
   fprintf(outfile, "#ifdef __cplusplus\n}\n#endif\n");
@@ -1033,7 +1152,7 @@ int n_choose_k ( int n0, int k0 ) {
  *        https://people.sc.fsu.edu/~jburkardt/c_src/monomial/monomial.html
  */
 
-int exponent_to_rank ( int m, int *x ) {
+int exponent_to_rank( int m, int *x ) {
   int i, j, n, degree, rank, tim1, *xs;
 
   if( m < 1 ){
@@ -1081,7 +1200,7 @@ int exponent_to_rank ( int m, int *x ) {
   return rank;
 }
 
-int *rank_to_exponent ( int m, int rank ) {
+int *rank_to_exponent( int m, int rank ) {
   int i,  j,  nm, ns, r, rank1, rank2, *x, *xs;
 
   if( m < 1 ) {
@@ -1366,7 +1485,7 @@ void mn_multiply_jets( int m, int n, int flag ) {
 }
 
 
-void genlexia (int *c, int n) {
+void genlexia(int *c, int n) {
   int ordp, i, inz;
   for (inz=0; inz<n; inz++) if (c[inz]!=0) break;
   if (inz==n) return;
@@ -1518,7 +1637,7 @@ int output_taylor_jet_reducer(FILE *outfile) {
   if(1) {
     for(i= 1; i < order; i++) {
       if(i > 1) {
-	f1 = rank_to_exponent ( m, indicies[i-1]+1 );
+        f1 = rank_to_exponent( m, indicies[i-1]+1 );
 
 	{
 	  fprintf(outfile, "\t/* \"");	  	  

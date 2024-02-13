@@ -355,7 +355,8 @@ void " PREFIX_JET_m(nrm2) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_JET_m(t) " a)
   int k;\n\
   /* WARNING initial value for nrm GIVEN!! */\n\
   for (k = 0; k < nm_working_jetvar_size; k++) {\n\
-    " PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_m(faux) ",a[k]);\n\
+    " PREFIX_MYCOEF(set_fabs) "(" PREFIX_JET_m(caux) ",a[k]);\n\
+    " PREFIX_MYCOEF(nrm2) "(&" PREFIX_JET_m(faux) "," PREFIX_JET_m(caux) ");\n\
     " PREFIX_MYFLOAT(add2) "(*nrm,*nrm," PREFIX_JET_m(faux) ");\n\
   }\n\
 }\n\
@@ -1044,6 +1045,13 @@ void " PREFIX_JET_m(set_tanh) "(" PREFIX_JET_m(t) " t," PREFIX_JET_m(t) " b) {\n
   " PREFIX_JET_m(div2) "(t, t1, t2);  \n\
 }\n\
 \n\
+\n\
+void " PREFIX_JET_m(set_fabs) "(" PREFIX_JET_m(t) " f, " PREFIX_JET_m(t) " a) {\n\
+  int i; \n\
+  for(i=0;i<nm_working_jetvar_size;i++){\n\
+    " PREFIX_MYCOEF(set_fabs) "(f[i],a[i]);\n\
+  }\n\
+}\n\
 \n\
 void " PREFIX_JET_m(fprintf) "(FILE *file, const char *fmt, " PREFIX_JET_m(t) " a)\n\
 {\n\

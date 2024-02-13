@@ -1,0 +1,31 @@
+extern MY_FLOAT G, m[3];
+
+#loop i = 0, 2
+qx$i' = px$i;
+qy$i' = py$i;
+qz$i' = pz$i;
+#endloop
+
+#loop i = 0, 2
+px$i' =
+#loop j = 0,2
+#if $i != $j
++G*m[$j]*(qx$i-qx$j)/((qx$i-qx$j)**2+(qy$i-qy$j)**2+(qz$i-qz$j)**2)**1.5
+#endif
+#endloop
+;
+py$i' =
+#loop j = 0,2
+#if $i != $j
++G*m[$j]*(qy$i-qy$j)/((qx$i-qx$j)**2+(qy$i-qy$j)**2+(qz$i-qz$j)**2)**1.5
+#endif
+#endloop
+;
+pz$i' =
+#loop j = 0,2
+#if $i != $j
++G*m[$j]*(qz$i-qz$j)/((qx$i-qx$j)**2+(qy$i-qy$j)**2+(qz$i-qz$j)**2)**1.5
+#endif
+#endloop
+;
+#endloop

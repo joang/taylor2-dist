@@ -35,6 +35,11 @@ ExternVar externVars = NULL;
 Node      *jetVars = NULL;
 int       njetVars = 0;
 int       jetVarSpace = 0;
+
+Node      *cloudVars = NULL;
+int       ncloudVars = 0;
+int       cloudVarSpace = 0;
+
 int       nexterns = 0;
 int       externSpace = 0;
 int       neqns     = 0;
@@ -1745,6 +1750,59 @@ int markAllVarsJet() {
 }
 // 20220609 end
 /*******************************************************************************/
+// 20230805
+void  record_cloud_var(Node var) {
+  if(cloudVarSpace == 0) {
+    cloudVars = (Node *)my_malloc(32 * sizeof(Node));
+    cloudVarSpace = 32;
+  } else if(ncloudVars+1 >= cloudVarSpace) {
+    cloudVars = (Node *)my_realloc(cloudVars, 2 * cloudVarSpace * sizeof(Node));
+    cloudVarSpace *= 2;
+  }
+  cloudVars[ncloudVars++] = var;
+}
+
+int markAllVarsCloud() {
+  int i;
+  for(i = 0; i < neqns; i++) {
+    Node var = equations[i].name;
+    if(var) {
+      SET_VAR_IS_CLOUD(var);
+      SET_VAR_IS_DECLARED_CLOUD(var);
+      record_cloud_var(var);      
+    }
+  }
+  num_cloud_vars = neqns;
+  return num_cloud_vars;
+}
+
+Node markCloud(Node var)
+{
+  if(var)
+    {
+      int code = NODE_CODE(var);
+      if(code != ID_NODE)
+        {
+          fprintf(stderr, "Internal Error in CLOUD declaration, Var is not an ID node.\n");
+          exit(5);
+        }
+      if(ID_IS_DEFINED(var))
+        {
+          fprintf(stderr, "Error in CLOUD declaration: symbol '%s' is already used as a local variable.\n", NODE_NAME(var));
+          exit(5);
+        }
+      SET_VAR_IS_CLOUD(var);
+      SET_VAR_IS_DECLARED_CLOUD(var);
+      //      ID_SINDEX(var) = ++state_jet_vars;
+      record_cloud_var(var);      
+      return(var);
+    }
+  return(NULL);
+}
+
+// 20230805
+/*******************************************************************************/
+
 
 Node markJetParameter(Node var)
 {

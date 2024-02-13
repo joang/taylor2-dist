@@ -213,9 +213,12 @@ static char *words[2] = {MY_COEF_PREFIX,MY_COEF_SUFFIX};
 int setMyCoefIndexes(void) {
   if (my_coef_arith == ARITH_NONE)
     {
-      index_my_coef_prefix = PREFIX_NONE;
-      index_my_coef_header = HEADER_NONE;
-      index_my_coef_code = CODE_NONE;
+      //index_my_coef_prefix = PREFIX_NONE;
+      index_my_coef_prefix =  PREFIX_MY_FLOAT;
+      //index_my_coef_header = HEADER_NONE;
+      index_my_coef_header = HEADER_MY_FLOAT;      
+      //index_my_coef_code = CODE_NONE;
+      index_my_coef_code = CODE_MY_FLOAT;
       my_coef_prefix = my_coef_prefixes[index_my_coef_prefix];
       fprintf(outfile, "/* No coef lib */\n");
     }
@@ -324,11 +327,12 @@ void genMyCoefHeader(void) {
         }
 
       print_and_subs(words, my_coef_of_jets_preheaders[index_my_coef_header], my_coef_prefix, suffix);
-
+      fprintf(outfile, "\n");
 //      if (my_jet_arith == ARITH_JET1_1) print_and_subs(words, my_coef_api_macros[2], my_coef_prefix, suffix);
       print_and_subs(words, my_coef_of_jets_headers[index_my_coef_header], my_coef_prefix, suffix);
-
+      fprintf(outfile, "\n");
       print_and_subs(words, my_coef_of_jets_postheaders[index_my_coef_header], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
     }
   else
     {
@@ -337,14 +341,18 @@ void genMyCoefHeader(void) {
       fprintf(outfile, "#define " MY_COEF_TOTAL_COEFFS_MACRO_NAME " 1\n");
 
       print_and_subs(words, my_coef_preheaders[index_my_coef_header], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
 
       if (my_jet_arith == ARITH_JET1_1) print_and_subs(words, my_coef_api_macros[2], my_coef_prefix, suffix);
       print_and_subs(words, my_coef_headers[index_my_coef_header], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
 
       print_and_subs(words, my_coef_postheaders[index_my_coef_header], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
     }
 
   print_and_subs(words, MY_COEF_FUN_MACRO, my_coef_prefix, suffix);
+  fprintf(outfile, "\n");
 
   fprintf(outfile, "#endif /* _MY_COEF_H_ */\n\n");
 }
@@ -388,17 +396,23 @@ void genMyCoefCode(void) {
         }
 
       print_and_subs(words, my_coef_of_jets_precodes[index_my_coef_code], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
 //      if (my_jet_arith != ARITH_JET1_1) print_and_subs(words, my_coef_api_macros[2], my_coef_prefix, suffix);
       print_and_subs(words, my_coef_of_jets_codes[index_my_coef_code], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
 
       print_and_subs(words, my_coef_of_jets_postcodes[index_my_coef_code], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
     }
   else
     {
       print_and_subs(words, my_coef_precodes[index_my_coef_code], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
       if (my_jet_arith != ARITH_JET1_1) print_and_subs(words, my_coef_api_macros[2], my_coef_prefix, suffix);
       print_and_subs(words, my_coef_codes[index_my_coef_code], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
 
       print_and_subs(words, my_coef_postcodes[index_my_coef_code], my_coef_prefix, suffix);
+      fprintf(outfile, "\n");
     }
 }

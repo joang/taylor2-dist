@@ -90,6 +90,7 @@ int all_vars_are_jets=0;
 /* *******  ***********  ******* */
 #include "my_jet_tree.h"
 
+#include "cppwrapper.h"
 
 char *my_jet_prefixes[] = {\
  "jet_none",\
@@ -102,6 +103,19 @@ char *my_jet_prefixes[] = {\
  "jet_tree",\
  "jet1_1_bis", \
  "jet"
+};
+
+char *my_jet_myblas_prefixes[] = {\
+ "jet_none_vec",\
+ "jet1_1_vec", \
+ "jet_1_vec", \
+ "jet1_vec", \
+ "jet2_vec", \
+ "jet_2_vec", \
+ "jet_m_vec", \
+ "jet_tree_vec",\
+ "jet1_1_bis_vec", \
+ "jet_vec"
 };
 
 char *my_float_api_macros = \
@@ -314,7 +328,81 @@ char *my_jet_postcodes[] = { \
   MY_JET_MAX_NUM_SYMB_MACRO_NAME,MY_JET_MAX_DEGREE_MACRO_NAME,MY_JET_TOTAL_COEFFS_MACRO_NAME),\
 };
 
-static char *words[2] = {MY_JET_PREFIX,MY_JET_SUFFIX};
+char *my_jet_myblas_headers[]= { \
+  "",\
+  MY_BLAS_HEADER(MY_JET1_1_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET_1_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET1_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET2_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET_2_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET_m_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET_TREE_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+  MY_BLAS_HEADER(MY_JET1_1_FIXES,"MY_JET","MY_COEF","MY_FLOAT","int"), \
+};
+
+char *my_jet_myblas_codes[]= { \
+  "",\
+  MY_BLAS_CODE(MY_JET1_1_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET_1_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET1_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET2_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET_2_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET_m_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET_TREE_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+  MY_BLAS_CODE(MY_JET1_1_FIXES,"MY_JET",MY_JET_FUN,"MY_COEF",MY_COEF_FUN,"MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(jaux)"), \
+};
+#define MY_JET_MYBLAS_PREFIX MY_JET_PREFIX
+#define MY_JET_MYBLAS_SUFFIX MY_JET_SUFFIX
+#define MY_JET_MYBLAS_SPACE(x) MY_JET_MYBLAS_PREFIX "_" #x "_" MY_JET_MYBLAS_SUFFIX
+#define MY_JET_MYBLAS_FUN(x) "MY_JET_MYBLAS_FUN(" #x ")"
+
+#define MY_JET_MYBLAS_FUN_MACRO "#define " MY_JET_MYBLAS_FUN(x) " " MY_JET_MYBLAS_PREFIX "_ ## x ## _" MY_JET_MYBLAS_SUFFIX
+
+char *my_jet_cppwrapper[]= { \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_NONE_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_NONE_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_NONE_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_NONE_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_1_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_1_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_1_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_1_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_1_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_1_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_1_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_1_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET1_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET2_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET2_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET2_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET2_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_2_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_2_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_2_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_2_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_m_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_m_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_m_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_m_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+\
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_TREE_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_NONE_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_TREE_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"),
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_TREE_FIXES,CPP_NONE_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+  CPP_WRAPPER("MyJet","MY_JET",MY_JET_TREE_FIXES,CPP_MY_COEF_WRAPPER,"MY_COEF",CPP_MY_FLOAT_WRAPPER,"MY_FLOAT"), \
+};
+
+static char *words[] = {\
+  MY_JET_PREFIX, MY_JET_SUFFIX, \
+};
 #define MY_JET_FUN_MACRO "#define " MY_JET_FUN(x) " " MY_JET_PREFIX "_ ## x ## _" MY_JET_SUFFIX
 
 void print_and_subs(char *word[], const char *str, const char *prefix, const char *suffix)
@@ -337,7 +425,7 @@ void print_and_subs(char *word[], const char *str, const char *prefix, const cha
       length -= (location + wlen[1]);
       fprintf(outfile, "%s", suffix);
     }
-  fprintf(outfile,"%s\n", str);
+  fprintf(outfile, "%s", str);
 }
 
 
@@ -502,16 +590,40 @@ void genMyJetHeader(void) {
   }
   //
 
-  genMyCoefHeader();
-
   print_and_subs(words, my_jet_preheaders[index_my_jet_header], my_jet_prefix, suffix);
-
+  fprintf(outfile, "\n");
   print_and_subs(words, my_jet_headers[index_my_jet_header], my_jet_prefix, suffix);
-
+  fprintf(outfile, "\n");
   print_and_subs(words, my_jet_postheaders[index_my_jet_header], my_jet_prefix, suffix);
-  
+  fprintf(outfile, "\n");
 //   if (my_jet_arith != ARITH_JET_NONE)
   print_and_subs(words, MY_JET_FUN_MACRO, my_jet_prefix, suffix);
+  fprintf(outfile, "\n");
+
+  if (genMyBlas) {
+      fprintf(outfile, "\n#ifndef _MY_JET_MYBLAS_H_\n");
+      fprintf(outfile, "#define _MY_JET_MYBLAS_H_\n");
+      print_and_subs(words, my_jet_myblas_headers[index_my_jet_header], my_jet_myblas_prefixes[index_my_jet_prefix], suffix);
+      fprintf(outfile, "\n");
+      print_and_subs(words, MY_JET_MYBLAS_FUN_MACRO, my_jet_myblas_prefixes[index_my_jet_prefix], suffix);
+      fprintf(outfile, "\n");
+      fprintf(outfile, "\n#endif /* end _MY_JET_MYBLAS_H_ */\n\n");
+    }
+
+  if (gencppwrapper) {
+      fprintf(outfile, "\n#endif\n");
+
+      if (my_float_arith == ARITH_NONE && my_coef_arith == ARITH_MY_FLOAT)
+        {print_and_subs(words, my_jet_cppwrapper[4*index_my_jet_header+0], my_jet_prefix, suffix);}
+      else if (my_float_arith == ARITH_NONE && my_coef_arith != ARITH_MY_FLOAT)
+        {print_and_subs(words, my_jet_cppwrapper[4*index_my_jet_header+1], my_jet_prefix, suffix);}
+      else if (my_float_arith != ARITH_NONE && my_coef_arith == ARITH_MY_FLOAT)
+        {print_and_subs(words, my_jet_cppwrapper[4*index_my_jet_header+2], my_jet_prefix, suffix);}
+      else if (my_float_arith != ARITH_NONE && my_coef_arith != ARITH_MY_FLOAT)
+        {print_and_subs(words, my_jet_cppwrapper[4*index_my_jet_header+3], my_jet_prefix, suffix);}
+
+      fprintf(outfile, "#ifdef __cplusplus\nextern \"C\"\n\n");
+    }
 
   fprintf(outfile, "#endif /* _MY_JET_H_ */\n\n");
 }
@@ -540,15 +652,23 @@ void genMyJetCode(void) {
     {
       print_jet_tree_num_coef_homog_table(my_jet_prefix, suffix, num_jet_symbols, deg_jet_vars);
     }
-
-  fprintf(outfile, "%s\n", my_float_api_macros);
-
-  if (genMyCoef) { genMyCoefCode(); }
   
   print_and_subs(words, my_jet_precodes[index_my_jet_code], my_jet_prefix, suffix);
-
+  fprintf(outfile, "\n");
   print_and_subs(words, my_jet_codes[index_my_jet_code], my_jet_prefix, suffix);
+  fprintf(outfile, "\n");
+
   output_jet_multiplication_code();
 
   print_and_subs(words, my_jet_postcodes[index_my_jet_code], my_jet_prefix, suffix);
+  fprintf(outfile, "\n");
+
+  if (genMyBlas) {
+      print_and_subs(words, my_jet_myblas_codes[index_my_jet_prefix], my_jet_myblas_prefixes[index_my_jet_prefix], suffix);
+
+      fprintf(outfile, "%s\n", MY_BLAS_CODE(MY_FLOAT_MYBLAS_FIXES,\
+                                            "MY_FLOAT",MY_FLOAT_FUN,\
+                                            "MY_FLOAT",MY_FLOAT_FUN,\
+                                            "MY_FLOAT",MY_FLOAT_FUN,"int","MY_JET_FUN(faux)"));
+    }
 }

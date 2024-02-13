@@ -30,6 +30,7 @@ static char *sample_header="\
  *  It may be 'float', 'double' or user defined private data types\n\
  *  like 'long double', 'complex' etc. \n\
  */\n\
+#define MY_FLOAT_IS_DOUBLE\n\
 \n\
 /* for double or long double, don't need to initialize */\n\
 #define   InitMyFloat(r)            \n\

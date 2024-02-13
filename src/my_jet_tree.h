@@ -141,7 +141,7 @@ static " I " " PREFIX_MYJET(nsymb) "=" MAX_NUM_SYMBOLS_NAME "," PREFIX_MYJET(deg
 \n\
 #define " PREFIX_TREE(nch) "(n,k) " PREFIX_MYJET(num_coefs_homogeneous) "[(n)*(" MAX_DEGREE_NAME "+1)+(k)]\n\
 \n\
-" MY_TREE_CODE(PREFIX_TREE,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,PREFIX_MYJET(faux),MY_RECURSION) "\n\
+" MY_TREE_CODE(PREFIX_TREE,PREFIX_MYCOEF,PREFIX_MYFLOAT,I,PREFIX_MYJET(caux),PREFIX_MYJET(faux),MY_RECURSION) "\n\
 \n\
 size_t " PREFIX_MYJET(init) "(" PREFIX_MYJET(ptr) " s)\n\
 {\n\
@@ -221,7 +221,7 @@ void " PREFIX_MYJET(initup2) "(" I " ns, " I " dg)\n\
     }\n\
   " PREFIX_MYJET(ipool) " = 0;\n\
   }\n\
-  " PREFIX_MYJET(jaux) "=" PREFIX_MYJET(pool) "[0];\n\
+  " PREFIX_MYJET(init) "(&" PREFIX_MYJET(jaux) ");//" PREFIX_MYJET(jaux) "=" PREFIX_MYJET(pool) "[0];\n\
   \n\
   " PREFIX_MYJET(flag_init_jet_library) "=1;\n\
 }\n\
@@ -257,7 +257,7 @@ void " PREFIX_MYJET(cleanup) "(void)\n\
   " PREFIX_MYJET(ipool) " = 0;\n\
   free(" PREFIX_MYJET(pool) "); " PREFIX_MYJET(pool) "=NULL;\n\
   }\n\
-//  " PREFIX_MYJET(clean) "(&" PREFIX_MYJET(jaux) ");\n\
+  " PREFIX_MYJET(clean) "(&" PREFIX_MYJET(jaux) ");\n\
   " PREFIX_MYCOEF(clean) "(" PREFIX_MYJET(caux) ");\n\
   " PREFIX_MYFLOAT(clean) "(" PREFIX_MYJET(faux) ");\n\
   " PREFIX_MYCOEF(cleanup) "();\n\
@@ -388,10 +388,7 @@ void " PREFIX_MYJET(set_jet_2_coef_array) "(" PREFIX_MYCOEF(t) " *b, " PREFIX_MY
 }\n\
 " PREFIX_MYCOEF(t) "* " PREFIX_MYJET(coef1) "(" PREFIX_MYJET(t) " s, " I " i)\n\
 {\n\
-  " I " k, idx[s->nsymb];\n\
-  for (k = 0; k < s->nsymb; ++k){idx[k]=0;}\n\
-  idx[i]=1;\n\
-  return " PREFIX_MYJET(get_coef) "(s,idx);\n\
+  return &s[1].coef[i];\n\
 }\n\
 \n\
 void " PREFIX_MYJET(nrminf) "(" PREFIX_MYFLOAT(t) " nrm[1], " PREFIX_MYJET(t) " s)\n\
@@ -998,6 +995,12 @@ void " PREFIX_MYJET(set_cosh) "(" PREFIX_MYJET(t) " c, " PREFIX_MYJET(t) " a)\n\
   " PREFIX_MYJET(sinhcosh) "(" PREFIX_MYJET(jaux) ",c,a);\n\
 }\n\
 \n\
+void " PREFIX_MYJET(set_fabs) "(" PREFIX_MYJET(t) " s, " PREFIX_MYJET(t) " a)\n\
+{\n\
+  " I " i;\n\
+  for (i = 0; i <= " PREFIX_MYJET(deg) "; ++i) {" PREFIX_TREE(set_fabs) "(s+i,a+i);}\n\
+}\n\
+\n\
 void " PREFIX_MYJET(eval) "(" PREFIX_MYCOEF(t) " val[1], " PREFIX_MYJET(t) " x, " PREFIX_MYFLOAT(t) " s[])\n\
 {\n\
   " I " k, m;\n\
@@ -1037,7 +1040,8 @@ static " PREFIX_MYJET(t) " " PREFIX_TREE(compoh) "(" PREFIX_TREE(ptr) " h, " PRE
         xk = tmp1;\n\
         tmp1 = tmp2;\n\
       }\n\
-    " PREFIX_MYJET(mul2_coef) "(xk, xk, *(h->coef));\n\
+    " PREFIX_MYJET(set) "(" PREFIX_MYJET(jaux) ", xk);\n\
+    " PREFIX_MYJET(mul2_coef) "(xk, " PREFIX_MYJET(jaux) ", *(h->coef));\n\
     " PREFIX_MYJET(pool) "[--" PREFIX_MYJET(ipool) "] = tmp1;\n\
     return xk;\n\
   } else {\n\
@@ -1106,8 +1110,8 @@ void " PREFIX_MYJET(reverse) "(" PREFIX_MYJET(t) " *u, " PREFIX_MYJET(t) " *v)\n
         }\n\
       for (i = 0; i < ns; ++i)\n\
         {\n\
-          " PREFIX_TREE(set) "(&u[i][m], &tmp2[i][m]);\n\
-          " PREFIX_TREE(neg) "(&u[i][m], &u[i][m]);\n\
+          //" PREFIX_TREE(set) "(&u[i][m], &tmp2[i][m]);\n\
+          " PREFIX_TREE(neg) "(&u[i][m], &tmp2[i][m]);\n\
           " PREFIX_MYJET(set_zero) "(tmp2[i]);\n\
         }\n\
     }\n\
@@ -1138,8 +1142,7 @@ void " PREFIX_MYJET(algT) "(" PREFIX_MYJET(t) " *w, " PREFIX_MYJET(t) " *u, " PR
         }\n\
       for (i = 0; i < ns; ++i)\n\
         {\n\
-          " PREFIX_TREE(set) "(&w[i][m], &u[i][m]);\n\
-          " PREFIX_TREE(sub2) "(&w[i][m], &w[i][m], &tmp2[i][m]);\n\
+          " PREFIX_TREE(sub2) "(&w[i][m], &u[i][m], &tmp2[i][m]);\n\
           " PREFIX_MYJET(set_zero) "(tmp2[i]);\n\
         }\n\
     }\n\

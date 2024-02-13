@@ -1,0 +1,11 @@
+This directory contains a few examples of calling taylor functions from python.
+
+ptaylor.py:  using taylor to integrate an orbit.
+
+psection.py:  using taylor to compute a poincare section for a single orbit.
+
+poincare.py:  generate poincare sections interactively.
+
+
+The -h option will display some help info.
+

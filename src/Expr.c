@@ -50,7 +50,7 @@ Node      *exprVars = NULL;
 
 extern FILE *yyin;
 extern int yyparse();
-
+extern FILE *preprocessed_file(FILE *, char *);
 /*************************************************************************/
 void reset_all_variables(); 
 void checkEquationsAndExpressions();
@@ -81,6 +81,8 @@ void genExpressionCode() {
 
   if(debug) fprintf(stderr, "\n\n/******* Translate Expressions ********/\n\n");
 
+  //  fp = preprocessed_file(fp, saved_input_file);
+  
   reset_all_variables();
   initialize_vars();
   parser_pass = 1;  
@@ -117,6 +119,13 @@ void reset_all_variables() {
   my_free(jetVarsList);   jetVarsList = NULL;
   my_free(jetParamsList); jetParamsList = NULL;
 
+  my_free(cloudVars);      cloudVars = NULL;
+
+  ncloudVars = 0;
+  cloudVarSpace = 0; 
+  num_cloud_vars=0;
+  max_cloud_size =0;
+  
   varSpace  = 0;
   njetVars = 0;
   jetVarSpace = 0;
@@ -646,7 +655,7 @@ void decomposeExpressions()
       Node nn = equations[i].def; /* !!!!!!!!!!! */
       simplify(&(nn));
       equations[i].def = nn;
-      //SET_KEEP_ME(equations[i].def);
+      SET_KEEP_ME(equations[i].def);
     }
  
   identifyConstants();  
@@ -869,7 +878,7 @@ void EmitExpressionCode() {
     for(ei = 0; ei < vcount; ei++) {
       Node ev = vlist[ei];
       j=  ID_VOFFSET(ev) + ID_VINDEX(ev);
-      fprintf(outfile, "    AssignMyFloat(_jz_save[%d], fptr[%d][0]); /* %s %s */\n",ei,j, NODE_GIVEN_NAME(ev), NODE_NAME(ev));
+      fprintf(outfile, "    AssignMyFloat(_jz_save[%d], fptr[%d][0]); /* %d %s %s */\n",ei,ei, j,NODE_GIVEN_NAME(ev), NODE_NAME(ev));
     }
 
     fprintf(outfile, "    if(out) {\n"); 
@@ -912,7 +921,7 @@ void EmitExpressionCode() {
     for(ei = 0; ei < vcount; ei++) {
       Node ev = vlist[ei];
       j=  ID_VOFFSET(ev) + ID_VINDEX(ev);
-      fprintf(outfile, "    AssignMyFloat(_jz_save[%d], fptr[%d][1]); /* %s %s */\n",ei,j, NODE_GIVEN_NAME(ev), NODE_NAME(ev));
+      fprintf(outfile, "    AssignMyFloat(_jz_save[%d], fptr[%d][1]); /* %d %s %s */\n",ei,ei,j, NODE_GIVEN_NAME(ev), NODE_NAME(ev));
     }
     
     fprintf(outfile, "    if(out) {\n"); 
@@ -973,6 +982,7 @@ void EmitExpressinJetCode(void)
     if (total_jet_vars>0) {
       /* series */
       fprintf(outfile, "/* series bgn */\n");
+      fprintf(outfile, "    static MY_JET     _zero_jet;\n" );                 
       fprintf(outfile, "    static MY_JET     *_sjz_out[%d];\n",  vcount+1);           
       fprintf(outfile, "    static MY_JET       *_sjz_jet[%d], *_sjz_save = NULL;\n", total_jet_vars);
       fprintf(outfile, "    static MY_JET     _sjz_tvar1, _sjz_tvar2, _sjz_tvar3, _sjz_tvar4; /* tmp vars */\n");
@@ -981,7 +991,7 @@ void EmitExpressinJetCode(void)
       fprintf(outfile, "    static MY_JET     _sjz_wvar3, _sjz_wvar4; /* tmp vars */\n");
     fprintf(outfile, "    static MY_JET     _sjz_zvar1, _sjz_zvar2; /* tmp vars */\n");
     fprintf(outfile, "    static MY_JET     _kthStmp; /* tmp vars */\n");
-    fprintf(outfile, "    #pragma omp threadprivate(_sjz_out, _sjz_jet, _sjz_save, _sjz_tvar1, _sjz_tvar2, _sjz_tvar3, _sjz_tvar4, _sjz_uvar1, _sjz_uvar2, _sjz_svar1, _sjz_svar2, _sjz_svar3, _sjz_svar4, _sjz_svar5,  _sjz_wvar3, _sjz_wvar4, _sjz_zvar1, _sjz_zvar2, _kthStmp)\n");    
+    fprintf(outfile, "    #pragma omp threadprivate(_sjz_out, _sjz_jet, _sjz_save, _sjz_tvar1, _sjz_tvar2, _sjz_tvar3, _sjz_tvar4, _sjz_uvar1, _sjz_uvar2, _sjz_svar1, _sjz_svar2, _sjz_svar3, _sjz_svar4, _sjz_svar5,  _sjz_wvar3, _sjz_wvar4, _sjz_zvar1, _sjz_zvar2, _kthStmp, _zero_jet)\n");    
     fprintf(outfile, "/* series end */\n");
   }
 
@@ -1014,6 +1024,7 @@ void EmitExpressinJetCode(void)
     fprintf(outfile, "    \t   InitJet(_sjz_uvar1); InitJet(_sjz_uvar2);\n");
     fprintf(outfile, "    \t   InitJet(_sjz_wvar3); InitJet(_sjz_wvar4);\n");
     fprintf(outfile, "    \t   InitJet(_kthStmp);\n");
+    fprintf(outfile, "    \t   InitJet(_zero_jet); AssignFloatToJet(_zero_jet,_jz_MyFloatZERO);\n");    
     fprintf(outfile, "    \t   /* series end */\n");
   }
 
@@ -1115,7 +1126,8 @@ void EmitExpressinJetCode(void)
     fprintf(outfile,"\t }\n");      
     fprintf(outfile, "/* series end */\n");
   }
-  
+
+  j = i;
   for( ; i < allVarsCount; i++)
     {
       Node var = allVarsList[i];
@@ -1129,6 +1141,18 @@ void EmitExpressinJetCode(void)
 	}
       else if (nodeIsNumber(var) == 0) outputInitialVar(var);
     }
+  
+  i = j;
+  fprintf(outfile, "\t /* set initial value for jet vars, needed b/c our expr vars are tmp vars.  */\n");
+  for( ; i < allVarsCount; i++)   {
+    Node var = allVarsList[i];
+    if (VAR_IS_JET(var)) {
+      int  jidx = ID_JINDEX(var);
+      int  vidx = ID_VINDEX(var);      
+      fprintf(outfile, "\t AssignJetToFloat(_jz_jet[%d][0], _sjz_jet[%d][0]);\n",vidx, jidx);      
+    }
+  }
+  
   fprintf(outfile, "\n\t /* the first derivative of state variables */\n");  
   for(j = 0; j < neqns - nonautonomous; j++) 
     {
@@ -1215,14 +1239,18 @@ void EmitExpressinJetCode(void)
   if (total_jet_vars) {
       for(i=0; i< vcount; i++) {
 	Node ev = vlist[i];
-	fprintf(outfile, "    _sjz_out[%d] = _sjz_jet[%d];\n", i, ID_VOFFSET(ev) + ID_VINDEX(ev));
+	if(VAR_IS_JET(ev)) {
+	  fprintf(outfile, "    _sjz_out[%d] = _sjz_jet[%d];\n", i, ID_JINDEX(ev));
+	} else {
+	  fprintf(outfile, "    _sjz_out[%d] = &(_zero_jet);\n", i);
+	}
       }
-    fprintf(outfile, "     *sOut = _sjz_jet;\n");      
+      fprintf(outfile, "     *sOut = _sjz_out;\n");      
   } else {
     fprintf(outfile, "     *sOut = NULL;\n");
   }
   fprintf(outfile, "    }\n");
-  fprintf(outfile, "    return(_jz_jet);\n}\n\n");
+  fprintf(outfile, "    return(_jz_out);\n}\n\n");
 
  }
 }
